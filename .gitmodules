@@ -1,0 +1,3 @@
+[submodule "ws2812b-neopixel-emulator"]
+	path = ws2812b-neopixel-emulator
+	url = https://github.com/rogerdahl/ws2812b-neopixel-emulator.git
