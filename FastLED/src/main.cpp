@@ -75,7 +75,10 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2811
 
-#define BRIGHTNESS 16 // max is 64 (?)
+#define BRIGHTNESS 2 // max is 64 (?)
+// if you set the brightness to 1, it only shows red stripes!
+// even brightness of 2 is able to show the colors quite well, but probably missing some saturation?
+
 
 // Helper functions for an two-dimensional XY matrix of pixels.
 // Simple 2-D demo code is included as well.
@@ -270,10 +273,10 @@ void loop()
 
     if( ms < 5000 ) {
       FastLED.setBrightness( scale8( BRIGHTNESS, (ms * 256) / 5000));
-      // FastLED.setBrightness( scale8(random(16, 64), (ms * 256) / 5000)); // thought this might look cool but its just seizure mode
+      // FastLED.setBrightness( scale8(random(16, 64), (ms * 256) / 5000)); // thought this might look cool but its just seizure mode (its for brightness of all pixels)
     } else {
       FastLED.setBrightness(BRIGHTNESS);
-      // FastLED.setBrightness(random(16, 64)); // thought this might look cool but its just seizure mode
+      // FastLED.setBrightness(random(16, 64)); // thought this might look cool but its just seizure mode (its for brightness of all pixels)
     }
     FastLED.show();
 }
@@ -282,5 +285,5 @@ void loop()
 void setup() {
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness( BRIGHTNESS );
-  randomSeed(analogRead(0));
+  // randomSeed(analogRead(0));
 }
