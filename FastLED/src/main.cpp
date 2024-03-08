@@ -75,7 +75,7 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2811
 
-#define BRIGHTNESS 64
+#define BRIGHTNESS 16 // max is 64 (?)
 
 // Helper functions for an two-dimensional XY matrix of pixels.
 // Simple 2-D demo code is included as well.
@@ -263,10 +263,17 @@ void loop()
     int32_t yHueDelta32 = ((int32_t)cos16( ms * (27/1) ) * (350 / kMatrixWidth));
     int32_t xHueDelta32 = ((int32_t)cos16( ms * (39/1) ) * (310 / kMatrixHeight));
     DrawOneFrame( ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+
+    // maybe setting a random brightness for each pixel could be cool
+    
+
+
     if( ms < 5000 ) {
       FastLED.setBrightness( scale8( BRIGHTNESS, (ms * 256) / 5000));
+      // FastLED.setBrightness( scale8(random(16, 64), (ms * 256) / 5000)); // thought this might look cool but its just seizure mode
     } else {
       FastLED.setBrightness(BRIGHTNESS);
+      // FastLED.setBrightness(random(16, 64)); // thought this might look cool but its just seizure mode
     }
     FastLED.show();
 }
@@ -275,4 +282,5 @@ void loop()
 void setup() {
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness( BRIGHTNESS );
+  randomSeed(analogRead(0));
 }
