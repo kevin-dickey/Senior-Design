@@ -1,0 +1,5 @@
+/FastLED/.pio/**
+/FastLED/.vscode/**
+
+/ImGUI_Emulator/.idea/**
+/ImGUI_Emulator/cmake-build-debug/**
