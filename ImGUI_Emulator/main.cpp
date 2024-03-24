@@ -30,7 +30,7 @@ int main() {
 # endif
 
     // Create window with graphics context
-    GLFWwindow *window = glfwCreateWindow(1920, 1080, "Dear ImGui - Emulator", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(1920, 1280, "Dear ImGui - Emulator", NULL, NULL);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
