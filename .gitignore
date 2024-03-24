@@ -2,4 +2,4 @@
 /FastLED/.vscode/**
 
 /ImGUI_Emulator/.idea/**
-/ImGUI_Emulator/cmake-build-debug/**
+/ImGUI_Emulator/cmake-build-*/**
