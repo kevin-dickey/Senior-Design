@@ -3,8 +3,13 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+static void glfw_error_callback(int error, const char *description) {
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
 int main() {
     // Setup window
+    glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
 
@@ -25,8 +30,8 @@ int main() {
 # endif
 
     // Create window with graphics context
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "Dear ImGui - Emulator", NULL, NULL);
-    if (window == NULL)
+    GLFWwindow *window = glfwCreateWindow(1920, 1080, "Dear ImGui - Emulator", NULL, NULL);
+    if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
@@ -40,6 +45,7 @@ int main() {
 
     Emulator emulator;
     emulator.Init(window, glsl_version);
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
@@ -47,6 +53,7 @@ int main() {
         emulator.NewFrame();
         emulator.Update();
         emulator.Render();
+        // Output the updated GLFW framebuffer to the window.
         glfwSwapBuffers(window);
     }
     emulator.Shutdown();

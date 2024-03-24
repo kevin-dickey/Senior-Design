@@ -16,7 +16,14 @@ public:
     virtual void Update();
     void Render();
     void Shutdown();
-};
 
+private:
+    float window_padding;
+    float circle_margin;
+
+    int num_cols;
+    int num_rows;
+
+};
 
 #endif //IMGUI_EMULATOR_EMULATOR_H
