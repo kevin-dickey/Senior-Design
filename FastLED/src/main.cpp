@@ -5,7 +5,7 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2811
 
-#define BRIGHTNESS 2 // max is 64 (?) maybe 256 idk
+#define BRIGHTNESS 8 // max is 64 (?) maybe 256 idk
 // if you set the brightness to 1, it only shows red stripes! DO NOT DO THIS WITHOUT A POWER SUPPLY CONNECTED (byebye usb)
 // even brightness of 2 is able to show the colors quite well, but probably missing some saturation?
 
@@ -211,6 +211,7 @@ void loop()
       // FastLED.setBrightness(random(16, 64)); // thought this might look cool but its just seizure mode (its for brightness of all pixels)
     }
     FastLED.show();
+    delay(1000);
 }
 
 
