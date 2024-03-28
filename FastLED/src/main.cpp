@@ -4,18 +4,19 @@
 #define LED_PIN     22
 #define NUM_LEDS    256
 #define BRIGHTNESS  8
-#define LED_TYPE    WS2812B
+// #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
+#define CHIPSET     WS2812B
 
 void rippleEffect();
 int calculateDistance(int x1, int y1, int x2, int y2);
 int scaleBrightness(int distance, int rippleCounter);
-
+int XY( int x, int y);
 
 CRGB leds[NUM_LEDS];
 
 void setup() {
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness(BRIGHTNESS);
 }
 
@@ -66,47 +67,47 @@ int scaleBrightness(int distance, int rippleCounter) {
 // // if you set the brightness to 1, it only shows red stripes! DO NOT DO THIS WITHOUT A POWER SUPPLY CONNECTED (byebye usb)
 // // even brightness of 2 is able to show the colors quite well, but probably missing some saturation?
 
-// // Params for width and height
-// const uint8_t kMatrixWidth = 16;
-// const uint8_t kMatrixHeight = 16;
+// Params for width and height
+const uint8_t kMatrixWidth = 16;
+const uint8_t kMatrixHeight = 16;
 
-// // Param for different pixel layouts
-// const bool    kMatrixSerpentineLayout = true;
-// const bool    kMatrixVertical = false;
+// Param for different pixel layouts
+const bool    kMatrixSerpentineLayout = true;
+const bool    kMatrixVertical = false;
 
-// uint16_t XY( uint8_t x, uint8_t y)
-// {
-//   uint16_t i;
+int XY( int x, int y)
+{
+  int i;
   
-//   if( kMatrixSerpentineLayout == false) {
-//     if (kMatrixVertical == false) {
-//       i = (y * kMatrixWidth) + x;
-//     } else {
-//       i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
-//     }
-//   }
+  if( kMatrixSerpentineLayout == false) {
+    if (kMatrixVertical == false) {
+      i = (y * kMatrixWidth) + x;
+    } else {
+      i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
+    }
+  }
 
-//   if( kMatrixSerpentineLayout == true) {
-//     if (kMatrixVertical == false) {
-//       if( y & 0x01) {
-//         // Odd rows run backwards
-//         uint8_t reverseX = (kMatrixWidth - 1) - x;
-//         i = (y * kMatrixWidth) + reverseX;
-//       } else {
-//         // Even rows run forwards
-//         i = (y * kMatrixWidth) + x;
-//       }
-//     } else { // vertical positioning
-//       if ( x & 0x01) {
-//         i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
-//       } else {
-//         i = kMatrixHeight * (kMatrixWidth - x) - (y+1);
-//       }
-//     }
-//   }
+  if( kMatrixSerpentineLayout == true) {
+    if (kMatrixVertical == false) {
+      if( y & 0x01) {
+        // Odd rows run backwards
+        uint8_t reverseX = (kMatrixWidth - 1) - x;
+        i = (y * kMatrixWidth) + reverseX;
+      } else {
+        // Even rows run forwards
+        i = (y * kMatrixWidth) + x;
+      }
+    } else { // vertical positioning
+      if ( x & 0x01) {
+        i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
+      } else {
+        i = kMatrixHeight * (kMatrixWidth - x) - (y+1);
+      }
+    }
+  }
   
-//   return i;
-// }
+  return i;
+}
 
 // #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
 // CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
