@@ -28,7 +28,7 @@ void loop() {
   rippleEffect();
   // std::cout << "Done with rippleEffect()" << std::endl; // idk how to get this to even show up in console lol
   FastLED.show();
-  delay(125);  // adjust delay for speed of the ripple effect  
+  delay(75);  // adjust delay for speed of the ripple effect  
 }
 
 void rippleEffect() {
@@ -44,7 +44,7 @@ void rippleEffect() {
             uint8_t brightness;
 
             // Determine brightness based on distance from center and rippleCounter
-            if (rippleDistance <= 2) {
+            if (rippleDistance <= 1) {
                 // If the pixel is within the ring
                 brightness = MAX_BRIGHTNESS - rippleDistance * 85; // Gradually decrease brightness towards the edge of the ring
             } else {
