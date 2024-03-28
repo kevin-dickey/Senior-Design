@@ -1,17 +1,22 @@
 
 #include <FastLED.h>
+#include <iostream>
 
 #define LED_PIN     22
-#define NUM_LEDS    256
-#define BRIGHTNESS  8
+#define NUM_LEDS_X  16
+#define NUM_LEDS_Y  16
+#define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
+#define BRIGHTNESS  32
 // #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
-#define CHIPSET     WS2812B
+#define CHIPSET     WS2811
 
 void rippleEffect();
-int calculateDistance(int x1, int y1, int x2, int y2);
-int scaleBrightness(int distance, int rippleCounter);
-int XY( int x, int y);
+uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
+uint16_t XY( uint8_t x, uint8_t y);
+uint16_t XYsafe( uint8_t x, uint8_t y);
+
 
 CRGB leds[NUM_LEDS];
 
@@ -22,37 +27,39 @@ void setup() {
 
 void loop() {
   rippleEffect();
+  std::cout << "Done with rippleEffect()" << std::endl;
   FastLED.show();
-  delay(50);  // Adjust delay for speed of the ripple effect
+  delay(10);  // adjust delay for speed of the ripple effect
 }
 
 void rippleEffect() {
   static int rippleCounter = 0;
-  int center_x = NUM_LEDS / 2;
-  int center_y = NUM_LEDS / 2;
+  uint8_t center_x = NUM_LEDS_X / 2;
+  uint8_t center_y = NUM_LEDS_Y / 2;
 
   for (int x = 0; x < NUM_LEDS; x++) {
     for (int y = 0; y < NUM_LEDS; y++) {
-      int distance = calculateDistance(center_x, center_y, x, y);
-      int brightness = scaleBrightness(distance, rippleCounter);
-      leds[ XY(x, y)] = CRGB(brightness, 0, 0);  // just red
+      uint8_t distance = calculateDistance(center_x, center_y, x, y);
+      uint8_t brightness = scaleBrightness(distance, rippleCounter);
+      leds[XYsafe(x, y)] = CRGB(brightness, 0, 0); // just different brightnesses of red
     }
   }
 
   rippleCounter++;
 }
 
-int calculateDistance(int x1, int y1, int x2, int y2) {
+uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
   float dx = abs(x2 - x1);
   float dy = abs(y2 - y1);
   return sqrt(dx * dx + dy * dy);
 }
 
-int scaleBrightness(int distance, int rippleCounter) {
-  int delta = abs(rippleCounter - distance);
-  int maxDistance = NUM_LEDS / 2;
-  int brightness = map(delta, 0, maxDistance, 255, 0);
-  return brightness > 255 ? 0 : brightness; // Ensures brightness does not exceed 255 or go below 0
+uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
+  uint8_t delta = abs(rippleCounter - distance);
+  uint8_t maxDistance = NUM_LEDS / 2;
+  uint8_t brightness = map(delta, 0, maxDistance, 0, 32);
+  // return (brightness <= 0) ? 0 : (brightness > 32) ? 32 : brightness; // ensures 0 <= brightness <= 16
+  return brightness > 32 ? 0 : brightness;
 }
 
 
@@ -75,7 +82,7 @@ const uint8_t kMatrixHeight = 16;
 const bool    kMatrixSerpentineLayout = true;
 const bool    kMatrixVertical = false;
 
-int XY( int x, int y)
+uint16_t XY( uint8_t x, uint8_t y)
 {
   int i;
   
@@ -113,12 +120,12 @@ int XY( int x, int y)
 // CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
 // CRGB* const leds( leds_plus_safety_pixel + 1);
 
-// uint16_t XYsafe( uint8_t x, uint8_t y)
-// {
-//   if( x >= kMatrixWidth) return -1;
-//   if( y >= kMatrixHeight) return -1;
-//   return XY(x,y);
-// }
+uint16_t XYsafe( uint8_t x, uint8_t y)
+{
+  if( x >= kMatrixWidth) return -1;
+  if( y >= kMatrixHeight) return -1;
+  return XY(x,y);
+}
 
 
 // // Demo that USES "XY" follows code below
