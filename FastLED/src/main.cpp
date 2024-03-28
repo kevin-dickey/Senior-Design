@@ -6,12 +6,12 @@
 #define NUM_LEDS_X  16
 #define NUM_LEDS_Y  16
 #define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
-#define MAX_BRIGHTNESS  16
-// #define LED_TYPE    WS2812B
+#define MAX_BRIGHTNESS  16 // maximum for FastLED is 255, but I would probably not go higher than 64 (especially if no power supply)
 #define COLOR_ORDER GRB
-#define CHIPSET     WS2811
+#define CHIPSET     WS2812B
 
-void rippleEffect();
+void rippleEffect(int r, int g, int b); // provide values 0-255 for specifying the color in terms of r, g, and b.
+                                        // do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
 uint16_t XY( uint8_t x, uint8_t y);
@@ -20,19 +20,19 @@ uint16_t XYsafe( uint8_t x, uint8_t y);
 CRGB leds[NUM_LEDS];
 
 void setup() {
-  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
-  FastLED.setBrightness(MAX_BRIGHTNESS);
+  Serial.begin(9600); // for setting up stuff to print to serial monitor
+  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+  FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
 }
 
 void loop() {
-  rippleEffect();
-  // std::cout << "Done with rippleEffect()" << std::endl; // idk how to get this to even show up in console lol
+  rippleEffect(255, 0, 255); // purple :D
   FastLED.show();
   delay(75);  // adjust delay for speed of the ripple effect  
 }
 
-void rippleEffect() {
-    static uint8_t rippleCounter = 0;
+void rippleEffect(int r, int g, int b) {
+    static int rippleCounter = 0;
     uint8_t center_x = NUM_LEDS_X / 2;
     uint8_t center_y = NUM_LEDS_Y / 2;
     uint8_t maxDistance = max(NUM_LEDS_X / 2, NUM_LEDS_Y / 2);
@@ -51,11 +51,12 @@ void rippleEffect() {
                 // If the pixel is outside the ring
                 brightness = 0; // Dim brightness value
             }
-
-            leds[XY(x, y)] = CRGB(0, 0, brightness);  // Adjust color as needed
+          
+            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
         }
     }
 
+    Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
     rippleCounter++;
 }
 
