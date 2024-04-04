@@ -6,12 +6,11 @@
 #define NUM_LEDS_X  16
 #define NUM_LEDS_Y  16
 #define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
-#define MAX_BRIGHTNESS  16 // maximum for FastLED is 255, but I would probably not go higher than 64 (especially if no power supply)
+#define MAX_BRIGHTNESS  16 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812B
 
-void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y); // provide values 0-255 for specifying the color in terms of r, g, and b.
-                                        // do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y); 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
 uint16_t XY(uint8_t x, uint8_t y);
@@ -41,6 +40,19 @@ void loop() {
   delay(75);  // adjust delay for speed of the ripple effect  
 }
 
+/**
+ * Provides a singular frame for the ripple effect.
+ * Should be repeatedly called in a loop for a smooth ripple.
+ * Currently has overlapping frames near the end of a ripple's lifespan (believe frames 11-13)
+ *
+ *    r = 0-255 value, specifying the amount of red
+ *    g = 0-255 value, specifying the amount of green
+ *    b = 0-255 value, specifying the amount of blue
+ * 
+ * Provide values 0-255 for specifying the color in terms of r, g, and b.
+ * Do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
+ * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
+ * */ 
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
     static int rippleCounter = 0;
     // uint8_t center_x = NUM_LEDS_X / 2;
@@ -52,17 +64,19 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
         for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
             uint8_t distance = calculateDistance(center_x, center_y, x, y);
             uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance + 1);
-            uint8_t brightness;
+            uint8_t brightness = 0;
 
             // Determine brightness based on distance from center and rippleCounter
             if (rippleDistance <= 1) {
                 // If the pixel is within the ring
                 brightness = MAX_BRIGHTNESS - rippleDistance * 85; // Gradually decrease brightness towards the edge of the ring
-            } else {
+            } else { 
+                // this part isn't really required (as brightness is set to 0 by default), but here for readability
                 // If the pixel is outside the ring
-                brightness = 0; // Dim brightness value
+                brightness = 0; // Dim brightness value (completely dark)
             }
           
+            // set the desired color for the LED
             leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
         }
     }
@@ -88,12 +102,22 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
 //   rippleCounter++;
 // }
 
+/**
+ * Calculates the distance between two (x, y) points provided.
+*/
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
   float dx = abs(x2 - x1);
   float dy = abs(y2 - y1);
   return sqrt(dx * dx + dy * dy);
 }
 
+/**
+ * Scales the brightness of the LEDs based on the distance from the center of the actual ripple in the frame
+ * For example, if the width of the ripple is 3 pixels wide, the center would be brightest and the 2 outside
+ * pixels would be dimmed slightly. 
+ * 
+ * (Deprecated, should be moved to below soon unless use is found)
+*/
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
   uint8_t delta = abs(rippleCounter - distance);
   uint8_t maxDistance = NUM_LEDS / 2;
@@ -102,6 +126,14 @@ uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
   return brightness > MAX_BRIGHTNESS ? 0 : brightness;
 }
 
+/**
+ * Calculates the (x, y) position of a grid of LEDs.
+ * This is required over just creating a 2D array as it depends whether the LEDs
+ * are setup in a serpentine manner, and if they're setup ordered in a vertical manner or not.
+ * 
+ * If something doesn't look right, try changing the value of kMatrixVertical above.
+ * If that doesn't work, try changing kMatrixSerpentineLayout (not applicable for testbench, we know the value it needs to be).
+*/
 uint16_t XY(uint8_t x, uint8_t y)
 {
   int i;
@@ -136,6 +168,9 @@ uint16_t XY(uint8_t x, uint8_t y)
   return i;
 }
 
+/**
+ * Makes sure the specified point is in bounds before calculating its (x, y) position.
+*/
 uint16_t XYsafe(uint8_t x, uint8_t y)
 {
   if( x >= kMatrixWidth) return -1;
@@ -236,9 +271,40 @@ uint16_t XYsafe(uint8_t x, uint8_t y)
 
 
 
-
+/***********************************************************************************************************/
 /* Deprecated code */
 
 // #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
 // CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
 // CRGB* const leds( leds_plus_safety_pixel + 1);
+
+// Set 'kMatrixSerpentineLayout' to false if your pixels are 
+// laid out all running the same way, like this:
+//
+//     0 >  1 >  2 >  3 >  4
+//                         |
+//     .----<----<----<----'
+//     |
+//     5 >  6 >  7 >  8 >  9
+//                         |
+//     .----<----<----<----'
+//     |
+//    10 > 11 > 12 > 13 > 14
+//                         |
+//     .----<----<----<----'
+//     |
+//    15 > 16 > 17 > 18 > 19
+//
+// Set 'kMatrixSerpentineLayout' to true if your pixels are 
+// laid out back-and-forth, like this:
+//
+//     0 >  1 >  2 >  3 >  4
+//                         |
+//                         |
+//     9 <  8 <  7 <  6 <  5
+//     |
+//     |
+//    10 > 11 > 12 > 13 > 14
+//                        |
+//                        |
+//    19 < 18 < 17 < 16 < 15
