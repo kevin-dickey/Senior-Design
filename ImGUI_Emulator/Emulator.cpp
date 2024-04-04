@@ -47,7 +47,7 @@ void Emulator::NewFrame()
 }
 
 void Emulator::Update() {
-    PixelField pixelField;
+    PixelField pixelField(grid_config);
 
     // Row Column Configuration Window
     ImGui::Begin("Configuration");
@@ -57,6 +57,7 @@ void Emulator::Update() {
     ImGui::Text("Grid Fill State");
     ImGui::RadioButton("Rainbow", (int*)&grid_fill_state, RAINBOW);
     ImGui::RadioButton("Solid", (int*)&grid_fill_state, SOLID);
+    ImGui::RadioButton("Random", (int*)&grid_fill_state, CHANGING);
 
     if (grid_fill_state == SOLID) {
         ImGui::ColorEdit3("Fill color", fill_color);
@@ -72,7 +73,7 @@ void Emulator::Update() {
     ImVec4 fill_color_vec4 = ImVec4(fill_color[0], fill_color[1], fill_color[2], 1.0f);
     grid_config.configureGrid(num_rows, num_cols,
                               grid_fill_state, new ImColor(fill_color_vec4));
-    pixelField.ShowPixelField(grid_config);
+    pixelField.ShowPixelField();
 }
 
 void Emulator::Render() {

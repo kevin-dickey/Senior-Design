@@ -20,9 +20,6 @@ public:
     void Shutdown();
 
 private:
-
-
-
     PixelGridConfig grid_config;
     GRID_FILL_STATE grid_fill_state;
     float fill_color[3] = {1.0f, 0.0f, 0.2f };

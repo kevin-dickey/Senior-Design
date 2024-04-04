@@ -13,9 +13,12 @@
 
 class PixelField {
 public:
-    void ShowPixelField(PixelGridConfig config); // Show the pixel field in the main window
+    PixelField(PixelGridConfig config);
+    ImColor *pixel_fills;
+    void ShowPixelField(); // Show the pixel field in the main window
 
 private:
+    PixelGridConfig grid_config;
     float window_padding;
     float circle_radius;
 };

@@ -10,6 +10,7 @@
 enum GRID_FILL_STATE {
     RAINBOW,
     SOLID,
+    CHANGING,
 };
 
 class PixelGridConfig {
