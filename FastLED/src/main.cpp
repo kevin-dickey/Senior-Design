@@ -10,13 +10,23 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812B
 
-void rippleEffect(int r, int g, int b); // provide values 0-255 for specifying the color in terms of r, g, and b.
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y); // provide values 0-255 for specifying the color in terms of r, g, and b.
                                         // do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
-uint16_t XY( uint8_t x, uint8_t y);
-uint16_t XYsafe( uint8_t x, uint8_t y);
+uint16_t XY(uint8_t x, uint8_t y);
+uint16_t XYsafe(uint8_t x, uint8_t y);
 
+/* Variables for XY() and XYsafe() */
+// Params for width and height
+const uint8_t kMatrixWidth = 16;
+const uint8_t kMatrixHeight = 16;
+// Param for different pixel layouts
+const bool    kMatrixSerpentineLayout = true;
+const bool    kMatrixVertical = false;
+
+// Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
+//                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 
 void setup() {
@@ -26,15 +36,16 @@ void setup() {
 }
 
 void loop() {
-  rippleEffect(255, 0, 255); // purple :D
+  rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
   FastLED.show();
   delay(75);  // adjust delay for speed of the ripple effect  
 }
 
-void rippleEffect(int r, int g, int b) {
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
     static int rippleCounter = 0;
-    uint8_t center_x = NUM_LEDS_X / 2;
-    uint8_t center_y = NUM_LEDS_Y / 2;
+    // uint8_t center_x = NUM_LEDS_X / 2;
+    // uint8_t center_y = NUM_LEDS_Y / 2;
+    
     uint8_t maxDistance = max(NUM_LEDS_X / 2, NUM_LEDS_Y / 2);
 
     for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
@@ -56,6 +67,7 @@ void rippleEffect(int r, int g, int b) {
         }
     }
 
+    // debugging
     Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
     rippleCounter++;
 }
@@ -90,27 +102,7 @@ uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
   return brightness > MAX_BRIGHTNESS ? 0 : brightness;
 }
 
-
-// #include <FastLED.h>
-
-// #define LED_PIN  22
-
-// #define COLOR_ORDER GRB
-// #define CHIPSET     WS2811
-
-// #define BRIGHTNESS 8 // max is 64 (?) maybe 256 idk
-// // if you set the brightness to 1, it only shows red stripes! DO NOT DO THIS WITHOUT A POWER SUPPLY CONNECTED (byebye usb)
-// // even brightness of 2 is able to show the colors quite well, but probably missing some saturation?
-
-// Params for width and height
-const uint8_t kMatrixWidth = 16;
-const uint8_t kMatrixHeight = 16;
-
-// Param for different pixel layouts
-const bool    kMatrixSerpentineLayout = true;
-const bool    kMatrixVertical = false;
-
-uint16_t XY( uint8_t x, uint8_t y)
+uint16_t XY(uint8_t x, uint8_t y)
 {
   int i;
   
@@ -144,11 +136,7 @@ uint16_t XY( uint8_t x, uint8_t y)
   return i;
 }
 
-// #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
-// CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
-// CRGB* const leds( leds_plus_safety_pixel + 1);
-
-uint16_t XYsafe( uint8_t x, uint8_t y)
+uint16_t XYsafe(uint8_t x, uint8_t y)
 {
   if( x >= kMatrixWidth) return -1;
   if( y >= kMatrixHeight) return -1;
@@ -156,46 +144,101 @@ uint16_t XYsafe( uint8_t x, uint8_t y)
 }
 
 
-// // Demo that USES "XY" follows code below
-// void DrawOneFrame( uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
-// {
-//   uint8_t lineStartHue = startHue8;
-//   for( uint8_t y = 0; y < kMatrixHeight; y++) {
-//     lineStartHue += yHueDelta8;
-//     uint8_t pixelHue = lineStartHue;      
-//     for( uint8_t x = 0; x < kMatrixWidth; x++) {
-//       pixelHue += xHueDelta8;
-//       leds[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
+/* *********************************************************************** */
+// TODO:
+/* Try these changes later */
+
+// uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t y) {
+//   // Calculate the distances from the center to the edges of the matrix
+//   uint8_t center_to_left_edge = center_x;
+//   uint8_t center_to_right_edge = NUM_LEDS_X - 1 - center_x;
+//   uint8_t center_to_top_edge = center_y;
+//   uint8_t center_to_bottom_edge = NUM_LEDS_Y - 1 - center_y;
+
+//   // Calculate the distances from the point (x, y) to the edges of the matrix
+//   uint8_t point_to_left_edge = x;
+//   uint8_t point_to_right_edge = NUM_LEDS_X - 1 - x;
+//   uint8_t point_to_top_edge = y;
+//   uint8_t point_to_bottom_edge = NUM_LEDS_Y - 1 - y;
+
+//   // Calculate the minimum distances from the point to the center
+//   uint8_t min_x_distance = min(abs(int(center_x) - int(x)), min(center_to_left_edge + point_to_right_edge, center_to_right_edge + point_to_left_edge));
+//   uint8_t min_y_distance = min(abs(int(center_y) - int(y)), min(center_to_top_edge + point_to_bottom_edge, center_to_bottom_edge + point_to_top_edge));
+
+//   return max(min_x_distance, min_y_distance);
+// }
+
+// void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
+//   static int rippleCounter = 0;
+//   uint8_t maxDistance = max(NUM_LEDS_X, NUM_LEDS_Y);
+
+//   for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
+//     for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
+//       uint8_t distance = calculateDistance(center_x, center_y, x, y);
+//       uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance + 1);
+//       uint8_t brightness;
+
+//       // Determine brightness based on distance from center and rippleCounter
+//       if (rippleDistance <= 1) {
+//         // If the pixel is within the ring
+//         brightness = MAX_BRIGHTNESS - rippleDistance * 85;  // Gradually decrease brightness towards the edge of the ring
+//       } else {
+//         // If the pixel is outside the ring
+//         brightness = 0;  // Dim brightness value
+//       }
+
+//       leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
 //     }
 //   }
+
+//   // debugging
+//   Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
+//   rippleCounter++;
 // }
 
 
-// void loop()
-// {
-//     uint32_t ms = millis();
-//     int32_t yHueDelta32 = ((int32_t)cos16( ms * (27/1) ) * (350 / kMatrixWidth));
-//     int32_t xHueDelta32 = ((int32_t)cos16( ms * (39/1) ) * (310 / kMatrixHeight));
-//     DrawOneFrame( ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+// TODO:
+/* Also try these changes later */
 
-//     // maybe setting a random brightness for each pixel could be cool
-    
+// uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t y) {
+//     int dx = abs(x - center_x);
+//     int dy = abs(y - center_y);
+//     return max(dx, dy); // Distance is the maximum of horizontal and vertical distances
+// }
 
+// void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
+//     static int rippleCounter = 0;
 
-//     if( ms < 5000 ) {
-//       FastLED.setBrightness( scale8( BRIGHTNESS, (ms * 256) / 5000));
-//       // FastLED.setBrightness( scale8(random(16, 64), (ms * 256) / 5000)); // thought this might look cool but its just seizure mode (its for brightness of all pixels)
-//     } else {
-//       FastLED.setBrightness(BRIGHTNESS);
-//       // FastLED.setBrightness(random(16, 64)); // thought this might look cool but its just seizure mode (its for brightness of all pixels)
+//     for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
+//         for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
+//             uint8_t distance = calculateDistance(center_x, center_y, x, y);
+//             uint8_t rippleDistance = (rippleCounter + distance) % 13;
+//             uint8_t brightness;
+
+//             // Determine brightness based on distance from center and rippleCounter
+//             if (rippleDistance <= 1) {
+//                 // If the pixel is within the ring
+//                 brightness = MAX_BRIGHTNESS - rippleDistance * 85; // Gradually decrease brightness towards the edge of the ring
+//             } else {
+//                 // If the pixel is outside the ring
+//                 brightness = 0; // Dim brightness value
+//             }
+          
+//             leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
+//         }
 //     }
-//     FastLED.show();
-//     // delay(1000);
+
+//     // debugging
+//     Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
+//     rippleCounter++;
 // }
 
 
-// void setup() {
-//   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
-//   FastLED.setBrightness( BRIGHTNESS );
-//   // randomSeed(analogRead(0));
-// }
+
+
+
+/* Deprecated code */
+
+// #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
+// CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
+// CRGB* const leds( leds_plus_safety_pixel + 1);
