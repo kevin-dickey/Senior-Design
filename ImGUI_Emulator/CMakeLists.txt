@@ -11,6 +11,8 @@ find_package(imgui CONFIG REQUIRED)
 add_executable(ImGUI_Emulator main.cpp
         Emulator.cpp
         Emulator.h
+        PixelField.cpp
+        PixelGridConfig.cpp
 )
 
 target_link_libraries(

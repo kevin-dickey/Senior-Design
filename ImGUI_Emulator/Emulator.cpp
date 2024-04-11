@@ -2,16 +2,41 @@
 // Created by Nick Vazquez on 3/12/24.
 //
 
+#include <string>
+#include "PixelField.h"
 #include "Emulator.h"
+
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
 
 void Emulator::Init(GLFWwindow* window, const char* glsl_version) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO(); (void) io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+
+    ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    ImGui::StyleColorsDark();
+
+    // Emulator state
+    num_cols = 20;
+    num_rows = 20;
+
+    grid_fill_state = RAINBOW;
+    grid_config.configureGrid(num_rows, num_cols, grid_fill_state, nullptr);
 }
 
 void Emulator::NewFrame()
@@ -21,28 +46,34 @@ void Emulator::NewFrame()
     ImGui::NewFrame();
 }
 
-void render_conan_logo()
-{
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    float sz = 300.0f;
-    static ImVec4 col1 = ImVec4(68.0 / 255.0, 83.0 / 255.0, 89.0 / 255.0, 1.0f);
-    static ImVec4 col2 = ImVec4(40.0 / 255.0, 60.0 / 255.0, 80.0 / 255.0, 1.0f);
-    static ImVec4 col3 = ImVec4(50.0 / 255.0, 65.0 / 255.0, 82.0 / 255.0, 1.0f);
-    static ImVec4 col4 = ImVec4(20.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0f);
-    const ImVec2 p = ImGui::GetCursorScreenPos();
-    float x = p.x + 4.0f, y = p.y + 4.0f;
-    draw_list->AddQuadFilled(ImVec2(x, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y + 0.5 * sz), ImVec2(x + sz, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y), ImColor(col1));
-    draw_list->AddQuadFilled(ImVec2(x, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y + 0.5 * sz), ImVec2(x + 0.5 * sz, y + 1.0 * sz), ImVec2(x, y + 0.75 * sz), ImColor(col2));
-    draw_list->AddQuadFilled(ImVec2(x + 0.5 * sz, y + 0.5 * sz), ImVec2(x + sz, y + 0.25 * sz), ImVec2(x + sz, y + 0.75 * sz), ImVec2(x + 0.5 * sz, y + 1.0 * sz), ImColor(col3));
-    draw_list->AddLine(ImVec2(x + 0.75 * sz, y + 0.375 * sz), ImVec2(x + 0.75 * sz, y + 0.875 * sz), ImColor(col4));
-    draw_list->AddBezierCubic(ImVec2(x + 0.72 * sz, y + 0.24 * sz), ImVec2(x + 0.68 * sz, y + 0.15 * sz), ImVec2(x + 0.48 * sz, y + 0.13 * sz), ImVec2(x + 0.39 * sz, y + 0.17 * sz), ImColor(col4), 10, 18);
-    draw_list->AddBezierCubic(ImVec2(x + 0.39 * sz, y + 0.17 * sz), ImVec2(x + 0.2 * sz, y + 0.25 * sz), ImVec2(x + 0.3 * sz, y + 0.35 * sz), ImVec2(x + 0.49 * sz, y + 0.38 * sz), ImColor(col4), 10, 18);
-}
-
 void Emulator::Update() {
-    ImGui::Begin("Conan Logo");                          // Create a window called "Conan Logo" and append into it.
-    render_conan_logo();  // draw conan logo if user didn't override update
+    PixelField pixelField(grid_config);
+
+    // Row Column Configuration Window
+    ImGui::Begin("Configuration");
+    ImGui::SliderInt("Rows", &num_rows, 1, 50);
+    ImGui::SliderInt("Columns", &num_cols, 1, 50);
+
+    ImGui::Text("Grid Fill State");
+    ImGui::RadioButton("Rainbow", (int*)&grid_fill_state, RAINBOW);
+    ImGui::RadioButton("Solid", (int*)&grid_fill_state, SOLID);
+    ImGui::RadioButton("Random", (int*)&grid_fill_state, CHANGING);
+
+    if (grid_fill_state == SOLID) {
+        ImGui::ColorEdit3("Fill color", fill_color);
+        ImGui::SameLine(); HelpMarker(
+                "Click on the color square to open a color picker.\n"
+                "Click and hold to use drag and drop.\n"
+                "Right-click on the color square to show options.\n"
+                "CTRL+click on individual component to input value.\n");
+    }
+
     ImGui::End();
+
+    ImVec4 fill_color_vec4 = ImVec4(fill_color[0], fill_color[1], fill_color[2], 1.0f);
+    grid_config.configureGrid(num_rows, num_cols,
+                              grid_fill_state, new ImColor(fill_color_vec4));
+    pixelField.ShowPixelField();
 }
 
 void Emulator::Render() {
