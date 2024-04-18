@@ -1,5 +1,5 @@
-/PixelController/FastLED/.pio/**
-/PixelController/FastLED/.vscode/**
+/PixelController/.pio/**
+/PixelController/.vscode/**
 
 /PixelController/ImGUI_Emulator/.idea/**
 /PixelController/ImGUI_Emulator/cmake-build-*/**
