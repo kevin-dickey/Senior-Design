@@ -13,4 +13,4 @@ before_script:
 
 job:
   stage: test
-  script: "platformio run -e nodemcu-32s"
+  script: "platformio run -e nodemcu-32s -d ./PixelController/"
