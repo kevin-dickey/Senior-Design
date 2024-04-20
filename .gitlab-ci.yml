@@ -6,11 +6,11 @@ cache:
     - ~/.platformio/.cache
 
 stages:
-  - test
+  - build
 
 before_script:
   - pip install -U platformio
 
-job:
-  stage: test
+PlatformIO-esp32-build:
+  stage: build
   script: "platformio run -e nodemcu-32s -d ./PixelController/"
