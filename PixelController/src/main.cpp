@@ -1,7 +1,6 @@
-#define USE_EMULATOR 1
+#define USE_EMULATOR 0
 
 #include <iostream>
-#include <cmath>
 
 #define LED_PIN         22
 #define NUM_LEDS_X      16
@@ -44,7 +43,7 @@ const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-//CRGB leds[NUM_LEDS];
+CRGB leds[NUM_LEDS];
 
 /**
  * Provides a singular frame for the ripple effect.
@@ -82,13 +81,13 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
             }
 
             // set the desired color for the LED
-//            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS,
-//                                  b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
+            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS,
+                                  b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
         }
     }
 
     // debugging
-//    Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
+    Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
     rippleCounter++;
 }
 
