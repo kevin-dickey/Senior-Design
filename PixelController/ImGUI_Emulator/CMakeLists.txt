@@ -19,13 +19,14 @@ find_package(imgui CONFIG REQUIRED)
 # NOTE: Multiple targets are declared here to provide a more modular build system.
 #      This allows for easier testing and debugging of the emulator individually by building the source
 #      files as either a library, or an executable and linking them to the same dependencies.
-add_library(${PROJECT_NAME}_Lib main.cpp
+add_library(${PROJECT_NAME}_Lib Window.cpp
         Emulator.cpp
         PixelField.cpp
         PixelGridConfig.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp
+        Window.cpp
         Emulator.cpp
         PixelField.cpp
         PixelGridConfig.cpp

@@ -1,120 +1,50 @@
 #define USE_EMULATOR 1
 
 #include <iostream>
-
-# if USE_EMULATOR
-
-#include <iostream>
-#include "../ImGUI_Emulator/Emulator.h"
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
-
-# else
-
-#include <FastLED.h>
+#include <cmath>
 
 #define LED_PIN         22
 #define NUM_LEDS_X      16
 #define NUM_LEDS_Y      16
 #define NUM_LEDS        NUM_LEDS_X * NUM_LEDS_Y
 #define MAX_BRIGHTNESS  16 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
+
+# if USE_EMULATOR
+
+#include "../ImGUI_Emulator/Window.h"
+
+# else
+
+#include <FastLED.h>
+
 #define COLOR_ORDER     GRB
 #define CHIPSET         WS2812B
+
 # endif
 
 
 
-//void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y);
-//
-//uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-//
-//uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
-//
-//uint16_t XY(uint8_t x, uint8_t y);
-//
-//uint16_t XYsafe(uint8_t x, uint8_t y);
-//
-///* Variables for XY() and XYsafe() */
-//// Params for width and height
-//const uint8_t kMatrixWidth = 16;
-//const uint8_t kMatrixHeight = 16;
-//// Param for different pixel layouts
-//const bool kMatrixSerpentineLayout = true;
-//const bool kMatrixVertical = false;
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y);
+
+uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
+uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
+
+uint16_t XY(uint8_t x, uint8_t y);
+
+uint16_t XYsafe(uint8_t x, uint8_t y);
+
+/* Variables for XY() and XYsafe() */
+// Params for width and height
+const uint8_t kMatrixWidth = 16;
+const uint8_t kMatrixHeight = 16;
+// Param for different pixel layouts
+const bool kMatrixSerpentineLayout = true;
+const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-# if USE_EMULATOR
-static void glfw_error_callback(int error, const char *description) {
-    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-}
-
-int main() {
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
-        return 1;
-
-# if __APPLE__
-    // GL 3.2 + GLSL 150
-    const char *glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
-# else
-    // GL 3.0 + GLSL 130
-        const char *glsl_version = "#version 130";
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    //    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-# endif
-
-    // Create window with graphics context
-    GLFWwindow *window = glfwCreateWindow(1920, 1280, "Dear ImGui - Emulator", NULL, NULL);
-    if (window == nullptr)
-        return 1;
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
-
-    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))  // tie window context to glad's opengl funcs
-        throw ("Unable to context to OpenGL");
-
-    int screen_width, screen_height;
-    glfwGetFramebufferSize(window, &screen_width, &screen_height);
-    glViewport(0, 0, screen_width, screen_height);
-
-    Emulator emulator;
-    emulator.Init(window, glsl_version);
-
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        emulator.NewFrame();
-        emulator.Update();
-        emulator.Render();
-    // Output the updated GLFW framebuffer to the window.
-        glfwSwapBuffers(window);
-    }
-    emulator.Shutdown();
-    return 0;
-}
-# else
-CRGB leds[NUM_LEDS];
-
-void setup() {
-    Serial.begin(9600); // for setting up stuff to print to serial monitor
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(
-            TypicalSMD5050); // setup the LEDs & LED pin for the esp32
-    FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
-}
-
-void loop() {
-    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
-    FastLED.show();
-    delay(75);  // adjust delay for speed of the ripple effect
-}
+//CRGB leds[NUM_LEDS];
 
 /**
  * Provides a singular frame for the ripple effect.
@@ -124,17 +54,15 @@ void loop() {
  *    r = 0-255 value, specifying the amount of red
  *    g = 0-255 value, specifying the amount of green
  *    b = 0-255 value, specifying the amount of blue
- * 
+ *
  * Provide values 0-255 for specifying the color in terms of r, g, and b.
  * Do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
  * */
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
     static int rippleCounter = 0;
-    // uint8_t center_x = NUM_LEDS_X / 2;
-    // uint8_t center_y = NUM_LEDS_Y / 2;
 
-    uint8_t maxDistance = max(NUM_LEDS_X / 2, NUM_LEDS_Y / 2);
+    uint8_t maxDistance = std::max(NUM_LEDS_X / 2, NUM_LEDS_Y / 2);
 
     for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
         for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
@@ -154,13 +82,13 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
             }
 
             // set the desired color for the LED
-            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS,
-                                  b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
+//            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS,
+//                                  b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
         }
     }
 
     // debugging
-    Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
+//    Serial.printf("Now showing frame %d/13 of ripple %d.\n", (rippleCounter % 13 + 1), (rippleCounter / 13 + 1));
     rippleCounter++;
 }
 
@@ -192,16 +120,17 @@ uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
 /**
  * Scales the brightness of the LEDs based on the distance from the center of the actual ripple in the frame
  * For example, if the width of the ripple is 3 pixels wide, the center would be brightest and the 2 outside
- * pixels would be dimmed slightly. 
- * 
+ * pixels would be dimmed slightly.
+ *
  * (Deprecated, should be moved to below soon unless use is found)
 */
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
-    uint8_t delta = abs(rippleCounter - distance);
-    uint8_t maxDistance = NUM_LEDS / 2;
-    uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
-    // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
-    return brightness > MAX_BRIGHTNESS ? 0 : brightness;
+    return 0;
+//    uint8_t delta = abs(rippleCounter - distance);
+//    uint8_t maxDistance = NUM_LEDS / 2;
+//    uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
+//     return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
+//    return brightness > MAX_BRIGHTNESS ? 0 : brightness;
 }
 
 /**
@@ -384,4 +313,28 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
 //                        |
 //                        |
 //    19 < 18 < 17 < 16 < 15
+
+# if USE_EMULATOR
+void loop_callback() {
+    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
+    std ::cout << "Ripple effect frame 1/13" << std::endl;
+}
+
+int main() {
+    emulator(loop_callback);
+}
+# else
+
+void setup() {
+    Serial.begin(9600); // for setting up stuff to print to serial monitor
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(
+            TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
+}
+
+void loop() {
+    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
+    FastLED.show();
+    delay(75);  // adjust delay for speed of the ripple effect
+}
 # endif
