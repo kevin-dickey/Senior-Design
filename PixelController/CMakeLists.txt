@@ -9,21 +9,16 @@ find_package(imgui CONFIG REQUIRED)
 
 add_executable(
         PixelController src/main.cpp
-        # TODO: Refactor these into the ImGUI_Emulator subdirectory
-        ${CMAKE_SOURCE_DIR}/ImGUI_Emulator/Emulator.cpp
-        ${CMAKE_SOURCE_DIR}/ImGUI_Emulator/PixelField.cpp
-        ${CMAKE_SOURCE_DIR}/ImGUI_Emulator/PixelGridConfig.cpp
 )
 
-#add_subdirectory("${PROJECT_SOURCE_DIR}/ImGUI_Emulator")
-include_directories("${PROJECT_SOURCE_DIR}/ImGUI_Emulator")
+add_subdirectory("${PROJECT_SOURCE_DIR}/ImGUI_Emulator")
 
 target_link_libraries(
         PixelController PRIVATE
         glad::glad
         glfw
         imgui::imgui
-#        ImGUI_Emulator
+        ImGUI_Emulator_Lib
 )
 
 # FastLED is not a CMake project, so we need to manually add the source files
