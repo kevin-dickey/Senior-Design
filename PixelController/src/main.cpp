@@ -29,13 +29,13 @@ const bool    kMatrixVertical = false;
 CRGB leds[NUM_LEDS];
 
 void setup() {
-  Serial.bgin(9600); // for setting up stuff to print to serial monitor
+  Serial.begin(9600); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
 }
 
 void loop() {
-  rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
+  rippleEffect(256, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
   FastLED.show();
   delay(75);  // adjust delay for speed of the ripple effect  
 }
