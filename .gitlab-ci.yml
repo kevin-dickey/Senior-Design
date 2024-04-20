@@ -1,0 +1,16 @@
+image: python:3.11
+
+cache:
+  paths:
+    - ~/.cache/pip
+    - ~/.platformio/.cache
+
+stages:
+  - test
+
+before_script:
+  - pip install -U platformio
+
+job:
+  stage: test
+  script: "platformio run -e nodemcu-32s"
