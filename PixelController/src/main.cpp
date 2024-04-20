@@ -1,43 +1,119 @@
+#define USE_EMULATOR 1
 
-#include <FastLED.h>
 #include <iostream>
 
-#define LED_PIN     22
-#define NUM_LEDS_X  16
-#define NUM_LEDS_Y  16
-#define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
+# if USE_EMULATOR
+
+#include <iostream>
+#include "../ImGUI_Emulator/Emulator.h"
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+
+# else
+
+#include <FastLED.h>
+
+#define LED_PIN         22
+#define NUM_LEDS_X      16
+#define NUM_LEDS_Y      16
+#define NUM_LEDS        NUM_LEDS_X * NUM_LEDS_Y
 #define MAX_BRIGHTNESS  16 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
-#define COLOR_ORDER GRB
-#define CHIPSET     WS2812B
+#define COLOR_ORDER     GRB
+#define CHIPSET         WS2812B
+# endif
 
-void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y); 
-uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
-uint16_t XY(uint8_t x, uint8_t y);
-uint16_t XYsafe(uint8_t x, uint8_t y);
 
-/* Variables for XY() and XYsafe() */
-// Params for width and height
-const uint8_t kMatrixWidth = 16;
-const uint8_t kMatrixHeight = 16;
-// Param for different pixel layouts
-const bool    kMatrixSerpentineLayout = true;
-const bool    kMatrixVertical = false;
+
+//void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y);
+//
+//uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+//
+//uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
+//
+//uint16_t XY(uint8_t x, uint8_t y);
+//
+//uint16_t XYsafe(uint8_t x, uint8_t y);
+//
+///* Variables for XY() and XYsafe() */
+//// Params for width and height
+//const uint8_t kMatrixWidth = 16;
+//const uint8_t kMatrixHeight = 16;
+//// Param for different pixel layouts
+//const bool kMatrixSerpentineLayout = true;
+//const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
+# if USE_EMULATOR
+static void glfw_error_callback(int error, const char *description) {
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+int main() {
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit())
+        return 1;
+
+# if __APPLE__
+    // GL 3.2 + GLSL 150
+    const char *glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+# else
+    // GL 3.0 + GLSL 130
+        const char *glsl_version = "#version 130";
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    //    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    //    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+# endif
+
+    // Create window with graphics context
+    GLFWwindow *window = glfwCreateWindow(1920, 1280, "Dear ImGui - Emulator", NULL, NULL);
+    if (window == nullptr)
+        return 1;
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
+
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))  // tie window context to glad's opengl funcs
+        throw ("Unable to context to OpenGL");
+
+    int screen_width, screen_height;
+    glfwGetFramebufferSize(window, &screen_width, &screen_height);
+    glViewport(0, 0, screen_width, screen_height);
+
+    Emulator emulator;
+    emulator.Init(window, glsl_version);
+
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        emulator.NewFrame();
+        emulator.Update();
+        emulator.Render();
+    // Output the updated GLFW framebuffer to the window.
+        glfwSwapBuffers(window);
+    }
+    emulator.Shutdown();
+    return 0;
+}
+# else
 CRGB leds[NUM_LEDS];
 
 void setup() {
-  Serial.begin(9600); // for setting up stuff to print to serial monitor
-  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
-  FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
+    Serial.begin(9600); // for setting up stuff to print to serial monitor
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(
+            TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
 }
 
 void loop() {
-  rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
-  FastLED.show();
-  delay(75);  // adjust delay for speed of the ripple effect  
+    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
+    FastLED.show();
+    delay(75);  // adjust delay for speed of the ripple effect
 }
 
 /**
@@ -52,12 +128,12 @@ void loop() {
  * Provide values 0-255 for specifying the color in terms of r, g, and b.
  * Do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
- * */ 
+ * */
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
     static int rippleCounter = 0;
     // uint8_t center_x = NUM_LEDS_X / 2;
     // uint8_t center_y = NUM_LEDS_Y / 2;
-    
+
     uint8_t maxDistance = max(NUM_LEDS_X / 2, NUM_LEDS_Y / 2);
 
     for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
@@ -69,15 +145,17 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
             // Determine brightness based on distance from center and rippleCounter
             if (rippleDistance <= 1) {
                 // If the pixel is within the ring
-                brightness = MAX_BRIGHTNESS - rippleDistance * 85; // Gradually decrease brightness towards the edge of the ring
-            } else { 
+                brightness = MAX_BRIGHTNESS -
+                             rippleDistance * 85; // Gradually decrease brightness towards the edge of the ring
+            } else {
                 // this part isn't really required (as brightness is set to 0 by default), but here for readability
                 // If the pixel is outside the ring
                 brightness = 0; // Dim brightness value (completely dark)
             }
-          
+
             // set the desired color for the LED
-            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
+            leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS,
+                                  b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
         }
     }
 
@@ -106,9 +184,9 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y) {
  * Calculates the distance between two (x, y) points provided.
 */
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
-  float dx = abs(x2 - x1);
-  float dy = abs(y2 - y1);
-  return sqrt(dx * dx + dy * dy);
+    float dx = abs(x2 - x1);
+    float dy = abs(y2 - y1);
+    return sqrt(dx * dx + dy * dy);
 }
 
 /**
@@ -119,11 +197,11 @@ uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
  * (Deprecated, should be moved to below soon unless use is found)
 */
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
-  uint8_t delta = abs(rippleCounter - distance);
-  uint8_t maxDistance = NUM_LEDS / 2;
-  uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
-  // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
-  return brightness > MAX_BRIGHTNESS ? 0 : brightness;
+    uint8_t delta = abs(rippleCounter - distance);
+    uint8_t maxDistance = NUM_LEDS / 2;
+    uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
+    // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
+    return brightness > MAX_BRIGHTNESS ? 0 : brightness;
 }
 
 /**
@@ -134,48 +212,46 @@ uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
  * If something doesn't look right, try changing the value of kMatrixVertical above.
  * If that doesn't work, try changing kMatrixSerpentineLayout (not applicable for testbench, we know the value it needs to be).
 */
-uint16_t XY(uint8_t x, uint8_t y)
-{
-  int i;
-  
-  if( kMatrixSerpentineLayout == false) {
-    if (kMatrixVertical == false) {
-      i = (y * kMatrixWidth) + x;
-    } else {
-      i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
-    }
-  }
+uint16_t XY(uint8_t x, uint8_t y) {
+    int i;
 
-  if( kMatrixSerpentineLayout == true) {
-    if (kMatrixVertical == false) {
-      if( y & 0x01) {
-        // Odd rows run backwards
-        uint8_t reverseX = (kMatrixWidth - 1) - x;
-        i = (y * kMatrixWidth) + reverseX;
-      } else {
-        // Even rows run forwards
-        i = (y * kMatrixWidth) + x;
-      }
-    } else { // vertical positioning
-      if ( x & 0x01) {
-        i = kMatrixHeight * (kMatrixWidth - (x+1))+y;
-      } else {
-        i = kMatrixHeight * (kMatrixWidth - x) - (y+1);
-      }
+    if (kMatrixSerpentineLayout == false) {
+        if (kMatrixVertical == false) {
+            i = (y * kMatrixWidth) + x;
+        } else {
+            i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
+        }
     }
-  }
-  
-  return i;
+
+    if (kMatrixSerpentineLayout == true) {
+        if (kMatrixVertical == false) {
+            if (y & 0x01) {
+                // Odd rows run backwards
+                uint8_t reverseX = (kMatrixWidth - 1) - x;
+                i = (y * kMatrixWidth) + reverseX;
+            } else {
+                // Even rows run forwards
+                i = (y * kMatrixWidth) + x;
+            }
+        } else { // vertical positioning
+            if (x & 0x01) {
+                i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
+            } else {
+                i = kMatrixHeight * (kMatrixWidth - x) - (y + 1);
+            }
+        }
+    }
+
+    return i;
 }
 
 /**
  * Makes sure the specified point is in bounds before calculating its (x, y) position.
 */
-uint16_t XYsafe(uint8_t x, uint8_t y)
-{
-  if( x >= kMatrixWidth) return -1;
-  if( y >= kMatrixHeight) return -1;
-  return XY(x,y);
+uint16_t XYsafe(uint8_t x, uint8_t y) {
+    if (x >= kMatrixWidth) return -1;
+    if (y >= kMatrixHeight) return -1;
+    return XY(x, y);
 }
 
 
@@ -258,7 +334,7 @@ uint16_t XYsafe(uint8_t x, uint8_t y)
 //                 // If the pixel is outside the ring
 //                 brightness = 0; // Dim brightness value
 //             }
-          
+
 //             leds[XY(x, y)] = CRGB(r * brightness / MAX_BRIGHTNESS, g * brightness / MAX_BRIGHTNESS, b * brightness / MAX_BRIGHTNESS);  // Adjust color as needed
 //         }
 //     }
@@ -308,3 +384,4 @@ uint16_t XYsafe(uint8_t x, uint8_t y)
 //                        |
 //                        |
 //    19 < 18 < 17 < 16 < 15
+# endif
