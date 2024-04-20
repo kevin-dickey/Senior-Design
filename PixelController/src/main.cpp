@@ -35,7 +35,7 @@ void setup() {
 }
 
 void loop() {
-  rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
+  rippleEffect(256, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2); // purple :D
   FastLED.show();
   delay(75);  // adjust delay for speed of the ripple effect  
 }
