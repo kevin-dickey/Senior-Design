@@ -1,0 +1,19 @@
+{
+  "name" : "imgui-emulator",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "e105a86c97b8ab13d4dbe3f7bd9ebc17ece31634",
+  "dependencies" : [ {
+    "name" : "glfw3",
+    "version>=" : "3.4"
+  }, {
+    "name" : "glad",
+    "version>=" : "0.1.36"
+  }, {
+    "name": "imgui",
+    "features": [
+      "glfw-binding",
+      "opengl3-binding"
+    ]
+  }
+  ]
+}
