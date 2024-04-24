@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-#define LED_PIN     22
-#define NUM_LEDS_X  16
-#define NUM_LEDS_Y  16
-#define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
+#define LED_PIN         22
+#define NUM_LEDS_X      16
+#define NUM_LEDS_Y      16
+#define NUM_LEDS        NUM_LEDS_X * NUM_LEDS_Y
 #define MAX_BRIGHTNESS  4 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 
 
@@ -23,11 +23,13 @@
 # endif
 
 
+/* Function Prototypes */
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter); 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter); // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
+
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
