@@ -1,5 +1,5 @@
+#define USE_EMULATOR 0
 
-#include <FastLED.h>
 #include <iostream>
 
 #define LED_PIN     22
@@ -7,12 +7,25 @@
 #define NUM_LEDS_Y  16
 #define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
 #define MAX_BRIGHTNESS  4 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
-#define COLOR_ORDER GRB
-#define CHIPSET     WS2812B
+
+
+# if USE_EMULATOR
+
+#include "../ImGUI_Emulator/Window.h"
+
+# else
+
+#include <FastLED.h>
+
+#define COLOR_ORDER     GRB
+#define CHIPSET         WS2812B
+
+# endif
+
 
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter); 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);
+uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter); // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 
@@ -21,13 +34,27 @@ uint16_t XYsafe(uint8_t x, uint8_t y);
 const uint8_t kMatrixWidth = 16;
 const uint8_t kMatrixHeight = 16;
 // Param for different pixel layouts
-const bool    kMatrixSerpentineLayout = true;
-const bool    kMatrixVertical = false;
+const bool kMatrixSerpentineLayout = true;
+const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 
+
+# if USE_EMULATOR
+void loop_callback() {
+
+    // modified call to meet new method signature
+    static int rippleCountah = 0;
+    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah); // purple :D
+    std ::cout << "Ripple effect frame 1/13" << std::endl;
+}
+
+int main() {
+    emulator(loop_callback);
+}
+# else
 
 /**
  * MARK: Setup
@@ -37,7 +64,6 @@ void setup() {
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
 }
-
 
 /**
  * MARK: Looping
@@ -65,6 +91,8 @@ void loop() {
     // Adjust delay for speed of the ripple effect
     delay(75);
 }
+# endif
+
 
 /**
  * MARK:  Ripple effect
@@ -78,7 +106,7 @@ void loop() {
  *    r = 0-255 value, specifying the amount of red
  *    g = 0-255 value, specifying the amount of green
  *    b = 0-255 value, specifying the amount of blue
- * 
+ *
  * Provide values 0-255 for specifying the color in terms of r, g, and b.
  * Do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
@@ -110,6 +138,7 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int r
   }
 }
 
+
 /**
  * MARK: Distance calculation
 */
@@ -124,20 +153,24 @@ uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t
 }
 
 
+
 /**
  * Scales the brightness of the LEDs based on the distance from the center of the actual ripple in the frame
  * For example, if the width of the ripple is 3 pixels wide, the center would be brightest and the 2 outside
- * pixels would be dimmed slightly. 
- * 
- * (Deprecated, should be moved to below soon unless use is found)
+ * pixels would be dimmed slightly.
+ *
+ * (Not sure if it's actually working as intended to be hoenst :D)
+ * (Effectively Depricated)
 */
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
-  uint8_t delta = abs(rippleCounter - distance);
-  uint8_t maxDistance = NUM_LEDS / 2;
-  uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
+  // uint8_t delta = abs(rippleCounter - distance);
+  // uint8_t maxDistance = NUM_LEDS / 2;
+  // uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
   // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
-  return brightness > MAX_BRIGHTNESS ? 0 : brightness;
+  // return brightness > MAX_BRIGHTNESS ? 0 : brightness;
+  return 0;
 }
+
 
 /**
  * Calculates the (x, y) position of a grid of LEDs.
@@ -181,14 +214,14 @@ uint16_t XY(uint8_t x, uint8_t y)
   return i;
 }
 
+
 /**
  * Makes sure the specified point is in bounds before calculating its (x, y) position.
 */
-uint16_t XYsafe(uint8_t x, uint8_t y)
-{
-  if( x >= kMatrixWidth) return -1;
-  if( y >= kMatrixHeight) return -1;
-  return XY(x,y);
+uint16_t XYsafe(uint8_t x, uint8_t y) {
+    if (x >= kMatrixWidth) return -1;
+    if (y >= kMatrixHeight) return -1;
+    return XY(x, y);
 }
 
 
