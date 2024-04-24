@@ -1,0 +1,6 @@
+/PixelController/.pio/**
+/PixelController/.vscode/c_cpp_properties.json
+/PixelController/.vscode/launch.json
+
+/PixelController/ImGUI_Emulator/.idea/**
+/PixelController/ImGUI_Emulator/cmake-build-*/**

@@ -1,0 +1,22 @@
+image: python:3.11
+
+cache:
+  paths:
+    - ~/.cache/pip
+    - ~/.platformio/.cache
+
+stages:
+  - build
+
+before_script:
+  - pip install -U platformio
+
+PlatformIO-esp32-build:
+  stage: build
+  script: "platformio run -e nodemcu-32s -d ./PixelController/"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - when: never
