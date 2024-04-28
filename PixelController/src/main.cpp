@@ -41,6 +41,9 @@ const bool kMatrixVertical = false;
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 
+// the serial button for the button input
+const int buttonInput = 32;
+
 
 # if USE_EMULATOR
 void loop_callback() {
@@ -63,6 +66,7 @@ void setup() {
   Serial.begin(9600); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
+  pinMode(buttonInput, INPUT);
 }
 
 /**
@@ -70,26 +74,41 @@ void setup() {
 */
 void loop() {
     static int rippleCounter1 = 0; // could also be considered the particular ripple effect's "id"
-    static int rippleCounter2 = 0;
 
-    // Clear the LED array before each frame
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-    // Create frame for first ripple effect
-    rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 4, rippleCounter1); // cyan ripple
-
-    // Create frame for second ripple effect
-    rippleEffect(124, 25, 255, NUM_LEDS_X / 2, NUM_LEDS_Y - NUM_LEDS_Y / 4 - 1, rippleCounter2); // purple ripple
-
-    // Display the frames simultaneously
-    FastLED.show();
+    bool button_status = digitalRead(buttonInput);
     
-    // Increment the counters for the ripple effects (for progressing to next frame of ripple)
-    rippleCounter1++;
-    rippleCounter2++;
+    if (button_status) { // do a full ripple effect 
+
+      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter1);
+        FastLED.show();
+        rippleCounter1++;
+        delay(75);
+      }
+    }
+
+
+    // static int rippleCounter2 = 0;
+
+    // // Clear the LED array before each frame
+    // fill_solid(leds, NUM_LEDS, CRGB::Black);
+
+    // // Create frame for first ripple effect
+    // rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 4, rippleCounter1); // cyan ripple
+
+    // // Create frame for second ripple effect
+    // rippleEffect(124, 25, 255, NUM_LEDS_X / 2, NUM_LEDS_Y - NUM_LEDS_Y / 4 - 1, rippleCounter2); // purple ripple
+
+    // // Display the frames simultaneously
+    // FastLED.show();
     
-    // Adjust delay for speed of the ripple effect
-    delay(75);
+    // // Increment the counters for the ripple effects (for progressing to next frame of ripple)
+    // rippleCounter1++;
+    // rippleCounter2++;
+    
+    // // Adjust delay for speed of the ripple effect
+    // delay(75);
 }
 # endif
 
