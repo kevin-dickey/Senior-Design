@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#define LED_PIN     22
+#define LED_PIN     13
 #define NUM_LEDS_X  16
 #define NUM_LEDS_Y  16
 #define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
