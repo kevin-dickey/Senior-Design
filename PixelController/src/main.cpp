@@ -88,12 +88,21 @@ void loop() {
     bool button3_status = digitalRead(INPUT_BTN_SE);
     bool button4_status = digitalRead(INPUT_BTN_SW);
     
+    // should be removed if we want multiple ripples displaying (will require putting in each ripple in own thread maybe)
+    // so it should be obvious that we remove this.
+    // dunno if Executors (in java) exist for c++ and are supported by arduino, if so -- def use that. super simple.
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
     
     if (button1_status) { // do a full ripple effect 
       Serial.printf("Button 1 pressed, starting ripple...\n");
-      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+      rippleCounter1 = 0; // should be redundant... we'll see
+      for (int i = 0; i < 17; i++) { 
         fill_solid(leds, NUM_LEDS, CRGB::Black);
-        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter1);
+        rippleEffect(28, 194, 255, 4, 4, rippleCounter1);
+        if (rippleCounter1 == 0) { // fixing bug like this instead of fixing my buggy rippleEffect() ;*
+          leds[XY(15, 15)] = CRGB(0, 0, 0);
+        }
         FastLED.show();
         rippleCounter1++;
         delay(75);
@@ -102,9 +111,13 @@ void loop() {
 
     if (button2_status) { // do a full ripple effect 
       Serial.printf("Button 2 pressed, starting ripple...\n");
-      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+      rippleCounter2 = 0; // should be redundant... we'll see
+      for (int i = 0; i < 17; i++) { 
         fill_solid(leds, NUM_LEDS, CRGB::Black);
-        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter2);
+        rippleEffect(69, 201, 14, 11, 11, rippleCounter2);
+        if (rippleCounter2 == 0) { // fixing bug like this instead of fixing my buggy rippleEffect() ;*
+          leds[XY(0, 0)] = CRGB(0, 0, 0);
+        }
         FastLED.show();
         rippleCounter2++;
         delay(75);
@@ -113,9 +126,13 @@ void loop() {
 
     if (button3_status) { // do a full ripple effect 
       Serial.printf("Button 3 pressed, starting ripple...\n");
-      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+      rippleCounter3 = 0; // should be redundant... we'll see
+      for (int i = 0; i < 17; i++) { 
         fill_solid(leds, NUM_LEDS, CRGB::Black);
-        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter3);
+        rippleEffect(93, 84, 116, 11, 4, rippleCounter3);
+        if (rippleCounter3 == 0) { // fixing bug like this instead of fixing my buggy rippleEffect() ;*
+          leds[XY(0, 15)] = CRGB(0, 0, 0);
+        }
         FastLED.show();
         rippleCounter3++;
         delay(75);
@@ -124,16 +141,19 @@ void loop() {
 
     if (button4_status) { // do a full ripple effect 
       Serial.printf("Button 4 pressed, starting ripple...\n");
-      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+      rippleCounter4 = 0; // should be redundant... we'll see
+      for (int i = 0; i < 17; i++) { 
         fill_solid(leds, NUM_LEDS, CRGB::Black);
-        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter4);
-        FastLED.show();
+        rippleEffect(1, 69, 127, 4, 11, rippleCounter4);
+        if (rippleCounter4 == 0) { // fixing bug like this instead of fixing my buggy rippleEffect() ;*
+          leds[XY(15, 0)] = CRGB(0, 0, 0);
+        }
+        FastLED.show();      
         rippleCounter4++;
         delay(75);
       }
+      rippleCounter4 = 0; // should be redundant but we'll see
     }
-
-    delay(50);
 
 
     // static int rippleCounter2 = 0;
@@ -185,11 +205,11 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int r
     for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
       // Calculate distance and ripple distance
       uint8_t distance = calculateDistance(center_x, center_y, x, y);
-      uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance + 1);
+      uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance);
       uint8_t brightness;
 
       // Determine brightness based on distance from center and rippleCounter
-      if (rippleDistance <= 1) {
+      if (rippleDistance <= 1 && rippleCounter != 16) { // added the second parameter SPECIFICALLY FOR PRESENTATION
         brightness = MAX_BRIGHTNESS;
       } else {
         brightness = 0;  // Dim brightness value outside the ripple's ring
