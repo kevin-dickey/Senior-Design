@@ -8,6 +8,11 @@
 #define NUM_LEDS    NUM_LEDS_X * NUM_LEDS_Y
 #define MAX_BRIGHTNESS  4 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 
+/* Declarations for the buttons, number corresponds to pin on the ESP32 */
+#define INPUT_BTN_NE 34
+#define INPUT_BTN_NW 35
+#define INPUT_BTN_SW 32
+#define INPUT_BTN_SE 33
 
 # if USE_EMULATOR
 
@@ -41,9 +46,6 @@ const bool kMatrixVertical = false;
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 
-// the serial button for the button input
-const int buttonInput = 32;
-
 
 # if USE_EMULATOR
 void loop_callback() {
@@ -63,10 +65,13 @@ int main() {
  * MARK: Setup
 */
 void setup() {
-  Serial.begin(9600); // for setting up stuff to print to serial monitor
+  Serial.begin(115200); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
-  pinMode(buttonInput, INPUT);
+  pinMode(INPUT_BTN_NE, INPUT);
+  pinMode(INPUT_BTN_NW, INPUT);
+  pinMode(INPUT_BTN_SE, INPUT);
+  pinMode(INPUT_BTN_SW, INPUT);
 }
 
 /**
@@ -74,11 +79,18 @@ void setup() {
 */
 void loop() {
     static int rippleCounter1 = 0; // could also be considered the particular ripple effect's "id"
+    static int rippleCounter2 = 0;
+    static int rippleCounter3 = 0;
+    static int rippleCounter4 = 0;
 
-    bool button_status = digitalRead(buttonInput);
+    bool button1_status = digitalRead(INPUT_BTN_NE);
+    bool button2_status = digitalRead(INPUT_BTN_NW);
+    bool button3_status = digitalRead(INPUT_BTN_SE);
+    bool button4_status = digitalRead(INPUT_BTN_SW);
     
-    if (button_status) { // do a full ripple effect 
-
+    
+    if (button1_status) { // do a full ripple effect 
+      Serial.printf("Button 1 pressed, starting ripple...\n");
       for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter1);
@@ -87,6 +99,41 @@ void loop() {
         delay(75);
       }
     }
+
+    if (button2_status) { // do a full ripple effect 
+      Serial.printf("Button 2 pressed, starting ripple...\n");
+      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter2);
+        FastLED.show();
+        rippleCounter2++;
+        delay(75);
+      }
+    }
+
+    if (button3_status) { // do a full ripple effect 
+      Serial.printf("Button 3 pressed, starting ripple...\n");
+      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter3);
+        FastLED.show();
+        rippleCounter3++;
+        delay(75);
+      }
+    }
+
+    if (button4_status) { // do a full ripple effect 
+      Serial.printf("Button 4 pressed, starting ripple...\n");
+      for (int i = 0; i < 14; i++) { // i think the ripple effect is 13 frames (on the testbench) ?
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCounter4);
+        FastLED.show();
+        rippleCounter4++;
+        delay(75);
+      }
+    }
+
+    delay(50);
 
 
     // static int rippleCounter2 = 0;
