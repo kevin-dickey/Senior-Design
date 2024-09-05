@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Grid, Paper, Typography, Container, CssBaseline, List, ListItem } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
+import { useNavigate } from 'react-router-dom';  
 
 const darkTheme = createTheme({
   palette: {
@@ -24,6 +25,7 @@ interface FoldersOverviewProps {
 
 const FoldersOverview: React.FC<FoldersOverviewProps> = ({ folders }) => {
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+  const navigate = useNavigate();
 
   const handleFolderClick = (folder: Folder) => {
     setSelectedFolder(folder);
@@ -31,6 +33,11 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({ folders }) => {
 
   const handleBackClick = () => {
     setSelectedFolder(null);
+  };
+
+  const handleFileClick = (fileName: string) => {
+    console.log(fileName); 
+    navigate('/configuration', { state: { fileName } });  
   };
 
   return (
@@ -57,7 +64,11 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({ folders }) => {
                   </Typography>
                   <List>
                     {folder.files.map((file, fileIndex) => (
-                      <ListItem key={fileIndex}>
+                      <ListItem
+                        key={fileIndex}
+                        onClick={() => handleFileClick(file.name)} 
+                        style={{ cursor: 'pointer' }}
+                      >
                         <Typography variant="body2">{file.name}</Typography>
                       </ListItem>
                     ))}
