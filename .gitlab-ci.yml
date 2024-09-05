@@ -17,9 +17,7 @@ PlatformIO-esp32-build:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: always
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - PixelController/**/*
-    - when: manual
+      when: always
