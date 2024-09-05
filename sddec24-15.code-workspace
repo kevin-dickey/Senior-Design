@@ -6,6 +6,10 @@
 		{
 			"name": "FastLED",
 			"path": "FastLED"
+		},
+		{
+			"name": "PixelController",
+			"path": "PixelController"
 		}
 	],
 	"settings": {}
