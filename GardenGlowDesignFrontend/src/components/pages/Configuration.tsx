@@ -72,6 +72,7 @@ const App: React.FC = () => {
                     maxScale={5}
                 >
                     {({ zoomIn, zoomOut, resetTransform }) => (
+                        <div style={{ width: '100%', height: '100%' }}>
                         <TransformComponent wrapperStyle={{ flex: 1 }}>
                             <Box flexDirection="column">
                                 {/* Generate a grid of dots to represent LEDs */}
@@ -92,6 +93,7 @@ const App: React.FC = () => {
                                 ))}
                             </Box>
                         </TransformComponent>
+                        </div>
                     )}
                 </TransformWrapper>
             </Box>
@@ -101,7 +103,7 @@ const App: React.FC = () => {
                 position="absolute"
                 bottom={0}
                 right={0}
-                width="80%"
+                width="83.1%"
                 height="10%"
                 bgcolor="#2a2a2a"
                 p={2}
