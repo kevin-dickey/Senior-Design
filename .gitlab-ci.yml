@@ -13,13 +13,13 @@ before_script:
 
 PlatformIO-esp32-build:
   stage: build
-  only:
-    changes:
-      - PixelController/**/*
   script: "platformio run -e nodemcu-32s -d ./PixelController/"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: always
-    - when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - PixelController/**/*
+    - when: manual
