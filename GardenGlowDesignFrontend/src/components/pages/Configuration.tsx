@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, Slider, Drawer, Divider, IconButton } from '@mui/material';
 import { ExpandLess, ExpandMore, Pause, PlayArrow, FastForward, FastRewind, SkipNext, SkipPrevious } from '@mui/icons-material';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";

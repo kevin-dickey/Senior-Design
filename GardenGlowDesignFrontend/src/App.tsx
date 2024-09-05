@@ -13,7 +13,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginContainer />} />
         <Route path="/configuration" element={<ConfigurationPage />}/>
-        <Route path="/overview" element={<OverviewContainer  />}/>
+        <Route path="/foldersoverview" element={<OverviewContainer  />}/>
       </Routes>
     </Router>
   );
