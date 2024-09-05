@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom'; 
 import { Box, Button, Slider, Drawer, Divider, IconButton } from '@mui/material';
 import { ExpandLess, ExpandMore, Pause, PlayArrow, FastForward, FastRewind, SkipNext, SkipPrevious } from '@mui/icons-material';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -7,6 +8,15 @@ const App: React.FC = () => {
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
     const [isColorsOpen, setIsColorsOpen] = useState(true);
+
+    const location = useLocation();  
+    const fileName = location.state?.fileName;
+
+    useEffect(() => {
+        if (fileName) {
+            console.log("Selected File:", fileName);
+        }
+    }, [fileName]);
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
     const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
@@ -75,7 +85,6 @@ const App: React.FC = () => {
                         <div style={{ width: '100%', height: '100%' }}>
                         <TransformComponent wrapperStyle={{ flex: 1 }}>
                             <Box flexDirection="column">
-                                {/* Generate a grid of dots to represent LEDs */}
                                 {[...Array(50)].map((_, rowIndex) => (
                                     <Box key={rowIndex} display="flex" gap={0.5}>
                                         {[...Array(50)].map((_, colIndex) => (
@@ -109,7 +118,6 @@ const App: React.FC = () => {
                 p={2}
                 zIndex={1}
             >
-                {/**add better time indicator */}
                 <Slider
                     defaultValue={0}
                     aria-label="Time Slider"
