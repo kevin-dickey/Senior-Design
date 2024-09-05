@@ -1,13 +1,17 @@
 export class Layout {
+    shape?: string | null = null;
 
     constructor() {}
 
     toJSON() {
-        return {};
+        return {
+            shape: this.shape
+        };
     }
 }
 
-export class PixelGrid extends Layout {
+export class GridLayout extends Layout {
+    shape = 'grid';
     width: number;
     height: number;
 
