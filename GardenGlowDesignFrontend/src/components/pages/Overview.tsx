@@ -8,15 +8,15 @@ import {List, ListItem, Paper} from '@mui/material';
 
 import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
-import {PixelGrid} from "../serialization/Layout";
+import {RainbowEffect} from "../serialization/Effect";
+import {GridLayout} from "../serialization/Layout";
 import { CreateRainbowEffectFormContainer } from "../editors/RainbowEffectForm/CreateRainbowEffectFormContainer";
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
     const effect = RainbowEffect.emptyEffect();
     show.addEffect(effect);
-    const grid = new PixelGrid(10, 10);
+    const grid = new GridLayout(10, 10);
     show.addLayout(grid);
     return show;
 }
@@ -68,7 +68,7 @@ const Overview: React.FC<OverviewProps> = ({folders}) => {
             </Container>
 
             <ShowFileExport show={show}/>
-            <CreateRainbowEffectFormContainer effect={show.effects[0]} onSubmit={(effect) => console.log(effect)} />
+            <CreateRainbowEffectFormContainer onSubmit={(effect) => console.log(effect)} />
         </ThemeProvider>
     );
 };
