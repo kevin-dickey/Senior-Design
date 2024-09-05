@@ -1,7 +1,5 @@
 export class Layout {
 
-    constructor() {}
-
     toJSON() {
         return {};
     }
