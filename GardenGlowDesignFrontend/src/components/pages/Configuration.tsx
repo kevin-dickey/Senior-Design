@@ -1,12 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Box, Button, Slider, Drawer, Divider, IconButton } from '@mui/material';
-import { ExpandLess, ExpandMore, Pause, PlayArrow, FastForward, FastRewind, SkipNext, SkipPrevious } from '@mui/icons-material';
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import React, {useState, useRef, useEffect} from 'react';
+import {Box, Button, Slider, Drawer, Divider, IconButton} from '@mui/material';
+import {
+    ExpandLess,
+    ExpandMore,
+    Pause,
+    PlayArrow,
+    FastForward,
+    FastRewind,
+    SkipNext,
+    SkipPrevious
+} from '@mui/icons-material';
+import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
+import {EffectList} from "../editors/EffectList";
+import {ShowFileExport} from "../serialization/ShowFileExport";
+import {Show} from "../serialization/Show";
+import {Effect, RainbowEffect} from "../serialization/Effect";
+import {GridLayout} from "../serialization/Layout";
+import {
+    EditRainbowEffectFormContainer
+} from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
 
-const App: React.FC = () => {
+const makeShow = () => {
+    const show = new Show('Basic Show File', 10000);
+    const effect = RainbowEffect.emptyEffect();
+
+    show.addEffect(effect);
+    const effect2 = new RainbowEffect(1000, 1000, ['#420', '#696969'], 1000, 'Crazy Train');
+    show.addEffect(effect2);
+
+    const grid = new GridLayout(10, 10);
+    show.addLayout(grid);
+
+    return show;
+}
+
+const Configuration: React.FC = () => {
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
     const [isColorsOpen, setIsColorsOpen] = useState(true);
+    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
+
+    const [show, setShow] = useState(makeShow());
+    const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
+
+    const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
+        // Create a copy of the show
+        // Update the effect in the copy
+        // Set the show to the copy
+        const updatedShow = new Show(show.name, show.duration);
+        updatedShow.setEffects(show.effects.map(effect => {
+            if (effect.id === effectToUpdateId) {
+                return submittedEffect;
+            }
+            return effect;
+        }));
+        setShow(updatedShow);
+    };
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
     const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
@@ -29,28 +78,62 @@ const App: React.FC = () => {
                 }}
             >
                 <Box>
-                    <Button fullWidth onClick={toggleShapes} sx={{ color: '#fff', justifyContent: 'flex-start' }}>
-                        Shapes {isShapesOpen ? <ExpandLess /> : <ExpandMore />}
+                    <Button fullWidth onClick={toggleShapes}
+                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                        Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
                     </Button>
-                    {isShapesOpen && <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>Shapes content</Box>}
+                    {isShapesOpen && <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Shapes content</Box>}
                 </Box>
-                <Divider sx={{ bgcolor: '#444' }} />
+                <Divider sx={{bgcolor: '#444'}}/>
                 <Box>
-                    <Button fullWidth onClick={toggleEffects} sx={{ color: '#fff', justifyContent: 'flex-start' }}>
-                        Effects {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
+                    <Button fullWidth onClick={toggleEffects}
+                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                        Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
                     </Button>
-                    {isEffectsOpen && <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>Effects content</Box>}
+                    {isEffectsOpen && <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Effects content</Box>}
                 </Box>
-                <Divider sx={{ bgcolor: '#444' }} />
+                <Divider sx={{bgcolor: '#444'}}/>
                 <Box>
-                    <Button fullWidth onClick={toggleColors} sx={{ color: '#fff', justifyContent: 'flex-start' }}>
-                        Colors {isColorsOpen ? <ExpandLess /> : <ExpandMore />}
+                    <Button fullWidth onClick={toggleColors}
+                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                        Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
                     </Button>
                     {isColorsOpen && (
-                        <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
-                            <input type="color" value="#9731f2" />
+                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                            <input type="color" value="#9731f2" readOnly={true}/>
                         </Box>
                     )}
+                </Box>
+                <Divider sx={{bgcolor: '#444'}}/>
+                <Box>
+                    <Button
+                        fullWidth
+                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
+                        sx={{color: '#fff', justifyContent: 'flex-start'}}
+                    >
+                        Effects in Show {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
+                    </Button>
+                    {isEffectsListOpen && (
+                        <div>
+                            <EffectList
+                                effects={show.effects}
+                                onEffectSelected={(effectId: number) => {
+                                    const finalSelectedId = selectedEffectId === effectId ? null : effectId;
+                                    setSelectedEffectId(finalSelectedId);
+                                }}/>
+                            <Button
+                                onClick={() => {
+                                    const effect = RainbowEffect.emptyEffect();
+                                    show.addEffect(effect);
+                                    setSelectedEffectId(effect.id);
+                                }}
+                            >
+                                Add Effect
+                            </Button>
+                        </div>
+                    )}
+
+                    <ShowFileExport show={show}/>
                 </Box>
             </Drawer>
 
@@ -59,7 +142,7 @@ const App: React.FC = () => {
                 sx={{
                     width: '85%',
                     height: '85%',
-                    position:'absolute',
+                    position: 'absolute',
                     top: 0,
                     right: 0,
                     overflow: 'hidden',
@@ -67,12 +150,12 @@ const App: React.FC = () => {
             >
                 <TransformWrapper
                     initialScale={1}
-                    wheel={{ step: 0.5 }}
+                    wheel={{step: 0.5}}
                     minScale={.5}
                     maxScale={5}
                 >
-                    {({ zoomIn, zoomOut, resetTransform }) => (
-                        <TransformComponent wrapperStyle={{ flex: 1 }}>
+                    {({zoomIn, zoomOut, resetTransform}) => (
+                        <TransformComponent wrapperStyle={{flex: 1}}>
                             <Box flexDirection="column">
                                 {/* Generate a grid of dots to represent LEDs */}
                                 {[...Array(50)].map((_, rowIndex) => (
@@ -94,6 +177,22 @@ const App: React.FC = () => {
                         </TransformComponent>
                     )}
                 </TransformWrapper>
+
+                {selectedEffectId != null &&
+                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                        {/* TODO: Conditionally render Edit/Create containers based on the
+                             action being performed. Don't add a new effect to the effect list
+                              before it's saved. */}
+                        <EditRainbowEffectFormContainer
+                            key={selectedEffectId}
+                            // TODO: This will error if selectedEffectId isn't present in show.effects
+                            effect={show.getEffectById(selectedEffectId)!}
+                            onSubmit={(effect: any) => {
+                                console.log(effect);
+                                updateEffect(effect, selectedEffectId);
+                            }}/>
+                    </Box>
+                }
             </Box>
 
             {/* Timeline Container */}
@@ -114,26 +213,26 @@ const App: React.FC = () => {
                     valueLabelDisplay="auto"
                     min={0}
                     max={100}
-                    sx={{ width: '100%', color: '#fff' }}
+                    sx={{width: '100%', color: '#fff'}}
                 />
                 <Box mt={2} display="flex" gap={2} justifyContent="center">
-                    <IconButton aria-label="Skip Previous" sx={{ color: '#fff' }}>
-                        <SkipPrevious />
+                    <IconButton aria-label="Skip Previous" sx={{color: '#fff'}}>
+                        <SkipPrevious/>
                     </IconButton>
-                    <IconButton aria-label="Rewind" sx={{ color: '#fff' }}>
-                        <FastRewind />
+                    <IconButton aria-label="Rewind" sx={{color: '#fff'}}>
+                        <FastRewind/>
                     </IconButton>
-                    <IconButton aria-label="Pause" sx={{ color: '#fff' }}>
-                        <Pause />
+                    <IconButton aria-label="Pause" sx={{color: '#fff'}}>
+                        <Pause/>
                     </IconButton>
-                    <IconButton aria-label="Play" sx={{ color: '#fff' }}>
-                        <PlayArrow />
+                    <IconButton aria-label="Play" sx={{color: '#fff'}}>
+                        <PlayArrow/>
                     </IconButton>
-                    <IconButton aria-label="Fast Forward" sx={{ color: '#fff' }}>
-                        <FastForward />
+                    <IconButton aria-label="Fast Forward" sx={{color: '#fff'}}>
+                        <FastForward/>
                     </IconButton>
-                    <IconButton aria-label="Skip Next" sx={{ color: '#fff' }}>
-                        <SkipNext />
+                    <IconButton aria-label="Skip Next" sx={{color: '#fff'}}>
+                        <SkipNext/>
                     </IconButton>
                 </Box>
             </Box>
@@ -141,4 +240,4 @@ const App: React.FC = () => {
     );
 };
 
-export default App;
+export default Configuration;

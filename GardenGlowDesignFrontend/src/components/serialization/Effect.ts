@@ -11,6 +11,7 @@ export class Translation {
 }
 
 export class Effect {
+    id: number;
     name: string;
     origin: Coordinate;
     startTimeMs: number;
@@ -20,7 +21,9 @@ export class Effect {
     constructor(name: string,
                 origin: Coordinate,
                 startTimeMs: number,
-                durationMs: number) {
+                durationMs: number,
+                id: number = -1) {
+        this.id = id;
         this.name = name;
         this.origin = origin;
         this.startTimeMs = startTimeMs;
@@ -44,12 +47,15 @@ export class RainbowEffect extends Effect {
     colors: string[];
     speed: number;
 
-    constructor(startTimeMs: number,
-                durationMs: number,
-                colors: string[],
-                speed: number,
-                name: string = 'rainbow') {
-        super(name, new Coordinate(0, 0), startTimeMs, durationMs);
+    constructor(
+        startTimeMs: number,
+        durationMs: number,
+        colors: string[],
+        speed: number,
+        name: string = 'rainbow',
+        id: number = -1
+    ) {
+        super(name, new Coordinate(0, 0), startTimeMs, durationMs, id);
         this.colors = colors;
         this.speed = speed;
     }

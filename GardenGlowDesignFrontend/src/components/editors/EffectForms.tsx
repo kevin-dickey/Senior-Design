@@ -27,12 +27,8 @@ export const EffectForm: React.FC<EffectFormProps> = ({ effect, onSubmit, childr
             <Field id="startTimeMs" name="startTimeMs" type="number" />
           </div>
           <div>
-            <label htmlFor="duration">End</label>
-            <Field id="duration" name="duration" type="number" />
-          </div>
-          <div>
-            <label htmlFor="layer">Layer</label>
-            <Field id="layer" name="layer" type="number" />
+            <label htmlFor="duration">Duration</label>
+            <Field id="durationMs" name="durationMs" type="number" />
           </div>
           {children}
           <button type="submit">Save</button>
