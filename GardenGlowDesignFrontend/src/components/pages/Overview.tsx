@@ -10,7 +10,6 @@ import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {RainbowEffect} from "../serialization/Effect";
 import {GridLayout} from "../serialization/Layout";
-import { CreateRainbowEffectFormContainer } from "../editors/RainbowEffectForm/CreateRainbowEffectFormContainer";
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
@@ -68,7 +67,6 @@ const Overview: React.FC<OverviewProps> = ({folders}) => {
             </Container>
 
             <ShowFileExport show={show}/>
-            <CreateRainbowEffectFormContainer onSubmit={(effect) => console.log(effect)} />
         </ThemeProvider>
     );
 };
