@@ -4,7 +4,6 @@ import {Effect, RainbowEffect} from '../../serialization/Effect';
 import { RainbowEffectFormPresentational } from './RainbowEffectFormPresentational';
 
 interface RainbowEffectFormContainerProps {
-  effect: Effect;
   onSubmit: (effect: Effect) => void;
 }
 
@@ -16,6 +15,5 @@ export const CreateRainbowEffectFormContainer:
   };
 
   const effect = RainbowEffect.emptyEffect();
-
   return <RainbowEffectFormPresentational effect={effect} onSubmit={handleSubmit} />;
 };
