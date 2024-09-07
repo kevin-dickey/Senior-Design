@@ -7,11 +7,12 @@ interface EffectListProps {
     // This should be the set function from useState in Configuration.tsx
 }
 
-export const EffectList: React.FC<EffectListProps> =
-    ({effects, onEffectSelected}) => {
+export const EffectList: React.FC<EffectListProps> = ({effects, onEffectSelected}) => {
+    const sortedEffects = effects.sort((a, b) => a.startTimeMs - b.startTimeMs);
+
     return (
         <ul>
-            {effects.map((effect, index) => (
+            {sortedEffects.map((effect, index) => (
                 <li key={index} onClick={() => onEffectSelected(effect.id)}>
                     {effect.name}
                 </li>

@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState} from 'react';
 import {Box, Button, Slider, Drawer, Divider, IconButton} from '@mui/material';
 import {
     ExpandLess,
@@ -56,6 +56,12 @@ const Configuration: React.FC = () => {
         }));
         setShow(updatedShow);
     };
+
+    const deleteEffect = (effectId: number) => {
+        const updatedShow = new Show(show.name, show.duration);
+        updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
+        setShow(updatedShow);
+    }
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
     const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
@@ -188,9 +194,15 @@ const Configuration: React.FC = () => {
                             // TODO: This will error if selectedEffectId isn't present in show.effects
                             effect={show.getEffectById(selectedEffectId)!}
                             onSubmit={(effect: any) => {
-                                console.log(effect);
+                                console.log("Saving effect: " + effect);
                                 updateEffect(effect, selectedEffectId);
-                            }}/>
+                            }}
+                            onDelete={(effectId: number) => {
+                                console.log("Deleting effect: " + effectId);
+                                deleteEffect(effectId);
+                                setSelectedEffectId(null);
+                            }}
+                        />
                     </Box>
                 }
             </Box>
