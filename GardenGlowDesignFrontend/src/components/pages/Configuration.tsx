@@ -8,10 +8,11 @@ import {
     FastForward,
     FastRewind,
     SkipNext,
-    SkipPrevious
+    SkipPrevious,
+    Save,
 } from '@mui/icons-material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {EffectList} from "../editors/EffectList";
+import {EffectList, validateEffects} from "../editors/EffectList";
 import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
@@ -32,6 +33,15 @@ const makeShow = () => {
     show.addLayout(grid);
 
     return show;
+}
+
+const saveShow = (show: Show) => {
+    // TODO: Implement saving to device LocalStorage
+    console.log('Saving show: ' + show.name);
+    validateEffects(show.effects).then((errors) => {
+        console.log(errors)
+    });
+    console.log(show);
 }
 
 const Configuration: React.FC = () => {
@@ -139,6 +149,13 @@ const Configuration: React.FC = () => {
                         </div>
                     )}
 
+                    <Button
+                        variant="contained"
+                        startIcon={<Save />}
+                        onClick={() => saveShow(show)}
+                    >
+                        Save Show
+                    </Button>
                     <ShowFileExport show={show}/>
                 </Box>
             </Drawer>
