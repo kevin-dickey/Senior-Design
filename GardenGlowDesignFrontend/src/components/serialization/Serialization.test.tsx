@@ -1,7 +1,7 @@
 import {Show} from './Show';
 import {GridLayout} from './Layout';
 import {Effect} from "./Effect";
-import {Coordinate} from "./Coordinate";
+import {Pair} from "./Pair";
 
 test('serializes simple 10x10 layout', () => {
     const grid = new GridLayout(10, 10);
@@ -9,15 +9,14 @@ test('serializes simple 10x10 layout', () => {
     expect(json).toEqual('{"shape":"grid","width":10,"height":10}');
 });
 
+const effect = new Effect('rainbow', new Pair(0, 0), new Pair(20, 20), 1000, 5000, undefined);
 
 test('serializes basic rainbow effect', () => {
-    const effect = new Effect('rainbow', new Coordinate(0, 0), 1000, 5000);
     const json = JSON.stringify(effect);
     expect(json).toEqual('{"name":"rainbow","startTime":1000,"duration":5000}');
 });
 
 test('serializes show file containing rainbow', () => {
-    const effect = new Effect('rainbow', new Coordinate(0, 0), 1000, 5000);
     const grid = new GridLayout(10, 10);
     const show = new Show('test', 10000);
     show.addEffect(effect);

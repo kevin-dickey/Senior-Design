@@ -1,4 +1,4 @@
-export class Coordinate {
+export class Pair {
     x: number;
     y: number;
 

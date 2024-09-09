@@ -14,8 +14,9 @@ export class Show {
         this.layouts = [];
     }
 
-    addEffect(effect: Effect) {
+    addEffect(effect: Effect) : number {
         this.effects.push(effect);
+        return effect.id;
     }
 
     addLayout(layout: Layout) {
