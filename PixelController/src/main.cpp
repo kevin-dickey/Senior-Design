@@ -88,23 +88,23 @@ const char *pumpkin =
     "ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff "
     "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
 
-uint32_t ghost[NUM_LEDS] = {
-    0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x000000, 0x0000FF, 0x0000FF, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x0000FF, 0x0000FF, 0x00FFFF, 0x00FFFF, 0x0000FF, 0x0000FF, 0x000000,
-    0x000000, 0x00FFFF, 0x00FFFF, 0x00FFFF, 0x00FFFF, 0x00FFFF, 0x00FFFF, 0x000000,
-    0x000000, 0x00FFFF, 0x00FFFF, 0x0000FF, 0x0000FF, 0x00FFFF, 0x00FFFF, 0x000000,
-    0x000000, 0x0000FF, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x0000FF, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000, 0x0000FF, 0x000000, 0x000000,
-    0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000};
+const char *ghost =
+    "494949 494949 4a4a4a 494949 494949 494949 494949 000000 000000 4b4b4b 494949 494949 4a4a4a 494949 494949 494949 "
+    "494949 494949 494949 494949 000000 000000 000000 000000 000000 000000 000000 494949 494949 494949 494949 494949 "
+    "494949 494949 494949 000000 000000 fdfdfd ffffff ffffff ffffff fefefe 000000 000000 000000 494949 494949 494949 "
+    "494949 494949 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 494949 494949 "
+    "494949 000000 000000 ffffff ffffff ffffff ffffff f7f7f7 f7f7f7 ffffff ffffff ffffff ffffff 000000 000000 494949 "
+    "494949 000000 ffffff ffffff 000000 ffffff ffffff 000000 ffffff f5f5f5 ffffff ffffff ffffff ffffff 000000 4a4a4a "
+    "494949 000000 ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 4a4a4a "
+    "494949 000000 ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 4a4a4a "
+    "494949 000000 ffffff 000000 ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff 000000 4a4a4a "
+    "494949 000000 ffffff f5f5f5 ffffff fafafa ffffff ffffff ffffff ffffff ffffff f9f9f9 ffffff ffffff 000000 4a4a4a "
+    "000000 000000 ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 4a4a4a "
+    "000000 ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 ffffff ffffff ffffff ffffff 000000 474747 "
+    "000000 ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff 000000 000000 "
+    "000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 fdfdfd ffffff ffffff eeeeee 000000 "
+    "494949 494949 494949 494949 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff f6f6f6 000000 000000 "
+    "494949 494949 494949 494949 494949 494949 494949 000000 000000 000000 000000 000000 000000 000000 494949 494949";
 
 void setup() {
   Serial.begin(115200);                                                                          // for setting up stuff to print to serial monitor
@@ -113,10 +113,13 @@ void setup() {
   fill_solid(leds, NUM_LEDS, CRGB::Black);
   FastLED.show();
 
-  // Parse the bitmap data
-  // parseBitmapData(pumpkin);          // works
+  /**** these DO work ****/
+  // parseBitmapData(pumpkin);
+  parseBitmapData(ghost);
+
+  /**** these DON'T work ****/
   // parseBitmapData(ghost, NUM_LEDS);  // doesn't work
-  loadBMP("../ghost.bmp");  // unable to find the image for some reason
+  // loadBMP("../ghost.bmp");  // unable to find the image, needs to be stored (and referenced) locally w/ respect to the esp32... cringe yucky gross
 }
 
 void loop() {
