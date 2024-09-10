@@ -35,12 +35,12 @@ export class Show {
         this.effects = effects;
     }
 
-    addEffect(effect: Effect) {
+    addEffect(effect: Effect) : number {
         if (effect.id === -1) {
             effect.id = this.nextEffectId();
         }
-
         this.effects.push(effect);
+        return effect.id
     }
 
     addLayout(layout: Layout) {
