@@ -1,6 +1,9 @@
-// OverviewContainer.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import FoldersOverview from '../components/pages/FoldersOverview';
+import AddNewFolder from '../components/pages/AddNewFolder';
+import AddNewFile from '../components/pages/AddNewFile';
+
 
 const fakeData = [
   {
@@ -159,9 +162,30 @@ const fakeData = [
   }
 ];
 
-
 const FoldersOverviewContainer: React.FC = () => {
-  return <FoldersOverview folders={fakeData} />;
+  const [folders, setFolders] = useState(fakeData);
+
+  const addNewFolder = (folderName: string) => {
+    setFolders([...folders, { name: folderName, files: [] }]);
+  };
+
+  const addNewFile = (fileName: string, folderName: string) => {
+    setFolders(
+      folders.map(folder =>
+        folder.name === folderName
+          ? { ...folder, files: [...folder.files, { name: fileName }] }
+          : folder
+      )
+    );
+  };
+
+  return (
+    <Routes>
+      <Route path="/" element={<FoldersOverview folders={folders} onAddFolder={addNewFolder} onAddFile={addNewFile} />} />
+      <Route path="/add-folder" element={<AddNewFolder onAddFolder={addNewFolder} />} />
+      <Route path="/add-file" element={<AddNewFile folders={folders} onAddFile={addNewFile} />} />
+    </Routes>
+  );
 };
 
 export default FoldersOverviewContainer;
