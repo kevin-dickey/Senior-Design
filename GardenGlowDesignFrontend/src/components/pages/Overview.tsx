@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {Link} from "react-router-dom";
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -6,22 +7,7 @@ import Container from '@mui/material/Container';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 import {List, ListItem, Paper} from '@mui/material';
 
-import {ShowFileExport} from "../serialization/ShowFileExport";
-import {Show} from "../serialization/Show";
-import {RainbowEffect} from "../serialization/Effect";
-import {GridLayout} from "../serialization/Layout";
 import storageManager from "../../Managers/ShowStorageManager";
-
-const makeShow = () => {
-    const show = new Show('Basic Show File', 10000);
-    const effect = RainbowEffect.emptyEffect();
-    show.addEffect(effect);
-    const grid = new GridLayout(10, 10);
-    show.addLayout(grid);
-    return show;
-}
-
-const show = makeShow();
 
 const darkTheme = createTheme({
     palette: {
@@ -32,6 +18,7 @@ const darkTheme = createTheme({
 
 interface File {
     name: string;
+    path: string;
 }
 
 interface Folder {
@@ -55,7 +42,10 @@ const reduceFiles = (files: string[]) : Folder[] => {
             acc.push(folder);
         }
 
-        folder.files.push({name: storageManager.loadShow(file).name});
+        folder.files.push({
+            name: storageManager.loadShow(file).name,
+            path: file,
+        });
         return acc;
     }, []);
 }
@@ -78,13 +68,20 @@ const Overview: React.FC<OverviewProps> = () => {
                                 <List>
                                     {folder.files.map((file, fileIndex) => (
                                         <ListItem key={fileIndex}>
-                                            <Typography variant="body2">{file.name}</Typography>
+                                            <Link to='/configuration' state={{ path: file.path }}>
+                                                <Typography variant="body2">{file.name}</Typography>
+                                            </Link>
                                         </ListItem>
                                     ))}
                                 </List>
                             </Paper>
                         </Grid>
                     ))}
+                    <Grid item xs={12}>
+                        <Link to='/configuration'>
+                            <Typography variant="h6">Create New Show</Typography>
+                        </Link>
+                    </Grid>
                 </Grid>
             </Container>
         </ThemeProvider>
