@@ -14,9 +14,33 @@ export class Show {
         this.layouts = [];
     }
 
+    private nextEffectId() {
+        // Find the max id of all effects and return max + 1
+        if (this.effects.length === 0) {
+            return 1;
+        }
+
+        const max = () => this.effects.reduce((prev, effect) => {
+            return effect.id > prev.id ? effect : prev;
+        });
+
+        return max().id + 1;
+    }
+
+    getEffectById(id: number): Effect | undefined {
+        return this.effects.find(effect => effect.id === id);
+    }
+
+    setEffects(effects: Effect[]) {
+        this.effects = effects;
+    }
+
     addEffect(effect: Effect) : number {
+        if (effect.id === -1) {
+            effect.id = this.nextEffectId();
+        }
         this.effects.push(effect);
-        return effect.id;
+        return effect.id
     }
 
     addLayout(layout: Layout) {

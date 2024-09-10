@@ -2,9 +2,10 @@
 
 const char *glsl_version;
 
-GLFWwindow *createWindow() {
+
+GLFWwindow *Window::createWindow() {
     // Setup window
-    glfwSetErrorCallback(glfw_error_callback);
+    glfwSetErrorCallback(Window::glfw_error_callback);
     if (!glfwInit())
         throw std::runtime_error("Unable to initialize GLFW");
 
@@ -25,7 +26,7 @@ GLFWwindow *createWindow() {
 # endif
 
     // Create window with graphics context
-    GLFWwindow *window = glfwCreateWindow(1920, 1280, "Dear ImGui - Emulator", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(1920, 1280, "Dear ImGui - Emulator", nullptr, nullptr);
     if (window == nullptr)
         throw std::runtime_error("Unable to create GLFW window");
 
@@ -41,31 +42,17 @@ GLFWwindow *createWindow() {
     return window;
 }
 
-void glfw_error_callback(int error, const char *description) {
+void Window::glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-int emulator(MainloopCallback callback) {
-    // Setup window
-    GLFWwindow *window = createWindow();
-
-    Emulator emulator;
-    emulator.Init(window, glsl_version);
-
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        callback();
-
-        emulator.NewFrame();
-        emulator.Update();
-        emulator.Render();
-        // Output the updated GLFW framebuffer to the window.
-        glfwSwapBuffers(window);
-    }
-    emulator.Shutdown();
-    return 0;
+void Window::clearWindow(GLFWwindow *window) {
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    glClearColor(clear_color.x * clear_color.w,
+                 clear_color.y * clear_color.w,
+                 clear_color.z * clear_color.w,
+                 clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
-
