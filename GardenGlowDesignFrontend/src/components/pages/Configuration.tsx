@@ -17,6 +17,7 @@ import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
 import {GridLayout} from "../serialization/Layout";
+import {LocalStorageManager} from "../../Managers/ShowStorageManager";
 import {
     EditRainbowEffectFormContainer
 } from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
@@ -37,16 +38,9 @@ const makeShow = () => {
     return show;
 }
 
-const saveShow = (show: Show) => {
-    // TODO: Implement saving to device LocalStorage
-    console.log('Saving show: ' + show.name);
-    validateEffects(show.effects).then((errors) => {
-        console.log(errors)
-    });
-    console.log(show);
-}
-
 const Configuration: React.FC = () => {
+    const storageManager = new LocalStorageManager();
+
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
     const [isColorsOpen, setIsColorsOpen] = useState(true);
@@ -74,6 +68,23 @@ const Configuration: React.FC = () => {
         updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
         setShow(updatedShow);
     }
+
+    const saveShow = async (show: Show) => {
+           // TODO: Implement saving to device LocalStorage
+        console.log('Saving show: ' + show.name);
+        console.log(show);
+
+        const errors = await validateEffects(show.effects);
+        if (errors.length > 0) {
+            console.log(`Errors found: ${errors}`);
+            console.log('Show not saved. Please fix errors and try again.');
+            return;
+        }
+        storageManager.saveShow(`test/${show.getFileName()}`, show);
+        console.log('Show saved successfully');
+    }
+
+    // TODO: Save As
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
     const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
