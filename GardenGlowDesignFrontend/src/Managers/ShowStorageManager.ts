@@ -47,3 +47,6 @@ export class LocalStorageManager implements IShowStorage {
         return shows;
     }
 }
+
+const storageManager = new LocalStorageManager();
+export default storageManager;

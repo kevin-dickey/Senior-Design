@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -10,6 +10,7 @@ import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {RainbowEffect} from "../serialization/Effect";
 import {GridLayout} from "../serialization/Layout";
+import storageManager from "../../Managers/ShowStorageManager";
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
@@ -42,7 +43,28 @@ interface OverviewProps {
     folders: Folder[];
 }
 
-const Overview: React.FC<OverviewProps> = ({folders}) => {
+const reduceFiles = (files: string[]) : Folder[] => {
+    return files.reduce((acc: Folder[], file: string) => {
+        const parts = file.split('/');
+        const folderName = parts[0];
+
+        // Find the folder in the accumulator
+        let folder = acc.find(f => f.name === folderName);
+        if (!folder) {
+            folder = {name: folderName, files: []};
+            acc.push(folder);
+        }
+
+        folder.files.push({name: storageManager.loadShow(file).name});
+        return acc;
+    }, []);
+}
+
+const Overview: React.FC<OverviewProps> = () => {
+    const [folders, setFolders] = useState(reduceFiles(storageManager.listShows()));
+
+    // Convert the list of file paths to a list of folders and files
+
     return (
         <ThemeProvider theme={darkTheme}>
             <Container component="main">
@@ -65,8 +87,6 @@ const Overview: React.FC<OverviewProps> = ({folders}) => {
                     ))}
                 </Grid>
             </Container>
-
-            <ShowFileExport show={show}/>
         </ThemeProvider>
     );
 };
