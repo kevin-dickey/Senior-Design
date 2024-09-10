@@ -20,13 +20,15 @@ import {GridLayout} from "../serialization/Layout";
 import {
     EditRainbowEffectFormContainer
 } from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
+import {Pair} from "../serialization/Pair";
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
     const effect = RainbowEffect.emptyEffect();
 
     show.addEffect(effect);
-    const effect2 = new RainbowEffect(1000, 1000, ['#420', '#696969'], 1000, 'Crazy Train');
+    const effect2 = new RainbowEffect(new Pair(0, 0), new Pair(16, 16),
+        1000, 1000, ['#420', '#696969'], 1000, 'Crazy Train');
     show.addEffect(effect2);
 
     const grid = new GridLayout(10, 10);

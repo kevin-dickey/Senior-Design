@@ -6,6 +6,21 @@ import Container from '@mui/material/Container';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 import {List, ListItem, Paper} from '@mui/material';
 
+import {ShowFileExport} from "../serialization/ShowFileExport";
+import {Show} from "../serialization/Show";
+import {RainbowEffect} from "../serialization/Effect";
+import {GridLayout} from "../serialization/Layout";
+
+const makeShow = () => {
+    const show = new Show('Basic Show File', 10000);
+    const effect = RainbowEffect.emptyEffect();
+    show.addEffect(effect);
+    const grid = new GridLayout(10, 10);
+    show.addLayout(grid);
+    return show;
+}
+
+const show = makeShow();
 
 const darkTheme = createTheme({
     palette: {
@@ -51,6 +66,7 @@ const Overview: React.FC<OverviewProps> = ({folders}) => {
                 </Grid>
             </Container>
 
+            <ShowFileExport show={show}/>
         </ThemeProvider>
     );
 };
