@@ -53,7 +53,9 @@ const Configuration: React.FC = () => {
     useEffect(() => {
         if (location.state && location.state!.path) {
             console.log('Loaded show!: ' + location.state!.path);
-            setShow(storageManager.loadShow(location.state!.path));
+            const serializedShow = storageManager.loadShow(location.state!.path);
+            console.log(serializedShow);
+            setShow(serializedShow);
         } else {
             console.log('Creating new show!');
             setShow(makeShow());
@@ -173,7 +175,7 @@ const Configuration: React.FC = () => {
                                     <Button
                                         onClick={() => {
                                             const effect = RainbowEffect.emptyEffect();
-                                            show!.addEffect(effect);
+                                            show.addEffect(effect);
                                             setSelectedEffectId(effect.id);
                                         }}
                                     >

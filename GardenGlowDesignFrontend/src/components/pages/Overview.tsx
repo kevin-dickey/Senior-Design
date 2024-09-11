@@ -53,8 +53,6 @@ const reduceFiles = (files: string[]) : Folder[] => {
 const Overview: React.FC<OverviewProps> = () => {
     const [folders, setFolders] = useState(reduceFiles(storageManager.listShows()));
 
-    // Convert the list of file paths to a list of folders and files
-
     return (
         <ThemeProvider theme={darkTheme}>
             <Container component="main">

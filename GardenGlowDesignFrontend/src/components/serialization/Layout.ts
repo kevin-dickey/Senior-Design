@@ -6,6 +6,12 @@ export class Layout {
             shape: this.shape
         };
     }
+
+    static fromJSON(data: any) : Layout{
+        const layout = new Layout();
+        Object.assign(layout, data);
+        return layout;
+    }
 }
 
 export class GridLayout extends Layout {

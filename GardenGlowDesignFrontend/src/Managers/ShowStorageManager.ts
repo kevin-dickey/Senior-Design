@@ -1,4 +1,5 @@
 import {Show} from "../components/serialization/Show";
+import {deserializeShow} from "../utils/deserializeShow";
 
 interface IShowStorage {
     saveShow(path: string, show: Show): void;
@@ -20,7 +21,8 @@ export class LocalStorageManager implements IShowStorage {
         if (!showData) {
             throw new Error(`Show file not found at path: ${path}`);
         }
-        return JSON.parse(showData);
+        const parsedData = JSON.parse(showData);
+        return deserializeShow(parsedData);
     }
 
     deleteShow(path: string): void {
