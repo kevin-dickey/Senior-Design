@@ -70,7 +70,7 @@ export class RainbowEffect extends Effect {
         this.speed = speed;
     }
 
-    static emptyEffect() {
+    static override emptyEffect() {
         return new RainbowEffect(new Pair(0, 0), new Pair(20, 20), -1, -1, [], -1);
     }
 
