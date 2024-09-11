@@ -19,7 +19,7 @@ const FilesOverview: React.FC<FilesOverviewProps> = ({ folderName, files, onBack
     console.log(fileName);
     navigate('/configuration', { state: { fileName } }); 
   };
-
+  
   return (
     <Paper elevation={3} style={{ padding: '16px' }}>
       <Typography variant="body1" onClick={onBack} style={{ cursor: 'pointer', paddingBottom:'2vh'}}>

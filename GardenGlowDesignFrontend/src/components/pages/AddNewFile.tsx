@@ -3,7 +3,12 @@ import { Button, TextField, Box, MenuItem, Select, FormControl, InputLabel } fro
 import { useNavigate } from 'react-router-dom';
 
 interface AddNewFileProps {
-  folders: { name: string }[];
+  folders:{
+    name: string;
+    files: {
+        name: string;
+    }[];
+}[];
   onAddFile: (fileName: string, folderName: string) => void;
 }
 
@@ -15,7 +20,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({ folders, onAddFile }) => {
   const handleSave = () => {
     if (fileName && selectedFolder) {
       onAddFile(fileName, selectedFolder);
-      navigate('/');
+      navigate('/foldersoverview');
     }
   };
 
@@ -44,7 +49,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({ folders, onAddFile }) => {
         <Button variant="contained" color="primary" onClick={handleSave}>
           Save
         </Button>
-        <Button variant="outlined" color="secondary" onClick={() => navigate('/')}>
+        <Button variant="outlined" color="secondary" onClick={() => navigate('/foldersoverview')}>
           Cancel
         </Button>
       </Box>

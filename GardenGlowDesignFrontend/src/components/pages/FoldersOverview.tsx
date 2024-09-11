@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Grid, Paper, Typography, Container, CssBaseline, List, ListItem, Button } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
-import { useNavigate } from 'react-router-dom';  
+import { useNavigate } from 'react-router-dom';
 
 const darkTheme = createTheme({
   palette: {
