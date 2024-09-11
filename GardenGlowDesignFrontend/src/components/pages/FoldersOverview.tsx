@@ -20,10 +20,16 @@ interface Folder {
 }
 
 interface FoldersOverviewProps {
-  folders: Folder[];
+  folders: {
+    name: string;
+    files: { name: string }[];
+  }[];
+  onAddFolder: (folderName: string) => void;
+  onAddFile: (fileName: string, folderName: string) => void;
 }
 
-const FoldersOverview: React.FC<FoldersOverviewProps> = ({ folders }) => {
+
+const FoldersOverview: React.FC<FoldersOverviewProps> = ({ folders, onAddFolder, onAddFile }) => {
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const navigate = useNavigate();
 
