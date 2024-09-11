@@ -18,6 +18,7 @@ export const RainbowEffectFormPresentational:
             <Grid item xs={4}>
                 <label htmlFor="rainbowSpeed">Rainbow Speed</label>
             </Grid>
+            {/* TODO: Add fields for color */}
             <Grid item xs={8}>
                 <Field id="speed" name="speed" type="number"/>
             </Grid>

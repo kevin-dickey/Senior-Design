@@ -1,5 +1,14 @@
 import React, {useState} from 'react';
-import {Box, Button, Slider, Drawer, Divider, IconButton} from '@mui/material';
+import {
+    Box,
+    Button,
+    Slider,
+    Drawer,
+    Divider,
+    IconButton,
+    FormControl,
+    InputLabel, Select, MenuItem
+} from '@mui/material';
 import {
     ExpandLess,
     ExpandMore,
@@ -21,6 +30,8 @@ import {
     EditRainbowEffectFormContainer
 } from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
 import {Pair} from "../serialization/Pair";
+import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
+import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
@@ -44,6 +55,8 @@ const Configuration: React.FC = () => {
     const [isColorsOpen, setIsColorsOpen] = useState(true);
     const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
+    const [selectedEffectType, setSelectedEffectType] = useState<string>('');
+    const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
         // Create a copy of the show
@@ -145,7 +158,7 @@ const Configuration: React.FC = () => {
                                 onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
                                 sx={{color: '#fff', justifyContent: 'flex-start'}}
                             >
-                                Effects in Show {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
+                                Effects in Show {isEffectsListOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
                             {isEffectsListOpen && (
                                 <div>
@@ -155,11 +168,29 @@ const Configuration: React.FC = () => {
                                             const finalSelectedId = selectedEffectId === effectId ? null : effectId;
                                             setSelectedEffectId(finalSelectedId);
                                         }}/>
+                                    <FormControl fullWidth>
+                                        <InputLabel id="effect-type-label">Effect Type</InputLabel>
+                                        <Select
+                                            labelId="effect-type-label"
+                                            id="effect-type"
+                                            value={selectedEffectType}
+                                            label="Effect Type"
+                                            onChange={(e) => setSelectedEffectType(e.target.value)}
+                                        >
+                                            <MenuItem value="RainbowEffect">Rainbow
+                                                Effect</MenuItem>
+                                            <MenuItem value="RippleEffect">Ripple Effect</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                     <Button
                                         onClick={() => {
-                                            const effect = RainbowEffect.emptyEffect();
-                                            show.addEffect(effect);
-                                            setSelectedEffectId(effect.id);
+                                            if (selectedEffectType === '') {
+                                                // TODO: Display a warning that the effect type must
+                                                //   be selected. Maybe use formik for this
+                                                return;
+                                            }
+                                            setSelectedEffectId(null);
+                                            setCreatingNewEffect(true);
                                         }}
                                     >
                                         Add Effect
@@ -189,12 +220,20 @@ const Configuration: React.FC = () => {
                             overflow: 'hidden',
                         }}
                     >
+                        {creatingNewEffect &&
+                            <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                            <CreateEffectFormContainer
+                                effectType={selectedEffectType}
+                                onSubmit={(values) => {
+                                    show.addEffect(values);
+                                    setCreatingNewEffect(false);
+                                }}
+                            />
+                            </Box>
+                        }
                         {selectedEffectId != null &&
                             <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                {/* TODO: Conditionally render Edit/Create containers based on the
-                             action being performed. Don't add a new effect to the effect list
-                              before it's saved. */}
-                                <EditRainbowEffectFormContainer
+                                <EditEffectFormContainer
                                     key={selectedEffectId}
                                     // TODO: This will error if selectedEffectId isn't present in .effects
                                     effect={show.getEffectById(selectedEffectId)!}
