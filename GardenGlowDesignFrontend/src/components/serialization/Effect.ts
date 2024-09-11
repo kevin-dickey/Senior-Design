@@ -86,6 +86,7 @@ export class RainbowEffect extends Effect {
 
 export class RippleEffect extends Effect {
     ripple_origin: Pair
+    speed: number;
 
     constructor(
         origin: Pair,
@@ -93,22 +94,25 @@ export class RippleEffect extends Effect {
         startTimeMs: number,
         durationMs: number,
         ripple_origin: Pair,
+        speed: number,
         translation?: Translation,
         name: string = 'ripple',
         id: number = -1
     ) {
         super(name, origin, size, startTimeMs, durationMs, translation, id);
         this.ripple_origin = ripple_origin;
+        this.speed = speed;
     }
 
-    emptyEffect() {
-        return new RippleEffect(new Pair(0, 0), new Pair(20, 20), -1, -1, new Pair(0, 0));
+    static override emptyEffect() {
+        return new RippleEffect(new Pair(0, 0), new Pair(20, 20), -1, -1, new Pair(0, 0), -1);
     }
 
     toJSON() {
         return {
             ...super.toJSON(),
             ripple_origin: this.ripple_origin,
+            speed: this.speed,
         };
     }
 }
