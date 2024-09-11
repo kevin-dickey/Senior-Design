@@ -37,28 +37,21 @@ const makeShow = () => {
     return show;
 }
 
-const saveShow = (show: Show) => {
-    // TODO: Implement saving to device LocalStorage
-    console.log('Saving show: ' + show.name);
-    validateEffects(show.effects).then((errors) => {
-        console.log(errors)
-    });
-    console.log(show);
-}
-
 const Configuration: React.FC = () => {
+    const [show, setShow] = useState<Show | null>(makeShow());
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
     const [isColorsOpen, setIsColorsOpen] = useState(true);
     const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
-
-    const [show, setShow] = useState(makeShow());
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
 
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
         // Create a copy of the show
         // Update the effect in the copy
         // Set the show to the copy
+        if (show == null) {
+            throw Error("Show must not be null!");
+        }
         const updatedShow = new Show(show.name, show.duration);
         updatedShow.setEffects(show.effects.map(effect => {
             if (effect.id === effectToUpdateId) {
@@ -70,205 +63,231 @@ const Configuration: React.FC = () => {
     };
 
     const deleteEffect = (effectId: number) => {
+        if (show == null) {
+            throw Error("Show must not be null!");
+        }
+
         const updatedShow = new Show(show.name, show.duration);
         updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
         setShow(updatedShow);
     }
+
+    const saveShow = async (show: Show) => {
+        console.log('Saving show: ' + show.name);
+        console.log(show);
+
+        const errors = await validateEffects(show.effects);
+        if (errors.length > 0) {
+            console.log(`Errors found: ${errors}`);
+            console.log('Show not saved. Please fix errors and try again.');
+            return;
+        }
+        console.log('Show not saved... Not yet implemented!');
+    }
+
+    // TODO: Save As
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
     const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
     const toggleColors = () => setIsColorsOpen(!isColorsOpen);
 
     return (
-        <Box display="flex" height="100vh" bgcolor="#181818" color="#ffffff">
-            {/* Sidebar */}
-            <Drawer
-                variant="permanent"
-                anchor="left"
-                sx={{
-                    width: '15%',
-                    height: '100vh',
-                    '& .MuiDrawer-paper': {
-                        width: '15%',
-                        bgcolor: '#2a2a2a',
-                        overflow: 'auto',
-                    },
-                }}
-            >
-                <Box>
-                    <Button fullWidth onClick={toggleShapes}
-                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                        Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
-                    {isShapesOpen && <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Shapes content</Box>}
-                </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
-                <Box>
-                    <Button fullWidth onClick={toggleEffects}
-                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                        Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
-                    {isEffectsOpen && <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Effects content</Box>}
-                </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
-                <Box>
-                    <Button fullWidth onClick={toggleColors}
-                            sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                        Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
-                    {isColorsOpen && (
-                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                            <input type="color" value="#9731f2" readOnly={true}/>
-                        </Box>
-                    )}
-                </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
-                <Box>
-                    <Button
-                        fullWidth
-                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
-                        sx={{color: '#fff', justifyContent: 'flex-start'}}
+        <div>
+            {show &&
+                <Box display="flex" height="100vh" bgcolor="#181818" color="#ffffff">
+                    {/* Sidebar */}
+                    <Drawer
+                        variant="permanent"
+                        anchor="left"
+                        sx={{
+                            width: '15%',
+                            height: '100vh',
+                            '& .MuiDrawer-paper': {
+                                width: '15%',
+                                bgcolor: '#2a2a2a',
+                                overflow: 'auto',
+                            },
+                        }}
                     >
-                        Effects in Show {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
-                    {isEffectsListOpen && (
-                        <div>
-                            <EffectList
-                                effects={show.effects}
-                                onEffectSelected={(effectId: number) => {
-                                    const finalSelectedId = selectedEffectId === effectId ? null : effectId;
-                                    setSelectedEffectId(finalSelectedId);
-                                }}/>
-                            <Button
-                                onClick={() => {
-                                    const effect = RainbowEffect.emptyEffect();
-                                    show.addEffect(effect);
-                                    setSelectedEffectId(effect.id);
-                                }}
-                            >
-                                Add Effect
+                        <Box>
+                            <Button fullWidth onClick={toggleShapes}
+                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                                Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
-                        </div>
-                    )}
+                            {isShapesOpen &&
+                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Shapes content</Box>}
+                        </Box>
+                        <Divider sx={{bgcolor: '#444'}}/>
+                        <Box>
+                            <Button fullWidth onClick={toggleEffects}
+                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                                Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
+                            </Button>
+                            {isEffectsOpen &&
+                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Effects content</Box>}
+                        </Box>
+                        <Divider sx={{bgcolor: '#444'}}/>
+                        <Box>
+                            <Button fullWidth onClick={toggleColors}
+                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                                Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
+                            </Button>
+                            {isColorsOpen && (
+                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                    <input type="color" value="#9731f2" readOnly={true}/>
+                                </Box>
+                            )}
+                        </Box>
+                        <Divider sx={{bgcolor: '#444'}}/>
+                        <Box>
+                            <Button
+                                fullWidth
+                                onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
+                                sx={{color: '#fff', justifyContent: 'flex-start'}}
+                            >
+                                Effects in Show {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
+                            </Button>
+                            {isEffectsListOpen && (
+                                <div>
+                                    <EffectList
+                                        effects={show.effects}
+                                        onEffectSelected={(effectId: number) => {
+                                            const finalSelectedId = selectedEffectId === effectId ? null : effectId;
+                                            setSelectedEffectId(finalSelectedId);
+                                        }}/>
+                                    <Button
+                                        onClick={() => {
+                                            const effect = RainbowEffect.emptyEffect();
+                                            show.addEffect(effect);
+                                            setSelectedEffectId(effect.id);
+                                        }}
+                                    >
+                                        Add Effect
+                                    </Button>
+                                </div>
+                            )}
 
-                    <Button
-                        variant="contained"
-                        startIcon={<Save />}
-                        onClick={() => saveShow(show)}
+                            <Button
+                                variant="contained"
+                                startIcon={<Save/>}
+                                onClick={() => saveShow(show)}
+                            >
+                                Save Show
+                            </Button>
+                            <ShowFileExport show={show}/>
+                        </Box>
+                    </Drawer>
+
+                    {/* Grid Container */}
+                    <Box
+                        sx={{
+                            width: '85%',
+                            height: '85%',
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            overflow: 'hidden',
+                        }}
                     >
-                        Save Show
-                    </Button>
-                    <ShowFileExport show={show}/>
-                </Box>
-            </Drawer>
-
-            {/* Grid Container */}
-            <Box
-                sx={{
-                    width: '85%',
-                    height: '85%',
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    overflow: 'hidden',
-                }}
-            >
-                <TransformWrapper
-                    initialScale={1}
-                    wheel={{step: 0.5}}
-                    minScale={.5}
-                    maxScale={5}
-                >
-                    {({zoomIn, zoomOut, resetTransform}) => (
-                        <TransformComponent wrapperStyle={{flex: 1}}>
-                            <Box flexDirection="column">
-                                {/* Generate a grid of dots to represent LEDs */}
-                                {[...Array(50)].map((_, rowIndex) => (
-                                    <Box key={rowIndex} display="flex" gap={0.5}>
-                                        {[...Array(50)].map((_, colIndex) => (
-                                            <Box
-                                                key={colIndex}
-                                                sx={{
-                                                    width: 10,
-                                                    height: 10,
-                                                    bgcolor: '#222',
-                                                    borderRadius: '50%',
-                                                }}
-                                            />
-                                        ))}
-                                    </Box>
-                                ))}
-                            </Box>
-                        </TransformComponent>
-                    )}
-                </TransformWrapper>
-
-                {selectedEffectId != null &&
-                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                        {/* TODO: Conditionally render Edit/Create containers based on the
+                        {selectedEffectId != null &&
+                            <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                {/* TODO: Conditionally render Edit/Create containers based on the
                              action being performed. Don't add a new effect to the effect list
                               before it's saved. */}
-                        <EditRainbowEffectFormContainer
-                            key={selectedEffectId}
-                            // TODO: This will error if selectedEffectId isn't present in show.effects
-                            effect={show.getEffectById(selectedEffectId)!}
-                            onSubmit={(effect: any) => {
-                                console.log("Saving effect: " + effect);
-                                updateEffect(effect, selectedEffectId);
-                            }}
-                            onDelete={(effectId: number) => {
-                                console.log("Deleting effect: " + effectId);
-                                deleteEffect(effectId);
-                                setSelectedEffectId(null);
-                            }}
-                        />
-                    </Box>
-                }
-            </Box>
+                                <EditRainbowEffectFormContainer
+                                    key={selectedEffectId}
+                                    // TODO: This will error if selectedEffectId isn't present in .effects
+                                    effect={show.getEffectById(selectedEffectId)!}
+                                    onSubmit={(effect: any) => {
+                                        console.log("Saving effect: " + effect);
+                                        updateEffect(effect, selectedEffectId);
+                                    }}
+                                    onDelete={(effectId: number) => {
+                                        console.log("Deleting effect: " + effectId);
+                                        deleteEffect(effectId);
+                                        setSelectedEffectId(null);
+                                    }}
+                                />
+                            </Box>
+                        }
 
-            {/* Timeline Container */}
-            <Box
-                position="absolute"
-                bottom={0}
-                right={0}
-                width="80%"
-                height="10%"
-                bgcolor="#2a2a2a"
-                p={2}
-                zIndex={1}
-            >
-                {/**add better time indicator */}
-                <Slider
-                    defaultValue={0}
-                    aria-label="Time Slider"
-                    valueLabelDisplay="auto"
-                    min={0}
-                    max={100}
-                    sx={{width: '100%', color: '#fff'}}
-                />
-                <Box mt={2} display="flex" gap={2} justifyContent="center">
-                    <IconButton aria-label="Skip Previous" sx={{color: '#fff'}}>
-                        <SkipPrevious/>
-                    </IconButton>
-                    <IconButton aria-label="Rewind" sx={{color: '#fff'}}>
-                        <FastRewind/>
-                    </IconButton>
-                    <IconButton aria-label="Pause" sx={{color: '#fff'}}>
-                        <Pause/>
-                    </IconButton>
-                    <IconButton aria-label="Play" sx={{color: '#fff'}}>
-                        <PlayArrow/>
-                    </IconButton>
-                    <IconButton aria-label="Fast Forward" sx={{color: '#fff'}}>
-                        <FastForward/>
-                    </IconButton>
-                    <IconButton aria-label="Skip Next" sx={{color: '#fff'}}>
-                        <SkipNext/>
-                    </IconButton>
+                        <TransformWrapper
+                            initialScale={1}
+                            wheel={{step: 0.5}}
+                            minScale={.5}
+                            maxScale={5}
+                        >
+                            {({zoomIn, zoomOut, resetTransform}) => (
+                                <TransformComponent wrapperStyle={{flex: 1}}>
+                                    <Box flexDirection="column">
+                                        {/* Generate a grid of dots to represent LEDs */}
+                                        {[...Array(50)].map((_, rowIndex) => (
+                                            <Box key={rowIndex} display="flex" gap={0.5}>
+                                                {[...Array(50)].map((_, colIndex) => (
+                                                    <Box
+                                                        key={colIndex}
+                                                        sx={{
+                                                            width: 10,
+                                                            height: 10,
+                                                            bgcolor: '#222',
+                                                            borderRadius: '50%',
+                                                        }}
+                                                    />
+                                                ))}
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </TransformComponent>
+                            )}
+                        </TransformWrapper>
+                    </Box>
+
+                    {/* Timeline Container */}
+                    <Box
+                        position="absolute"
+                        bottom={0}
+                        right={0}
+                        width="80%"
+                        height="10%"
+                        bgcolor="#2a2a2a"
+                        p={2}
+                        zIndex={1}
+                    >
+                        {/**add better time indicator */}
+                        <Slider
+                            defaultValue={0}
+                            aria-label="Time Slider"
+                            valueLabelDisplay="auto"
+                            min={0}
+                            max={100}
+                            sx={{width: '100%', color: '#fff'}}
+                        />
+                        <Box mt={2} display="flex" gap={2} justifyContent="center">
+                            <IconButton aria-label="Skip Previous" sx={{color: '#fff'}}>
+                                <SkipPrevious/>
+                            </IconButton>
+                            <IconButton aria-label="Rewind" sx={{color: '#fff'}}>
+                                <FastRewind/>
+                            </IconButton>
+                            <IconButton aria-label="Pause" sx={{color: '#fff'}}>
+                                <Pause/>
+                            </IconButton>
+                            <IconButton aria-label="Play" sx={{color: '#fff'}}>
+                                <PlayArrow/>
+                            </IconButton>
+                            <IconButton aria-label="Fast Forward" sx={{color: '#fff'}}>
+                                <FastForward/>
+                            </IconButton>
+                            <IconButton aria-label="Skip Next" sx={{color: '#fff'}}>
+                                <SkipNext/>
+                            </IconButton>
+                        </Box>
+                    </Box>
                 </Box>
-            </Box>
-        </Box>
+            }
+        </div>
     );
-};
+}
+
 
 export default Configuration;
