@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#define LED_PIN         22
+#define LED_PIN         13
 #define NUM_LEDS_X      16
 #define NUM_LEDS_Y      16
-#define NUM_LEDS        NUM_LEDS_X * NUM_LEDS_Y
-#define MAX_BRIGHTNESS  4 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
+#define NUM_LEDS        100
+#define MAX_BRIGHTNESS  255 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 
 
 # if USE_EMULATOR
@@ -17,8 +17,8 @@
 
 #include <FastLED.h>
 
-#define COLOR_ORDER     GRB
-#define CHIPSET         WS2812B
+#define COLOR_ORDER     RBG
+#define CHIPSET         WS2812
 
 # endif
 
@@ -43,6 +43,8 @@ const bool kMatrixVertical = false;
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 
+int hue;
+
 
 # if USE_EMULATOR
 void loop_callback() {
@@ -65,33 +67,19 @@ void setup() {
   Serial.begin(9600); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
+
+  hue = 30;
 }
 
 /**
  * MARK: Looping
 */
 void loop() {
-    static int rippleCounter1 = 0; // could also be considered the particular ripple effect's "id"
-    static int rippleCounter2 = 0;
-
-    // Clear the LED array before each frame
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-    // Create frame for first ripple effect
-    rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 4, rippleCounter1); // cyan ripple
-
-    // Create frame for second ripple effect
-    rippleEffect(124, 25, 255, NUM_LEDS_X / 2, NUM_LEDS_Y - NUM_LEDS_Y / 4 - 1, rippleCounter2); // purple ripple
-
-    // Display the frames simultaneously
-    FastLED.show();
-    
-    // Increment the counters for the ripple effects (for progressing to next frame of ripple)
-    rippleCounter1++;
-    rippleCounter2++;
-    
-    // Adjust delay for speed of the ripple effect
-    delay(75);
+    fill_rainbow(leds, NUM_LEDS, hue, 7); // fill the LEDs with a rainbow effect
+    hue += 1; // increment the hue for the next frame
+    hue %= 256; // keep the hue within the range of 0-255
+    FastLED.show(); // show the LEDs
+    delay(1000 / 60); // delay for 60fps
 }
 # endif
 
