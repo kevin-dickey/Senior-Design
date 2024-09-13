@@ -16,7 +16,7 @@ public:
     SensorType type;
     Pair *location;
 
-    Sensor(int id, int pin, SensorType type, Pair *location) {
+    inline Sensor(int id, int pin, SensorType type, Pair *location) {
         this->id = id;
         this->pin = pin;
         this->type = type;

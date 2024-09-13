@@ -17,7 +17,7 @@ public:
     double durationMs;
     Translation *translation;
 
-    Effect(int id, std::string name,
+    inline Effect(int id, std::string name,
            Pair *origin, Pair *size,
            double startTimeMs, double durationMs,
            Translation *translation
@@ -58,7 +58,7 @@ public:
     std::vector<std::string> *colors;
     double speed;
 
-    RainbowEffect(
+    inline RainbowEffect(
             int id, std::string name,
             Pair *origin, Pair *size,
             double startTimeMs, double durationMs,
@@ -102,7 +102,7 @@ public:
     Pair *ripple_origin;
     int speed;
 
-    RippleEffect(
+    inline RippleEffect(
             int id, std::string name,
             Pair *origin, Pair *size,
             double startTimeMs, double durationMs,

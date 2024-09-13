@@ -40,7 +40,7 @@ public:
     int width;
     int height;
 
-    GridLayout(int id, int width, int height) :
+    inline GridLayout(int id, int width, int height) :
             Layout(id, width * height, LayoutType::GRID) {
         this->width = width;
         this->height = height;
