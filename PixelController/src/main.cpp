@@ -49,7 +49,6 @@ const bool kMatrixVertical = false;
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 //CRGB leds[NUM_LEDS];
 
-int hue;
 
 
 # if USE_EMULATOR
@@ -74,6 +73,9 @@ int main() {
 /**
  * MARK: Setup
 */
+CRGB leds[NUM_LEDS];
+int hue;
+
 void setup() {
   Serial.begin(9600); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
