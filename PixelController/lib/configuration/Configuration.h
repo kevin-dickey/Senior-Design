@@ -1,61 +1,50 @@
-//
-// Created by Nick Vazquez on 9/11/24.
-//
+// Configuration.h
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
 
-#ifndef PIXELCONTROLLER_CONFIGURATION_H
-#define PIXELCONTROLLER_CONFIGURATION_H
-
-#include <utility>
-
+#include <string>
 #include "../../include/json.hpp"
-#include "Pair.h"
+#include "Spatials.h"
+#include "Effect.h"
+#include "Layout.h"
+#include "Sensor.h"
 
 
-enum SensorType {
-    BINARY = 1,
-    ANALOG = 2
-};
+struct Show {
+    std::string name;
+    double duration;
+    std::vector<Layout*> layouts;
+    std::vector<Effect*> effects;
+    std::vector<Sensor*> sensors;
 
-class Sensor {
-public:
-    int id;
-    int pin;
-    SensorType type;
-    Pair *location;
-
-    Sensor(int id, int pin, SensorType type, Pair *location) {
-        this->id = id;
-        this->pin = pin;
-        this->type = type;
-        this->location = location;
+    static Show from_json(const nlohmann::json& j) {
+        Show show;
+        show.name = j["name"];
+        show.duration = j["duration"];
+        for (const auto& layout : j["layouts"]) {
+            switch (layout["shape"].get<LayoutType>()) {
+                case LayoutType::GRID:
+                    show.layouts.push_back(GridLayout::from_json(layout));
+                    break;
+                default:
+                    show.layouts.push_back(Layout::from_json(layout));
+                    break;
+            }
+        }
+        for (const auto& effect : j["effects"]) {
+            show.effects.push_back(Effect::from_json(effect));
+        }
+        for (const auto& sensor : j["sensors"]) {
+            show.sensors.push_back(Sensor::from_json(sensor));
+        }
+        return show;
     }
 
-    static Sensor from_json(const nlohmann::json &j);
-};
-
-
-class Effect {
-public:
-    int id;
-    std::string *name;
-    Pair *origin;
-    Pair *size;
-    double startTimeMs;
-    double durationMs;
-    Translation *translation;
-
-    Effect(int id, std::string *name, Pair *origin, Pair *size, double startTimeMs, double durationMs,
-           Translation *translation) {
-        this->id = id;
-        this->name = name;
-        this->origin = origin;
-        this->size = size;
-        this->startTimeMs = startTimeMs;
-        this->durationMs = durationMs;
-        this->translation = translation;
+    ~Show() {
+        for (auto layout : layouts) { delete layout; }
+        for (auto effect : effects) { delete effect; }
+        for (auto sensor : sensors) { delete sensor; }
     }
-
-    static Effect *from_json(const nlohmann::json &j);
 };
 
-#endif //PIXELCONTROLLER_CONFIGURATION_H
+#endif // CONFIGURATION_H
