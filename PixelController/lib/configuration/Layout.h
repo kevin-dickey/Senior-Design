@@ -1,7 +1,3 @@
-//
-// Created by Nick Vazquez on 9/12/24.
-//
-
 #ifndef PIXELCONTROLLER_LAYOUT_H
 #define PIXELCONTROLLER_LAYOUT_H
 
@@ -15,29 +11,48 @@ enum LayoutType {
     CUSTOM = 4
 };
 
-struct Layout {
+class Layout {
+public:
+    int id;
+    int pixels;
     LayoutType shape;
+
+    Layout(int id, int pixels, LayoutType shape) {
+        this->id = id;
+        this->pixels = pixels;
+        this->shape = shape;
+    }
 
     virtual ~Layout() = default;
 
-    static Layout *from_json(const nlohmann::json& j) {
-        Layout *layout = new Layout();
-        layout->shape = j.value("shape", LayoutType::CUSTOM);
+    static Layout *from_json(const nlohmann::json &j) {
+        auto *layout = new Layout(
+                j.value("id", 0),
+                j.value("pixels", 0),
+                j.value("shape", LayoutType::CUSTOM)
+        );
         return layout;
     }
 };
 
-struct GridLayout : public Layout {
-    int width{};
-    int height{};
+class GridLayout : public Layout {
+public:
+    int width;
+    int height;
 
-    static GridLayout *from_json(const nlohmann::json& j) {
-        auto* gridLayout = new GridLayout();
-        gridLayout->shape = LayoutType::GRID;
-        gridLayout->width = std::max(1, j.value("width", 1));
-        gridLayout->height = std::max(1, j.value("height", 1));
-        return gridLayout;
+    GridLayout(int id, int width, int height) :
+            Layout(id, width * height, LayoutType::GRID) {
+        this->width = width;
+        this->height = height;
+    }
+
+    static GridLayout *from_json(const nlohmann::json &j) {
+        auto id = j.value("id", -1);
+        auto width = std::max(1, j["width"].get<int>());
+        auto height = std::max(1, j["height"].get<int>());
+
+        return new GridLayout(id, width, height);
     }
 };
 
-#endif //PIXELCONTROLLER_LAYOUT_H
+#endif // PIXELCONTROLLER_LAYOUT_H

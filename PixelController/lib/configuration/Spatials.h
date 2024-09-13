@@ -11,17 +11,17 @@ struct Pair {
     int x;
     int y;
 
-    static Pair from_json(const nlohmann::json &j) {
-        return {j["x"], j["y"]};
+    static Pair *from_json(const nlohmann::json &j) {
+        return new Pair{j["x"], j["y"]};
     }
 };
 
 struct Translation {
-    Pair end_pos;
+    Pair *end_pos;
     double durationMs;
 
     static Translation *from_json(const nlohmann::json &j) {
-        Translation *translation = new Translation();
+        auto *translation = new Translation();
         translation->end_pos = Pair::from_json(j["end_pos"]);
         translation->durationMs = j["durationMs"];
         return translation;

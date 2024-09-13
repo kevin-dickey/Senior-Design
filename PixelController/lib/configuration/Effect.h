@@ -1,95 +1,139 @@
-//
-// Created by Nick Vazquez on 9/12/24.
-//
-
 #ifndef PIXELCONTROLLER_EFFECT_H
 #define PIXELCONTROLLER_EFFECT_H
 
 #include <string>
+#include <utility>
+#include <vector>
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
-struct Effect {
+class Effect {
+public:
     int id;
     std::string name;
-    Pair origin;
-    Pair size;
+    Pair *origin;
+    Pair *size;
     double startTimeMs;
     double durationMs;
     Translation *translation;
 
-    virtual ~Effect() = default;
+    Effect(int id, std::string name,
+           Pair *origin, Pair *size,
+           double startTimeMs, double durationMs,
+           Translation *translation
+    ) {
+        this->id = id;
+        this->name = std::move(name);
+        this->origin = origin;
+        this->size = size;
+        this->startTimeMs = startTimeMs;
+        this->durationMs = durationMs;
+        this->translation = translation;
+    }
+
+    virtual ~Effect() {
+        delete translation;
+    }
 
     static Effect *from_json(const nlohmann::json &j) {
-        auto *effect = new Effect();
-        effect->id = j["id"];
-        effect->name = j["name"];
-        effect->origin = Pair::from_json(j["origin"]);
-        effect->size = Pair::from_json(j["size"]);
-        effect->startTimeMs = j["startTimeMs"];
-        effect->durationMs = j["durationMs"];
-
         Translation *translation = nullptr;
         if (j.contains("translation")) {
             translation = Translation::from_json(j["translation"]);
         }
-        effect->translation = translation;
 
-        return effect;
-    };
+        return new Effect(
+                j["id"],
+                j["name"],
+                Pair::from_json(j["origin"]),
+                Pair::from_json(j["size"]),
+                j["startTimeMs"],
+                j["durationMs"],
+                translation
+        );
+    }
 };
 
-struct RainbowEffect : public Effect {
-    std::vector<std::string> colors;
+class RainbowEffect : public Effect {
+public:
+    std::vector<std::string> *colors;
     double speed;
 
-    static RainbowEffect *from_json(const nlohmann::json &j) {
-        auto *effect = new RainbowEffect();
-        effect->id = j["id"];
-        effect->name = j["name"];
-        effect->origin = Pair::from_json(j["origin"]);
-        effect->size = Pair::from_json(j["size"]);
-        effect->startTimeMs = j["startTimeMs"];
-        effect->durationMs = j["durationMs"];
+    RainbowEffect(
+            int id, std::string name,
+            Pair *origin, Pair *size,
+            double startTimeMs, double durationMs,
+            Translation *translation,
+            std::vector<std::string> *colors,
+            double speed
+    ) : Effect(
+            id, std::move(name), origin, size, startTimeMs, durationMs, translation
+    ) {
+        this->colors = colors;
+        this->speed = speed;
+    }
 
+    static RainbowEffect *from_json(const nlohmann::json &j) {
         Translation *translation = nullptr;
         if (j.contains("translation")) {
             translation = Translation::from_json(j["translation"]);
         }
-        effect->translation = translation;
 
-        for (const auto &color: j["colors"]) {
-            effect->colors.push_back(color);
+        auto *colors = new std::vector<std::string>();
+        for (const auto &color : j["colors"]) {
+            colors->push_back(color);
         }
 
-        effect->speed = j["speed"];
-        return effect;
+        return new RainbowEffect(
+                j["id"],
+                j["name"],
+                Pair::from_json(j["origin"]),
+                Pair::from_json(j["size"]),
+                j["startTimeMs"],
+                j["durationMs"],
+                translation,
+                colors,
+                j["speed"]
+        );
     }
 };
 
-struct RippleEffect : public Effect {
-    Pair ripple_origin;
+class RippleEffect : public Effect {
+public:
+    Pair *ripple_origin;
     int speed;
 
-    static RippleEffect *from_json(const nlohmann::json &j) {
-        auto *effect = new RippleEffect();
-        effect->id = j["id"];
-        effect->name = j["name"];
-        effect->origin = Pair::from_json(j["origin"]);
-        effect->size = Pair::from_json(j["size"]);
-        effect->startTimeMs = j["startTimeMs"];
-        effect->durationMs = j["durationMs"];
-        effect->speed = j["speed"];
+    RippleEffect(
+            int id, std::string name,
+            Pair *origin, Pair *size,
+            double startTimeMs, double durationMs,
+            Translation *translation,
+            Pair *ripple_origin,
+            int speed
+    ) : Effect(
+            id, std::move(name), origin, size, startTimeMs, durationMs, translation
+    ) {
+        this->ripple_origin = ripple_origin;
+        this->speed = speed;
+    }
 
+    static RippleEffect *from_json(const nlohmann::json &j) {
         Translation *translation = nullptr;
         if (j.contains("translation")) {
             translation = Translation::from_json(j["translation"]);
         }
 
-        effect->translation = translation;
-        effect->ripple_origin = Pair::from_json(j["ripple_origin"]);
-        return effect;
+        return new RippleEffect(
+                j["id"],
+                j["name"],
+                Pair::from_json(j["origin"]),
+                Pair::from_json(j["size"]),
+                j["startTimeMs"],
+                j["durationMs"],
+                translation,
+                Pair::from_json(j["ripple_origin"]),
+                j["speed"]
+        );
     }
 };
 
-#endif //PIXELCONTROLLER_EFFECT_H
+#endif // PIXELCONTROLLER_EFFECT_H

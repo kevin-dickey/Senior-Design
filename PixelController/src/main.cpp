@@ -14,7 +14,6 @@ using json = nlohmann::json;
 
 # if USE_EMULATOR
 
-//#include "../ImGUI_Emulator/Window.h"
 #include "../lib/configuration/Configuration.h"
 
 # else
@@ -56,15 +55,19 @@ int hue;
 # if USE_EMULATOR
 
 int main() {
-    std::ifstream f("../lib/configuration/test/sensor.json");
-    json data = json::parse(f);
-    Sensor sensor = Sensor::from_json(data);
-    f.close();
+    std::ifstream f3("../lib/configuration/test/Basic_Show_File.json");
+    json data3 = json::parse(f3);
+    Show show = Show::from_json(data3);
+    f3.close();
 
-    std::ifstream f2("../lib/configuration/test/effect.json");
-    json data2 = json::parse(f2);
-    Effect *effect = Effect::from_json(data2);
-    f2.close();
+    std::cout << "Show Name: " << show.name << std::endl;
+    std::cout << "Show Duration: " << show.duration << std::endl;
+
+    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
+    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+
+    return 0;
 }
 
 # else
