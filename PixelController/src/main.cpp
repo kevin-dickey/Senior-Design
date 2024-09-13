@@ -1,6 +1,9 @@
-#define USE_EMULATOR 0
-
 #include <iostream>
+
+#include <fstream>
+#include "../include/json.hpp"
+
+using json = nlohmann::json;
 
 #define LED_PIN         13
 #define NUM_LEDS_X      16
@@ -11,7 +14,8 @@
 
 # if USE_EMULATOR
 
-#include "../ImGUI_Emulator/Window.h"
+//#include "../ImGUI_Emulator/Window.h"
+#include "../lib/configuration/Configuration.h"
 
 # else
 
@@ -24,10 +28,13 @@
 
 
 /* Function Prototypes */
-void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter); 
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter);
+
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter); // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
+
 uint16_t XYsafe(uint8_t x, uint8_t y);
 
 
@@ -41,25 +48,26 @@ const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
+//CRGB leds[NUM_LEDS];
 
 int hue;
 
 
 # if USE_EMULATOR
-void loop_callback() {
-
-    // modified call to meet new method signature
-    static int rippleCountah = 0;
-    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah); // purple :D
-    std ::cout << "Ripple effect frame 1/13" << std::endl;
-}
 
 int main() {
-    emulator(loop_callback);
-}
-# else
+    std::ifstream f("../lib/configuration/test/sensor.json");
+    json data = json::parse(f);
+    Sensor sensor = Sensor::from_json(data);
+    f.close();
 
+    std::ifstream f2("../lib/configuration/test/effect.json");
+    json data2 = json::parse(f2);
+    Effect *effect = Effect::from_json(data2);
+    f2.close();
+}
+
+# else
 /**
  * MARK: Setup
 */
@@ -81,7 +89,6 @@ void loop() {
     FastLED.show(); // show the LEDs
     delay(1000 / 60); // delay for 60fps
 }
-# endif
 
 
 /**
@@ -251,3 +258,4 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
 //                        |
 //                        |
 //    19 < 18 < 17 < 16 < 15
+# endif
