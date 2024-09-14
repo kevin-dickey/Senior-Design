@@ -1,6 +1,9 @@
-#define USE_EMULATOR 0
-
 #include <iostream>
+
+#include <fstream>
+#include "../include/json.hpp"
+
+using json = nlohmann::json;
 
 #define LED_PIN         13
 #define NUM_LEDS_X      16
@@ -11,7 +14,7 @@
 
 # if USE_EMULATOR
 
-#include "../ImGUI_Emulator/Window.h"
+#include "../lib/configuration/Configuration.h"
 
 # else
 
@@ -24,10 +27,13 @@
 
 
 /* Function Prototypes */
-void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter); 
+void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter);
+
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter); // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
+
 uint16_t XYsafe(uint8_t x, uint8_t y);
 
 
@@ -41,28 +47,35 @@ const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
+//CRGB leds[NUM_LEDS];
 
-int hue;
 
 
 # if USE_EMULATOR
-void loop_callback() {
-
-    // modified call to meet new method signature
-    static int rippleCountah = 0;
-    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah); // purple :D
-    std ::cout << "Ripple effect frame 1/13" << std::endl;
-}
 
 int main() {
-    emulator(loop_callback);
-}
-# else
+    std::ifstream f3("../lib/configuration/test/Basic_Show_File.json");
+    json data3 = json::parse(f3);
+    Show show = Show::from_json(data3);
+    f3.close();
 
+    std::cout << "Show Name: " << show.name << std::endl;
+    std::cout << "Show Duration: " << show.duration << std::endl;
+
+    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
+    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+
+    return 0;
+}
+
+# else
 /**
  * MARK: Setup
 */
+CRGB leds[NUM_LEDS];
+int hue;
+
 void setup() {
   Serial.begin(9600); // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
@@ -81,7 +94,6 @@ void loop() {
     FastLED.show(); // show the LEDs
     delay(1000 / 60); // delay for 60fps
 }
-# endif
 
 
 /**
@@ -251,3 +263,4 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
 //                        |
 //                        |
 //    19 < 18 < 17 < 16 < 15
+# endif
