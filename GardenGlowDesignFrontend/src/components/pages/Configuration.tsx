@@ -74,6 +74,9 @@ const Configuration: React.FC = () => {
 
     return (
         <div>
+            {!show &&
+                <Box>Loading...</Box>
+            }
             {show &&
                 <Box
                     sx={{
@@ -189,7 +192,10 @@ const Configuration: React.FC = () => {
                             zIndex={1}
                         >
                             {/**add better time indicator */}
-                            <TimelineContainer/>
+                            <TimelineContainer
+                                effects={show.effects}
+                                onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                            />
                         </Box>
                     </Box>
                 </Box>
