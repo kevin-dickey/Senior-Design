@@ -1,8 +1,6 @@
 export class Layout {
     shape?: string | null = null;
 
-    constructor() {}
-
     toJSON() {
         return {
             shape: this.shape
