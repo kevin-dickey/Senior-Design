@@ -8,13 +8,16 @@ import {
     SkipNext,
     SkipPrevious
 } from "@mui/icons-material";
-import {Effect} from "../components/serialization/Effect";
 import {
     Timeline,
     TimelineAction,
     TimelineEffect,
     TimelineRow
 } from '@xzdarcy/react-timeline-editor' ;
+
+import './TimelineContainer.css';
+import {Effect} from "../components/serialization/Effect";
+
 
 interface CustomTimelineAction extends TimelineAction {
     effectId: string;
@@ -48,7 +51,7 @@ const convertEffectsToTimelineRows = (effects: Effect[]): CustomTimelineRow[] =>
     const timelineRows: CustomTimelineRow[] = [];
 
     effects.forEach((effect: Effect) => {
-        const timelineAction: CustomTimelineAction= {
+        const timelineAction: CustomTimelineAction = {
             id: `${effect.id}`,
             start: effect.startTimeMs / 1000,
             end: (effect.startTimeMs + effect.durationMs) / 1000,
@@ -79,15 +82,16 @@ interface TimelineEditorProps {
     timelineEffects: Record<string, TimelineEffect>;
     timelineRows: TimelineRow[];
     onChangeTimelineRows: (editorData: TimelineRow[]) => boolean | void;
+    style?: React.CSSProperties;
 }
 
 const TimelineEditor: React.FC<TimelineEditorProps> = (
-    {timelineEffects, timelineRows, onChangeTimelineRows}
+    {timelineEffects, timelineRows, onChangeTimelineRows, style}
 ) => {
 
     return (
         <Timeline
-            style={{width: 'auto'}}
+            style={{width: 'auto', ...style}}
             onChange={onChangeTimelineRows}
             editorData={timelineRows}
             effects={timelineEffects}
@@ -140,13 +144,20 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
     }
 
     return (
-        <Box>
+        <Box className='TimelineContainer'>
             <TimelineEditor
                 timelineEffects={timelineEffects}
                 timelineRows={timelineRows}
                 onChangeTimelineRows={onChangeTimelineRows}
             />
-            <Box mt={2} display="flex" gap={2} justifyContent="center">
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mt: 2
+                }}
+            >
                 <IconButton aria-label="Skip Previous" sx={{color: '#fff'}}>
                     <SkipPrevious/>
                 </IconButton>

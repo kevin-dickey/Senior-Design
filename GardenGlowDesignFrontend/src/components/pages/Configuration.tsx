@@ -186,7 +186,7 @@ const Configuration: React.FC = () => {
                             bottom={0}
                             right={0}
                             width="80%"
-                            height="60%"
+                            height="15vh"
                             bgcolor="#2a2a2a"
                             p={2}
                             zIndex={1}
