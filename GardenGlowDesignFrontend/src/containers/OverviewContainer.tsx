@@ -41,13 +41,29 @@ const FoldersOverviewContainer: React.FC = () => {
         setFolders(reduceFiles(storageManager.listShows()));
     };
 
-  return (
-    <Routes>
-      <Route path="/" element={<FoldersOverview folders={folders} onAddFolder={addNewFolder} onAddFile={addNewFile} />} />
-      <Route path="/add-folder" element={<AddNewFolder onAddFolder={addNewFolder} />} />
-      <Route path="/add-file" element={<AddNewFile folders={folders} onAddFile={addNewFile} />} />
-    </Routes>
-  );
+    return (
+        <Routes>
+            <Route path="/shows">
+                <Route index element={
+                    <FoldersOverview
+                        folders={folders}
+                        onAddFolder={addNewFolder}
+                        onAddFile={addNewFile}
+                    />
+                }/>
+                <Route path="new-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
+                <Route
+                    path="new"
+                    element={
+                        <AddNewFile
+                            folders={folders}
+                            onAddFile={addNewFile}
+                        />
+                    }
+                />
+            </Route>
+        </Routes>
+    );
 };
 
 export default FoldersOverviewContainer;

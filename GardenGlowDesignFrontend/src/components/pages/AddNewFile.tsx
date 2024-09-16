@@ -16,7 +16,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
     const handleSave = () => {
         if (fileName && selectedFolder) {
             onAddFile(fileName, selectedFolder);
-            navigate('/foldersoverview');
+            navigate('/shows');
         }
     };
 
@@ -49,7 +49,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
                     variant="outlined"
                     color="secondary"
                     onClick={() =>
-                        navigate('/foldersoverview')
+                        navigate('/shows')
                     }
                 >
                     Cancel
