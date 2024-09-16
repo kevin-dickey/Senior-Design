@@ -28,11 +28,15 @@
 #endif
 
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width);
+void fadeToBlack(int duration);
+void fadeToBright(int duration, int targetBrightness);
+void setBrightnessTo(CRGB lights[], int numLights, int newBrightness);
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
+
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
@@ -70,178 +74,121 @@ void setup() {
   Serial.begin(115200);                                                                          // for setting up stuff to print to serial monitor
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
-  pinMode(INPUT_BTN_NE, INPUT);
-  pinMode(INPUT_BTN_NW, INPUT);
-  pinMode(INPUT_BTN_SE, INPUT);
-  pinMode(INPUT_BTN_SW, INPUT);
-  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, NUM_LEDS, CRGB::Red);
   FastLED.show();
 }
-
-bool button1_status;
-bool button2_status;
-bool button3_status;
-bool button4_status;
 
 /**
  * MARK: Looping
  */
 void loop() {
-  static int rippleCounter1 = 0;  // could also be considered the particular ripple effect's "id"
-  static int rippleCounter2 = 0;
-  static int rippleCounter3 = 0;
-  static int rippleCounter4 = 0;
-  button1_status = digitalRead(INPUT_BTN_NE);
-  button2_status = digitalRead(INPUT_BTN_NW);
-  button3_status = digitalRead(INPUT_BTN_SE);
-  button4_status = digitalRead(INPUT_BTN_SW);
-  int width = 2;
 
-  if (button1_status) {
-    if (rippleCounter1 == NUM_LEDS_X + width + 1)
-    // could also be NUM_LEDS_Y, whichever is greater
-    {
-      Serial.printf("\nResetting rippleCounter1...");
-      rippleCounter1 = 0;
-    } else {
-      Serial.printf("\nGenerating frame for button 1...");
-      // generates 1 frame
-      rippleEffect(255, 0, 0, 4, 4, rippleCounter1, prevLeds1, width);
-      if (rippleCounter1 == 0) {  // fixing bug like this instead of fixing my buggy rippleEffect() ;*
-        leds[XY(15, 15)] = CRGB(0, 0, 0);
-      }
-      rippleCounter1++;
-    }
-  }
+  // Test the fade to black function
+  fadeToBlack(3); // fades over 3s
+  FastLED.show();
+  delay(1000);
 
-  button1_status = digitalRead(INPUT_BTN_NE);
-  button2_status = digitalRead(INPUT_BTN_NW);
-  button3_status = digitalRead(INPUT_BTN_SE);
-  button4_status = digitalRead(INPUT_BTN_SW);
+  // Test the fade in function
+  fadeToBright(3, 8); // fades back in over 3s to a brightness value of 8
+  FastLED.show();
 
-  if (button2_status) {
-    if (rippleCounter2 == NUM_LEDS_X + width + 1) {
-      Serial.printf("\nResetting rippleCounter2...");
-      rippleCounter2 = 0;
-    } else {
-      Serial.printf("\nGenerating frame for button 2...");
-      // generates 1 frame
-      rippleEffect(0, 255, 0, 11, 11, rippleCounter2, prevLeds2, width);
-      if (rippleCounter2 == 0) {  // fixing bug like this instead of fixing my buggy rippleEffect() ;*
-        leds[XY(0, 0)] = CRGB(0, 0, 0);
-      }
-      rippleCounter2++;
-    }
-  }
+  // Test the setBrightnessTo function on all LEDs
 
-  button1_status = digitalRead(INPUT_BTN_NE);
-  button2_status = digitalRead(INPUT_BTN_NW);
-  button3_status = digitalRead(INPUT_BTN_SE);
-  button4_status = digitalRead(INPUT_BTN_SW);
+  // Test the setBrightnessTo function on some subset of LEDs
 
-  if (button3_status) {
-    if (rippleCounter3 == NUM_LEDS_X + width + 1) {
-      Serial.printf("\nResetting rippleCounter3...");
-      rippleCounter3 = 0;
-    } else {
-      Serial.printf("\nGenerating frame for button 3...");
-      // generates 1 frame
-      rippleEffect(0, 0, 255, 11, 4, rippleCounter3, prevLeds3, width);
-      if (rippleCounter3 == 0) {  // fixing bug like this instead of fixing my buggy rippleEffect() ;*
-        leds[XY(0, 15)] = CRGB(0, 0, 0);
-      }
-      rippleCounter3++;
-      Serial.printf(" rippleCounter3 = %d", rippleCounter3);
-    }
-  }
+  // Test the setBrightnessTo function on some subset of LEDs again (same or different subset)
 
-  button1_status = digitalRead(INPUT_BTN_NE);
-  button2_status = digitalRead(INPUT_BTN_NW);
-  button3_status = digitalRead(INPUT_BTN_SE);
-  button4_status = digitalRead(INPUT_BTN_SW);
+  delay(3000);
+}
+#endif
 
-  if (button4_status) {
-    Serial.printf("\nButton 4 pressed...");
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-    FastLED.show();
-    bool running = true;
-    while (running == true) {
-      button1_status = digitalRead(INPUT_BTN_NE);
-      button2_status = digitalRead(INPUT_BTN_NW);
-      button3_status = digitalRead(INPUT_BTN_SE);
 
-      if (button1_status || button2_status || button3_status) {
-        running = false;
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-        break;
-      }
 
-      uint32_t ms = millis();
-      int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
-      int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
-      DrawOneFrame(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-      if (ms < 5000) {
-        FastLED.setBrightness(scale8(MAX_BRIGHTNESS, (ms * 256) / 5000));
-      } else {
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-      }
-      FastLED.show();
+/**
+ * Works on a subset of total leds, called lights (doesn't have to modify brightness of whole thing)
+ *  *** Does rely on what the global brightness is set to, so this might just break after using it once.
+ *      Needs to be tested.
+ */
+void setBrightnessTo(CRGB lights[], int numLights, int newBrightness) {
+  uint8_t currentBrightness = FastLED.getBrightness();
+
+  if (currentBrightness == newBrightness) { // no change
+    
+    return;
+
+  } else if (currentBrightness < newBrightness) { // increasing brightness
+
+    for (int i = 0; i < numLights; i++) {
+      lights[i].r = min(255, lights[i].r * newBrightness / currentBrightness);
+      lights[i].g = min(255, lights[i].g * newBrightness / currentBrightness);
+      lights[i].b = min(255, lights[i].b * newBrightness / currentBrightness);
     }
 
-    // reset the ripples after leaving rainbow effect
-    rippleCounter1 = 0;
-    rippleCounter2 = 0;
-    rippleCounter3 = 0;
-    for (int i = 0; i < NUM_LEDS; i++) {
-      prevLeds1[i] = 0;
-      prevLeds2[i] = 0;
-      prevLeds3[i] = 0;
-    }
+  } else { // decreasing brightness
+    
+    int difference = currentBrightness - newBrightness;
 
-    // if (rippleCounter4 == NUM_LEDS_X + width + 1)
-    // {
-    //   Serial.printf("\nResetting rippleCounter4...");
-    //   rippleCounter4 = 0;
-    // }
-    // else
-    // {
-    //   Serial.printf("\nGenerating frame for button 4...");
-    //   // generates 1 frame
-    //   rippleEffect(255, 255, 255, 4, 11, rippleCounter4, prevLeds4, width);
-    //   if (rippleCounter4 == 0)
-    //   { // fixing bug like this instead of fixing my buggy rippleEffect() ;*
-    //     leds[XY(15, 0)] = CRGB(0, 0, 0);
-    //   }
-    //   rippleCounter4++;
-    // }
+    for (int i = 0; i < numLights; i++) {
+      lights[i].fadeLightBy(difference);
+    }
   }
 
   FastLED.show();
-  delay(75);
-
-  // static int rippleCounter2 = 0;
-
-  // // Clear the LED array before each frame
-  // fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-  // // Create frame for first ripple effect
-  // rippleEffect(28, 194, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 4, rippleCounter1); // cyan ripple
-
-  // // Create frame for second ripple effect
-  // rippleEffect(124, 25, 255, NUM_LEDS_X / 2, NUM_LEDS_Y - NUM_LEDS_Y / 4 - 1, rippleCounter2); // purple ripple
-
-  // // Display the frames simultaneously
-  // FastLED.show();
-
-  // // Increment the counters for the ripple effects (for progressing to next frame of ripple)
-  // rippleCounter1++;
-  // rippleCounter2++;
-
-  // // Adjust delay for speed of the ripple effect
-  // delay(75);
 }
-#endif
+
+/**
+ * duration is given in seconds.
+ * 
+ * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
+ * 
+ * If you want to use it on a specific subset of LEDs, will have to provide 
+ * that subset as well as somehow keeping track of what the LEDs previously were.
+ */
+void fadeToBlack(int duration) {
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + duration;
+  uint8_t brightness = FastLED.getBrightness();
+
+  while (millis() < endTime) {
+    double progress = ((millis() - startTime) / 1000) / duration; // divide by 1000 to convert ms to s
+
+    // linearly scale the brightness fade
+    uint8_t newBrightness = (uint8_t) (brightness * (1.0 - progress));
+    FastLED.setBrightness(newBrightness);
+    FastLED.show();
+  }
+
+  FastLED.setBrightness(0); // just in case it doesnt fully work lol
+  FastLED.show();
+}
+
+/**
+ * duration is given in seconds.
+ * targetBrightness should generally not be set beyond 32 (64 likely maximum for safety/consistent power delivery)
+ * 
+ * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
+ * 
+ * If you want to use it on a specific subset of LEDs, will have to provide 
+ * that subset as well as somehow keeping track of what the LEDs previously were.
+ */
+void fadeToBright(int duration, int targetBrightness) {
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + duration;
+
+  while (millis() < endTime) {
+    double progress = ((millis() - startTime) / 1000) / duration; // divide by 1000 to convert ms to s
+    
+    // linearly scale the brightness fade
+    uint8_t newBrightness = (uint8_t) (targetBrightness * progress);
+    FastLED.setBrightness(newBrightness);
+    FastLED.show();
+  }
+
+  FastLED.setBrightness(targetBrightness); // just in case it doesnt fully work lol
+  FastLED.show();
+}
+
+
 
 /**
  * Draws a single frame of the rainbow effect
