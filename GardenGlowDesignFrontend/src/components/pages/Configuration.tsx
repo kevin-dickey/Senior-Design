@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {useLocation} from "react-router-dom";
+import React, {useState, useRef, useEffect} from 'react';
+import {useLocation} from "react-router-dom"
 import {Box, Button, Slider, Drawer, Divider, IconButton} from '@mui/material';
 import {
     ExpandLess,
@@ -13,16 +13,16 @@ import {
     Save,
 } from '@mui/icons-material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {EffectList, validateEffects} from "../editors/EffectList";
-import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
+import {EffectList, validateEffects} from "../editors/EffectList";
+import {ShowFileExport} from "../serialization/ShowFileExport";
 import {GridLayout} from "../serialization/Layout";
 import storageManager from "../../Managers/ShowStorageManager";
-import {
-    EditRainbowEffectFormContainer
-} from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
 import {Pair} from "../serialization/Pair";
+import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
+import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
+
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
@@ -36,7 +36,7 @@ const makeShow = () => {
     const grid = new GridLayout(10, 10);
     show.addLayout(grid);
 
-    return show!;
+    return show;
 }
 
 const Configuration: React.FC = () => {
@@ -49,6 +49,8 @@ const Configuration: React.FC = () => {
     const [isColorsOpen, setIsColorsOpen] = useState(true);
     const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
+    const [selectedEffectType, setSelectedEffectType] = useState<string>('');
+    const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
     useEffect(() => {
         if (location.state && location.state!.path) {
@@ -87,6 +89,7 @@ const Configuration: React.FC = () => {
         setShow(updatedShow);
     }
 
+    // TODO: Save As
     const saveShow = async (show: Show) => {
         console.log('Saving show: ' + show.name);
         console.log(show);
@@ -187,11 +190,11 @@ const Configuration: React.FC = () => {
                             <Button
                                 variant="contained"
                                 startIcon={<Save/>}
-                                onClick={() => saveShow(show!)}
+                                onClick={() => saveShow(show)}
                             >
                                 Save Show
                             </Button>
-                            <ShowFileExport show={show!}/>
+                            <ShowFileExport show={show}/>
                         </Box>
                     </Drawer>
 
@@ -206,15 +209,23 @@ const Configuration: React.FC = () => {
                             overflow: 'hidden',
                         }}
                     >
+                        {creatingNewEffect &&
+                            <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                <CreateEffectFormContainer
+                                    effectType={selectedEffectType}
+                                    onSubmit={(values) => {
+                                        show.addEffect(values);
+                                        setCreatingNewEffect(false);
+                                    }}
+                                />
+                            </Box>
+                        }
                         {selectedEffectId != null &&
                             <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                {/* TODO: Conditionally render Edit/Create containers based on the
-                             action being performed. Don't add a new effect to the effect list
-                              before it's saved. */}
-                                <EditRainbowEffectFormContainer
+                                <EditEffectFormContainer
                                     key={selectedEffectId}
-                                    // TODO: This will error if selectedEffectId isn't present in show!.effects
-                                    effect={show!.getEffectById(selectedEffectId)!}
+                                    // TODO: This will error if selectedEffectId isn't present in .effects
+                                    effect={show.getEffectById(selectedEffectId)!}
                                     onSubmit={(effect: any) => {
                                         console.log("Saving effect: " + effect);
                                         updateEffect(effect, selectedEffectId);
@@ -301,7 +312,6 @@ const Configuration: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-
             )}
         </div>
     );

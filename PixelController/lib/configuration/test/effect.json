@@ -1,0 +1,27 @@
+{
+  "id": 1,
+  "name": "Save me!",
+  "type": "rainbow",
+  "startTimeMs": 10,
+  "durationMs": 900,
+  "origin": {
+    "x": 5,
+    "y": 5
+  },
+  "size": {
+    "x": 10,
+    "y": 10
+  },
+  "colors": [
+    {
+      "r": 255,
+      "g": 0,
+      "b": 0
+    },
+    {
+      "r": 0,
+      "g": 255,
+      "b": 0
+    }
+  ]
+}
