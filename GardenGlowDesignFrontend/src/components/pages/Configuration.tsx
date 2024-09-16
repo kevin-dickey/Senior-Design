@@ -1,6 +1,15 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useLocation} from "react-router-dom"
-import {Box, Button, Slider, Drawer, Divider, IconButton} from '@mui/material';
+import {
+    Box,
+    Button,
+    Slider,
+    Drawer,
+    Divider,
+    IconButton,
+    FormControl,
+    InputLabel, Select, MenuItem
+} from '@mui/material';
 import {
     ExpandLess,
     ExpandMore,
@@ -165,21 +174,39 @@ const Configuration: React.FC = () => {
                                 onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
                                 sx={{color: '#fff', justifyContent: 'flex-start'}}
                             >
-                                Effects in Show {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
+                                Effects in Show {isEffectsListOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
                             {isEffectsListOpen && (
                                 <div>
                                     <EffectList
-                                        effects={show!.effects}
+                                        effects={show.effects}
                                         onEffectSelected={(effectId: number) => {
                                             const finalSelectedId = selectedEffectId === effectId ? null : effectId;
                                             setSelectedEffectId(finalSelectedId);
                                         }}/>
+                                    <FormControl fullWidth>
+                                        <InputLabel id="effect-type-label">Effect Type</InputLabel>
+                                        <Select
+                                            labelId="effect-type-label"
+                                            id="effect-type"
+                                            value={selectedEffectType}
+                                            label="Effect Type"
+                                            onChange={(e) => setSelectedEffectType(e.target.value)}
+                                        >
+                                            <MenuItem value="RainbowEffect">Rainbow
+                                                Effect</MenuItem>
+                                            <MenuItem value="RippleEffect">Ripple Effect</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                     <Button
                                         onClick={() => {
-                                            const effect = RainbowEffect.emptyEffect();
-                                            show.addEffect(effect);
-                                            setSelectedEffectId(effect.id);
+                                            if (selectedEffectType === '') {
+                                                // TODO: Display a warning that the effect type must
+                                                //   be selected. Maybe use formik for this
+                                                return;
+                                            }
+                                            setSelectedEffectId(null);
+                                            setCreatingNewEffect(true);
                                         }}
                                     >
                                         Add Effect
