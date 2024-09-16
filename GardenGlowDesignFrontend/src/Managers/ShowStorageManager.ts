@@ -48,6 +48,10 @@ export class LocalStorageManager implements IShowStorage {
         }
         return shows;
     }
+
+    createFolder(folderName: string): void {
+        localStorage.setItem(`${this.rootKey}/${folderName}`, '');
+    }
 }
 
 const storageManager = new LocalStorageManager();
