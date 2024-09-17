@@ -1,15 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Box, Button, Slider, Drawer, Divider, IconButton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { ExpandLess, ExpandMore, Pause, PlayArrow, FastForward, FastRewind, SkipNext, SkipPrevious, Save } from '@mui/icons-material';
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import {GridLayout} from "../serialization/Layout";
-import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
+import React, {useState} from 'react';
+import {
+    Box,
+    Button,
+    Slider,
+    Drawer,
+    Divider,
+    IconButton,
+    FormControl,
+    InputLabel, Select, MenuItem
+} from '@mui/material';
+import {
+    ExpandLess,
+    ExpandMore,
+    Pause,
+    PlayArrow,
+    FastForward,
+    FastRewind,
+    SkipNext,
+    SkipPrevious,
+    Save,
+} from '@mui/icons-material';
+import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import {EffectList, validateEffects} from "../editors/EffectList";
 import {ShowFileExport} from "../serialization/ShowFileExport";
-import {
-    EditRainbowEffectFormContainer
-} from "../editors/RainbowEffectForm/EditRainbowEffectFormContainer";
+import {Show} from "../serialization/Show";
+import {Effect, RainbowEffect} from "../serialization/Effect";
+import {GridLayout} from "../serialization/Layout";
 import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
