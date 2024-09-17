@@ -40,7 +40,7 @@ build artifact:
         - GardenFlowDesignFrontend/**/*
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
-        - GardenFlowDesignFrontend/**/*
+        - GardenGlowDesignFrontend/**/*
 
 deploy s3:
   stage: deploy
