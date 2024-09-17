@@ -28,7 +28,7 @@ const HomePage : React.FC = () => {
       }}
     >
       <Typography variant="h2" component="h1" gutterBottom>
-        Welcome to the Interactive Lighting Exhibit
+        Welcome to Garden <Box component="span" sx={{ textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff00ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff, 0 0 60px #ff00ff, 0 0 70px #ff00ff' }}>Glow</Box>
       </Typography>
       <Typography variant="h5" component="h2" gutterBottom>
         Experience the future of interactive art
