@@ -1,7 +1,7 @@
 // RainbowEffectForm.tsx
 import React from 'react';
 import {Field} from 'formik';
-import {EffectForm} from '../EffectForms';
+import {EffectForm, labelColumns, fieldColumns} from '../EffectForms';
 import {Effect} from '../../serialization/Effect';
 import Grid from "@mui/material/Grid";
 
@@ -16,11 +16,11 @@ export const RainbowEffectFormPresentational:
     React.FC<RainbowEffectFormProps> = (props) => {
     return (
         <EffectForm {...props}>
-            <Grid item xs={4}>
+            <Grid item xs={labelColumns}>
                 <label htmlFor="rainbowSpeed">Rainbow Speed</label>
             </Grid>
             {/* TODO: Add fields for color */}
-            <Grid item xs={8}>
+            <Grid item xs={fieldColumns}>
                 <Field id="speed" name="speed" type="number"/>
             </Grid>
         </EffectForm>
