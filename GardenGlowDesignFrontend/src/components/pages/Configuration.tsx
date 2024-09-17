@@ -47,15 +47,6 @@ const makeShow = () => {
     return show;
 }
 
-const saveShow = (show: Show) => {
-    // TODO: Implement saving to device LocalStorage
-    console.log('Saving show: ' + show.name);
-    validateEffects(show.effects).then((errors) => {
-        console.log(errors)
-    });
-    console.log(show);
-}
-
 const Configuration: React.FC = () => {
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
@@ -195,6 +186,7 @@ const Configuration: React.FC = () => {
                                             value={selectedEffectType}
                                             label="Effect Type"
                                             onChange={(e) => setSelectedEffectType(e.target.value)}
+                                            variant='filled'
                                         >
                                             <MenuItem value="RainbowEffect">Rainbow
                                                 Effect</MenuItem>
