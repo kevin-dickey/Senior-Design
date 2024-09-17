@@ -36,7 +36,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
             variant="permanent"
             anchor="left"
             sx={{
-                width: '15%',
+                width: '100%',
                 height: '100vh',
                 '& .MuiDrawer-paper': {
                     width: '15%',

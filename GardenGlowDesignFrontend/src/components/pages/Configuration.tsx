@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useLocation} from "react-router-dom"
 import {Box} from '@mui/material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
@@ -34,10 +34,6 @@ const Configuration: React.FC = () => {
 
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
-    const [isShapesOpen, setIsShapesOpen] = useState(true);
-    const [isEffectsOpen, setIsEffectsOpen] = useState(true);
-    const [isColorsOpen, setIsColorsOpen] = useState(true);
-    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [creatingEffectType, setCreatingEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
@@ -107,7 +103,8 @@ const Configuration: React.FC = () => {
                         bgcolor: '#181818',
                         color: '#ffffff',
                         overflow: 'hidden'
-                    }}>
+                    }}
+                >
                     {/* Sidebar */}
                     <EntityPalette
                         show={show}
