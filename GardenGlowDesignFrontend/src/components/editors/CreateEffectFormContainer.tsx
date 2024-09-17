@@ -8,21 +8,26 @@ import {CreateRippleEffectFormContainer} from "./RippleEffectForm/CreateRippleEf
 interface CreateEffectFormContainerProps {
     effectType: string;
     onSubmit: (effect: Effect) => void;
+    onClose?: () => void;
 }
 
+// TODO: This can probably be collapsed into the EditEffectForm container which will handle both
+//  creation and editing.
 export const CreateEffectFormContainer: React.FC<CreateEffectFormContainerProps> =
-    ({effectType, onSubmit}) => {
+    ({effectType, onSubmit, onClose}) => {
         switch (effectType) {
             case 'RainbowEffect':
                 return (
                     <CreateRainbowEffectFormContainer
                         onSubmit={onSubmit}
+                        onClose={onClose}
                     />
                 );
             case 'RippleEffect':
                 return (
                     <CreateRippleEffectFormContainer
                         onSubmit={onSubmit}
+                        onClose={onClose}
                     />
                 );
             default:

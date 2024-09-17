@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import {Effect} from '../serialization/Effect';
 
 import {Box, Button} from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import Grid from "@mui/material/Grid";
 
 import {Delete, Save} from '@mui/icons-material';
@@ -14,6 +15,7 @@ interface EffectFormProps {
     effect: Effect;
     onSubmit: (effect: Effect) => void;
     onDelete?: (effectId: number) => void;
+    onClose?: () => void;
     children?: React.ReactNode;
 }
 
@@ -36,7 +38,7 @@ export const EffectSchema = Yup.object().shape({
 });
 
 export const EffectForm: React.FC<EffectFormProps> = (
-    {effect, onSubmit, onDelete, children}
+    {effect, onSubmit, onDelete, onClose, children}
 ) => {
 
 
@@ -61,10 +63,15 @@ export const EffectForm: React.FC<EffectFormProps> = (
                 {({values, errors, touched}) => (
                     <Form>
                         <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Grid item xs={11}>
                                 <h3>Effect - {values.name}</h3>
                             </Grid>
                             <Grid item xs={4}>
+                            <Grid>
+                                <CloseIcon
+                                    onClick={onClose}
+                                />
+                            </Grid>
                                 <label htmlFor="name">Name</label>
                             </Grid>
                             <Grid item xs={8}>

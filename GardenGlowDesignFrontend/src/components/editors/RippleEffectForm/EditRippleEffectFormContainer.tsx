@@ -7,6 +7,7 @@ interface EditRippleEffectFormContainerProps {
     effect: RippleEffect;
     onSubmit: (effect: Effect) => void;
     onDelete?: (effectId: number) => void;
+    onClose?: () => void;
 }
 
 export const EditRippleEffectFormContainer:
