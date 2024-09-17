@@ -37,7 +37,7 @@ build artifact:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - GardenFlowDesignFrontend/**/*
+        - GardenGlowDesignFrontend/**/*
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - GardenGlowDesignFrontend/**/*
@@ -59,10 +59,10 @@ deploy s3:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - GardenFlowDesignFrontend/**/*
+        - GardenGlowDesignFrontend/**/*
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
-        - GardenFlowDesignFrontend/**/*
+        - GardenGlowDesignFrontend/**/*
 
 PlatformIO-esp32-build:
   stage: build
