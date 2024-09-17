@@ -11,6 +11,7 @@ import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
 
+
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
     const effect = RainbowEffect.emptyEffect();

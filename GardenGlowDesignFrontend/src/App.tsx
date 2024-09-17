@@ -5,6 +5,8 @@ import Configuration from './components/pages/Configuration';
 import './App.css';
 import LoginContainer from './containers/LoginContainer';
 import OverviewContainer from './containers/OverviewContainer';
+import AddNewFolder from './components/pages/AddNewFolder';
+import AddNewFile from './components/pages/AddNewFile';
 
 function App() {
   return (
@@ -13,7 +15,11 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginContainer />} />
         <Route path="/configuration" element={<Configuration />}/>
-        <Route path="/overview" element={<OverviewContainer  />}/>
+        <Route path="/foldersoverview" element={<OverviewContainer  />}/>
+        <Route path="/add-folder" element={<AddNewFolder onAddFolder={() => {}} />} />
+        <Route path="/add-file" element={<AddNewFile onAddFile={() => { } } folders={[]} />} />
+
+
       </Routes>
     </Router>
   );

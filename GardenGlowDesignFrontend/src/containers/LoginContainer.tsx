@@ -25,7 +25,7 @@ const LoginContainer: React.FC = () => {
     setFormData({ username, password });
 
     if (username === credentials.username && password === credentials.password) {
-        navigate('/overview');
+        navigate('/foldersoverview');
     } else {
       setError('Incorrect username or password');
     }
