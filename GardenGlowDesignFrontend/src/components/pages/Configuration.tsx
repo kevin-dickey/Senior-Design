@@ -1,10 +1,12 @@
 import React, {useState} from 'react';
+import {useLocation} from "react-router-dom"
 import {Box} from '@mui/material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import {validateEffects} from "../editors/EffectList";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
 import {GridLayout} from "../serialization/Layout";
+import storageManager from "../../Managers/ShowStorageManager";
 import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
@@ -28,15 +30,32 @@ const makeShow = () => {
 }
 
 const Configuration: React.FC = () => {
-    const [show, setShow] = useState<Show | null>(makeShow());
+    const location = useLocation();
+
+    const [loadingShow, setLoadingShow] = useState(true);
+    const [show, setShow] = useState<Show | null>(null);
+    const [isShapesOpen, setIsShapesOpen] = useState(true);
+    const [isEffectsOpen, setIsEffectsOpen] = useState(true);
+    const [isColorsOpen, setIsColorsOpen] = useState(true);
+    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [creatingEffectType, setCreatingEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
+    useEffect(() => {
+        if (location.state && location.state.path) {
+            console.log('Loaded show!: ' + location.state.path);
+            const serializedShow = storageManager.loadShow(location.state.path);
+            console.log(serializedShow);
+            setShow(serializedShow);
+        } else {
+            console.log('Creating new show!');
+            setShow(makeShow());
+        }
+        setLoadingShow(false);
+    }, [location.state]);
+
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
-        // Create a copy of the show
-        // Update the effect in the copy
-        // Set the show to the copy
         if (show == null) {
             throw Error("Show must not be null!");
         }
@@ -60,6 +79,7 @@ const Configuration: React.FC = () => {
         setShow(updatedShow);
     }
 
+    // TODO: Save As
     const saveShow = async (show: Show) => {
         console.log('Saving show: ' + show.name);
         console.log(show);
@@ -70,15 +90,16 @@ const Configuration: React.FC = () => {
             console.log('Show not saved. Please fix errors and try again.');
             return;
         }
-        console.log('Show not saved... Not yet implemented!');
+        // FIXME: For now this is fine, but once we open configuration without a file, we need to
+        //  prompt the user for a folder & file name to save under.
+        storageManager.saveShow(location.state.path, show);
+        console.log('Show saved successfully');
     }
 
     return (
         <div>
-            {!show &&
-                <Box>Loading...</Box>
-            }
-            {show &&
+            {loadingShow && <div>Loading...</div>}
+            {!loadingShow && show && (
                 <Box
                     sx={{
                         display: 'flex',
@@ -200,10 +221,9 @@ const Configuration: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-            }
+            )}
         </div>
     );
-}
-
+};
 
 export default Configuration;

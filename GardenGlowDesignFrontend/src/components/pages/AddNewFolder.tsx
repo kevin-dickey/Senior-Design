@@ -13,7 +13,7 @@ const AddNewFolder: React.FC<AddNewFolderProps> = ({ onAddFolder }) => {
   const handleSave = () => {
     if (folderName) {
       onAddFolder(folderName);
-      navigate('/foldersoverview');
+      navigate('/shows');
     }
   };
 
@@ -29,7 +29,7 @@ const AddNewFolder: React.FC<AddNewFolderProps> = ({ onAddFolder }) => {
         <Button variant="contained" color="primary" onClick={handleSave}>
           Save
         </Button>
-        <Button variant="outlined" color="secondary" onClick={() => navigate('/foldersoverview')}>
+        <Button variant="outlined" color="secondary" onClick={() => navigate('/shows')}>
           Cancel
         </Button>
       </Box>
