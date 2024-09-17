@@ -20,6 +20,7 @@ import {
     SkipPrevious,
     Save,
 } from '@mui/icons-material';
+import Draggable from 'react-draggable';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import {EffectList, validateEffects} from "../editors/EffectList";
 import {ShowFileExport} from "../serialization/ShowFileExport";
@@ -65,6 +66,7 @@ const Configuration: React.FC = () => {
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [selectedEffectType, setSelectedEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
+    const nodeRef = React.useRef(null);
 
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
         // Create a copy of the show
@@ -106,6 +108,12 @@ const Configuration: React.FC = () => {
         console.log('Show not saved... Not yet implemented!');
     }
 
+    const closeEffectPane = () => {
+        // TODO: Add a confirmation dialog if the user has unsaved changes
+        setSelectedEffectId(null);
+        setCreatingNewEffect(false);
+    }
+
     // TODO: Save As
 
     const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
@@ -131,8 +139,9 @@ const Configuration: React.FC = () => {
                         }}
                     >
                         <Box>
-                            <Button fullWidth onClick={toggleShapes}
-                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                            <Button
+                                fullWidth onClick={toggleShapes}
+                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
                                 Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
                             {isShapesOpen &&
@@ -140,8 +149,9 @@ const Configuration: React.FC = () => {
                         </Box>
                         <Divider sx={{bgcolor: '#444'}}/>
                         <Box>
-                            <Button fullWidth onClick={toggleEffects}
-                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                            <Button
+                                fullWidth onClick={toggleEffects}
+                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
                                 Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
                             {isEffectsOpen &&
@@ -149,8 +159,9 @@ const Configuration: React.FC = () => {
                         </Box>
                         <Divider sx={{bgcolor: '#444'}}/>
                         <Box>
-                            <Button fullWidth onClick={toggleColors}
-                                    sx={{color: '#fff', justifyContent: 'flex-start'}}>
+                            <Button
+                                fullWidth onClick={toggleColors}
+                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
                                 Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
                             </Button>
                             {isColorsOpen && (
@@ -228,36 +239,6 @@ const Configuration: React.FC = () => {
                             overflow: 'hidden',
                         }}
                     >
-                        {creatingNewEffect &&
-                            <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                            <CreateEffectFormContainer
-                                effectType={selectedEffectType}
-                                onSubmit={(values) => {
-                                    show.addEffect(values);
-                                    setCreatingNewEffect(false);
-                                }}
-                            />
-                            </Box>
-                        }
-                        {selectedEffectId != null &&
-                            <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                <EditEffectFormContainer
-                                    key={selectedEffectId}
-                                    // TODO: This will error if selectedEffectId isn't present in .effects
-                                    effect={show.getEffectById(selectedEffectId)!}
-                                    onSubmit={(effect: any) => {
-                                        console.log("Saving effect: " + effect);
-                                        updateEffect(effect, selectedEffectId);
-                                    }}
-                                    onDelete={(effectId: number) => {
-                                        console.log("Deleting effect: " + effectId);
-                                        deleteEffect(effectId);
-                                        setSelectedEffectId(null);
-                                    }}
-                                />
-                            </Box>
-                        }
-
                         <TransformWrapper
                             initialScale={1}
                             wheel={{step: 0.5}}
@@ -287,6 +268,60 @@ const Configuration: React.FC = () => {
                                 </TransformComponent>
                             )}
                         </TransformWrapper>
+
+                        {creatingNewEffect &&
+                            // FIXME: Be more DRY
+                            <Draggable
+                                nodeRef={nodeRef}
+                            >
+                                <Box
+                                    sx={{
+                                        bgcolor: '#3a3a3a',
+                                        p: 2,
+                                        width: '40vw'
+                                    }}
+                                    ref={nodeRef}
+                                >
+                                    <CreateEffectFormContainer
+                                        effectType={selectedEffectType}
+                                        onSubmit={(values) => {
+                                            show.addEffect(values);
+                                            setCreatingNewEffect(false);
+                                        }}
+                                        onClose={() => closeEffectPane()}
+                                    />
+                                </Box>
+                            </Draggable>
+                        }
+                        {selectedEffectId != null &&
+                            <Draggable nodeRef={nodeRef}>
+                                <Box
+                                    sx={{
+                                        bgcolor: '#3a3a3a',
+                                        p: 2,
+                                        width: '40vw'
+                                    }}
+                                    ref={nodeRef}
+                                >
+                                    <EditEffectFormContainer
+                                        key={selectedEffectId}
+                                        // TODO: This will error if selectedEffectId isn't present in .effects
+                                        effect={show.getEffectById(selectedEffectId)!}
+                                        onSubmit={(effect: any) => {
+                                            console.log("Saving effect: " + effect);
+                                            updateEffect(effect, selectedEffectId);
+                                        }}
+                                        onDelete={(effectId: number) => {
+                                            console.log("Deleting effect: " + effectId);
+                                            deleteEffect(effectId);
+                                            setSelectedEffectId(null);
+                                        }}
+                                        onClose={() => closeEffectPane()}
+                                    />
+                                </Box>
+                            </Draggable>
+                        }
+
                     </Box>
 
                     {/* Timeline Container */}
