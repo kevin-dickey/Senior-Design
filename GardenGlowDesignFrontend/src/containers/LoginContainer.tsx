@@ -8,7 +8,7 @@ const credentials = {
 };
 
 const LoginContainer: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const [, setFormData] = useState({
     username: '',
     password: '',
   });
