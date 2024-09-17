@@ -13,6 +13,7 @@ export class Translation {
 export class Effect {
     id: number;
     name: string;
+    layer: number;
     origin: Pair;
     size: Pair;
     startTimeMs: number;
@@ -28,6 +29,8 @@ export class Effect {
                 id: number = -1) {
         this.id = id;
         this.name = name;
+        // FIXME: Add support for multiple layers
+        this.layer = 1;
         this.origin = origin;
         this.size = size;
         this.startTimeMs = startTimeMs;
