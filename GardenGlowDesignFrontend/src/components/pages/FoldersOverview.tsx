@@ -47,9 +47,9 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
         setSelectedFolder(null);
     };
 
-    const handleFileClick = (fileName: string) => {
-        console.log(fileName);
-        navigate('/configuration', {state: {fileName}});
+    const handleFileClick = (filePath: string) => {
+        console.log(filePath);
+        navigate('/configuration', {state: {path: filePath}});
     };
 
     return (
@@ -65,13 +65,13 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                 ) : (
                     <>
                         <Button
-                            onClick={() => navigate('/add-folder')}
+                            onClick={() => navigate('new-folder')}
                             variant="contained"
                             color="primary">
                             New Folder
                         </Button>
                         <Button
-                            onClick={() => navigate('/add-file')} variant="contained"
+                            onClick={() => navigate('new')} variant="contained"
                             color="secondary" sx={{ml: 2}}>
                             New File
                         </Button>
@@ -90,7 +90,7 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                                             {folder.files.map((file, fileIndex) => (
                                                 <ListItem
                                                     key={fileIndex}
-                                                    onClick={() => handleFileClick(file.name)}
+                                                    onClick={() => handleFileClick(file.path)}
                                                     style={{cursor: 'pointer'}}
                                                 >
                                                     <Typography

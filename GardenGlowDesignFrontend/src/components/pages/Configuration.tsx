@@ -62,9 +62,9 @@ const Configuration: React.FC = () => {
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
     useEffect(() => {
-        if (location.state && location.state!.path) {
-            console.log('Loaded show!: ' + location.state!.path);
-            const serializedShow = storageManager.loadShow(location.state!.path);
+        if (location.state && location.state.path) {
+            console.log('Loaded show!: ' + location.state.path);
+            const serializedShow = storageManager.loadShow(location.state.path);
             console.log(serializedShow);
             setShow(serializedShow);
         } else {
@@ -109,7 +109,9 @@ const Configuration: React.FC = () => {
             console.log('Show not saved. Please fix errors and try again.');
             return;
         }
-        storageManager.saveShow(`test/${show.getFileName()}`, show);
+        // FIXME: For now this is fine, but once we open configuration without a file, we need to
+        //  prompt the user for a folder & file name to save under.
+        storageManager.saveShow(location.state.path, show);
         console.log('Show saved successfully');
     }
 

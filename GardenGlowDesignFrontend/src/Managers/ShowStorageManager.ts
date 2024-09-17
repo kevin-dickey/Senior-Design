@@ -50,7 +50,7 @@ export class LocalStorageManager implements IShowStorage {
     }
 
     createFolder(folderName: string): void {
-        localStorage.setItem(`${this.rootKey}/${folderName}`, '');
+        localStorage.setItem(`${this.rootKey}/${folderName}/`, '');
     }
 }
 

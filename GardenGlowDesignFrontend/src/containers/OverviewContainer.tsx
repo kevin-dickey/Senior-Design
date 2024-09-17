@@ -18,10 +18,20 @@ const reduceFiles = (files: string[]): Folder[] => {
             acc.push(folder);
         }
 
-        folder.files.push({
-            name: storageManager.loadShow(file).name,
-            path: file,
-        });
+        // Skip folders
+        if (file.endsWith('/')) {
+            return acc;
+        }
+
+        try {
+            folder.files.push({
+                name: storageManager.loadShow(file).name,
+                path: file,
+            });
+        } catch (e) {
+            console.error(`Could not load show: ${file} - ${e}`);
+        }
+
         return acc;
     }, []);
 }
@@ -37,14 +47,20 @@ const FoldersOverviewContainer: React.FC = () => {
     const addNewFile = (fileName: string, folderName: string) => {
         // TODO: Just navigate to configurator with a new show name?
         //  Only save to disk and ask for a name on first save?
-        storageManager.saveShow(`${folderName}/${fileName}`, new Show(fileName, 0));
+        // FIXME: This is the same translation as in Show.ts:getFileName. Should be in one place.
+        //  This wouldn't matter if we just navigated to the configurator with a new show name,
+        //  then the save show logic would handle the rest.
+        // TODO: Pre-set duration. Allow changing in the UI & First setting it in the
+        //  configurator if not already set.
+        storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, new Show(fileName, 5000));
         setFolders(reduceFiles(storageManager.listShows()));
     };
 
     return (
         <Routes>
             <Route path="/shows">
-                <Route index element={
+                <Route
+                    index element={
                     <FoldersOverview
                         folders={folders}
                         onAddFolder={addNewFolder}
