@@ -8,6 +8,7 @@ interface RippleEffectFormProps {
     effect: Effect;
     onSubmit: (effect: Effect) => void;
     onDelete?: (effectId: number) => void;
+    onClose?: () => void;
 }
 
 export const RippleEffectFormPresentational:
