@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import {useLocation} from "react-router-dom"
 import {
     Box,
     Button,
@@ -21,11 +22,12 @@ import {
     Save,
 } from '@mui/icons-material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {EffectList, validateEffects} from "../editors/EffectList";
-import {ShowFileExport} from "../serialization/ShowFileExport";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
+import {EffectList, validateEffects} from "../editors/EffectList";
+import {ShowFileExport} from "../serialization/ShowFileExport";
 import {GridLayout} from "../serialization/Layout";
+import storageManager from "../../Managers/ShowStorageManager";
 import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
@@ -46,30 +48,33 @@ const makeShow = () => {
     return show;
 }
 
-const saveShow = (show: Show) => {
-    // TODO: Implement saving to device LocalStorage
-    console.log('Saving show: ' + show.name);
-    validateEffects(show.effects).then((errors) => {
-        console.log(errors)
-    });
-    console.log(show);
-}
-
 const Configuration: React.FC = () => {
+    const location = useLocation();
+
+    const [loadingShow, setLoadingShow] = useState(true);
+    const [show, setShow] = useState<Show | null>(null);
     const [isShapesOpen, setIsShapesOpen] = useState(true);
     const [isEffectsOpen, setIsEffectsOpen] = useState(true);
     const [isColorsOpen, setIsColorsOpen] = useState(true);
     const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
-
-    const [show, setShow] = useState(makeShow());
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [selectedEffectType, setSelectedEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
+    useEffect(() => {
+        if (location.state && location.state.path) {
+            console.log('Loaded show!: ' + location.state.path);
+            const serializedShow = storageManager.loadShow(location.state.path);
+            console.log(serializedShow);
+            setShow(serializedShow);
+        } else {
+            console.log('Creating new show!');
+            setShow(makeShow());
+        }
+        setLoadingShow(false);
+    }, [location.state]);
+
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
-        // Create a copy of the show
-        // Update the effect in the copy
-        // Set the show to the copy
         if (show == null) {
             throw Error("Show must not be null!");
         }
@@ -93,6 +98,7 @@ const Configuration: React.FC = () => {
         setShow(updatedShow);
     }
 
+    // TODO: Save As
     const saveShow = async (show: Show) => {
         console.log('Saving show: ' + show.name);
         console.log(show);
@@ -103,7 +109,10 @@ const Configuration: React.FC = () => {
             console.log('Show not saved. Please fix errors and try again.');
             return;
         }
-        console.log('Show not saved... Not yet implemented!');
+        // FIXME: For now this is fine, but once we open configuration without a file, we need to
+        //  prompt the user for a folder & file name to save under.
+        storageManager.saveShow(location.state.path, show);
+        console.log('Show saved successfully');
     }
 
     // TODO: Save As
@@ -114,7 +123,8 @@ const Configuration: React.FC = () => {
 
     return (
         <div>
-            {show &&
+            {loadingShow && <div>Loading...</div>}
+            {!loadingShow && show && (
                 <Box display="flex" height="100vh" bgcolor="#181818" color="#ffffff">
                     {/* Sidebar */}
                     <Drawer
@@ -230,13 +240,13 @@ const Configuration: React.FC = () => {
                     >
                         {creatingNewEffect &&
                             <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                            <CreateEffectFormContainer
-                                effectType={selectedEffectType}
-                                onSubmit={(values) => {
-                                    show.addEffect(values);
-                                    setCreatingNewEffect(false);
-                                }}
-                            />
+                                <CreateEffectFormContainer
+                                    effectType={selectedEffectType}
+                                    onSubmit={(values) => {
+                                        show.addEffect(values);
+                                        setCreatingNewEffect(false);
+                                    }}
+                                />
                             </Box>
                         }
                         {selectedEffectId != null &&
@@ -331,10 +341,9 @@ const Configuration: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-            }
+            )}
         </div>
     );
-}
-
+};
 
 export default Configuration;
