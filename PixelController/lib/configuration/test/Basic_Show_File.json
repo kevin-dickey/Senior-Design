@@ -1,0 +1,43 @@
+{
+  "name": "Basic Show File",
+  "duration": 10000,
+  "effects": [
+    {
+      "id": 1,
+      "name": "rainbow",
+      "startTimeMs": 20,
+      "durationMs": 800,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 10
+    },
+    {
+      "id": 2,
+      "name": "Crazy Train",
+      "startTimeMs": 1000,
+      "durationMs": 1000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 16,
+        "y": 16
+      },
+      "colors": [
+        "#420",
+        "#696969"
+      ],
+      "speed": 1000
+    }
+  ],
+  "layouts": [],
+  "sensors": []
+}

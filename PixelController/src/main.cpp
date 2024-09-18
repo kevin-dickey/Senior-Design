@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include "../include/json.hpp"
+#include "../lib/configuration/Configuration.h"
 
 using json = nlohmann::json;
 
@@ -14,12 +15,12 @@ using json = nlohmann::json;
 
 # if USE_EMULATOR
 
-#include "../lib/configuration/Configuration.h"
+#define PROJECT_DIR SOURCE_ROOT
 
 # else
+#define PROJECT_DIR PROJECT_DIR
 
 #include <FastLED.h>
-
 #define COLOR_ORDER     RBG
 #define CHIPSET         WS2812
 
@@ -54,13 +55,9 @@ const bool kMatrixVertical = false;
 # if USE_EMULATOR
 
 int main() {
-    std::ifstream f3("../lib/configuration/test/Basic_Show_File.json");
-    json data3 = json::parse(f3);
-    Show show = Show::from_json(data3);
-    f3.close();
-
-    std::cout << "Show Name: " << show.name << std::endl;
-    std::cout << "Show Duration: " << show.duration << std::endl;
+    std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
+    Show show = loadShow(filePath);
+    std::cout << "test";
 
     auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
     std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;

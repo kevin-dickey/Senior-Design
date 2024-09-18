@@ -41,9 +41,10 @@ export class Effect {
 
     toJSON() {
         return {
+            id: this.id,
             name: this.name,
-            startTime: this.startTimeMs,
-            duration: this.durationMs,
+            startTimeMs: this.startTimeMs,
+            durationMs: this.durationMs,
             origin: this.origin,
             size: this.size,
             translation: this.translation
