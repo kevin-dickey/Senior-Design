@@ -58,19 +58,15 @@ void setup()
   FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
 
   pinMode(LED_BUILTIN, OUTPUT); // setup the built-in LED for the esp32
-  pinMode(SENSOR_PIN, INPUT_PULLUP);
 
   hue = 30;
 }
 
 /* Function Prototypes */
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter);
-
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter); // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
-
 uint16_t XYsafe(uint8_t x, uint8_t y);
 
 /* Variables for XY() and XYsafe() */
