@@ -102,7 +102,71 @@ void loop() {
 }
 #endif
 
+enum ShiftDirection {
+  LEFT,
+  RIGHT,
+  UP,
+  DOWN
+};
 
+void shiftLeds(CRGB leds[], ShiftDirection direction) {
+  CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
+
+  // Copy current state to temp array
+  for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++)
+  {
+    temp[i] = leds[i];
+  }
+
+  switch (direction)
+  {
+  case RIGHT:
+    for (int y = 0; y < NUM_LEDS_Y; y++)
+    {
+      for (int x = 0; x < NUM_LEDS_X; x++)
+      {
+        int newX = (x + 1) % NUM_LEDS_X;
+        leds[XY(newX, y)] = temp[XY(x, y)];
+      }
+    }
+    break;
+
+  case LEFT:
+    for (int y = 0; y < NUM_LEDS_Y; y++)
+    {
+      for (int x = 0; x < NUM_LEDS_X; x++)
+      {
+        int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
+        leds[XY(newX, y)] = temp[XY(x, y)];
+      }
+    }
+    break;
+
+  case UP:
+    for (int x = 0; x < NUM_LEDS_X; x++)
+    {
+      for (int y = 0; y < NUM_LEDS_Y; y++)
+      {
+        int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
+        leds[XY(x, newY)] = temp[XY(x, y)];
+      }
+    }
+    break;
+
+  case DOWN:
+    for (int x = 0; x < NUM_LEDS_X; x++)
+    {
+      for (int y = 0; y < NUM_LEDS_Y; y++)
+      {
+        int newY = (y + 1) % NUM_LEDS_Y;
+        leds[XY(x, newY)] = temp[XY(x, y)];
+      }
+    }
+    break;
+  }
+
+  FastLED.show(); // Update the LED display
+}
 
 /**
  * Works on a subset of total leds, called lights (doesn't have to modify brightness of whole thing)
