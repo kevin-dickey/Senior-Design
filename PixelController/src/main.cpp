@@ -29,7 +29,7 @@
 
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width);
 void fadeToBlack(int duration);
-void fadeToBright(int duration, int targetBrightness);
+void fadeToBrightness(int duration, int targetBrightness);
 void setBrightnessTo(CRGB lights[], int numLights, int newBrightness);
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
@@ -80,25 +80,21 @@ void setup() {
 /**
  * MARK: Looping
  */
-void loop() {
+void loop() {  // for some reason whenever the loop resets so does the brightness? not sure why
   // Test the fade to black function
   fadeToBlack(3);  // fades over 3s
-  FastLED.show();
   delay(1000);
-  FastLED.setBrightness(MAX_BRIGHTNESS);  // set the max brightness for the LEDs
-  FastLED.show();
-  delay(1000);
-  // Test the fade in function
-  // fadeToBright(3, 8); // fades back in over 3s to a brightness value of 8
+
+  // FastLED.setBrightness(MAX_BRIGHTNESS);  // set the max brightness for the LEDs
   // FastLED.show();
+  delay(1000);
 
-  // Test the setBrightnessTo function on all LEDs
+  // Test the fade in function
+  fadeToBrightness(3, 8);  // fades back in over 3s to a brightness value of 8
 
-  // Test the setBrightnessTo function on some subset of LEDs
+  fadeToBrightness(5, 1);
 
-  // Test the setBrightnessTo function on some subset of LEDs again (same or different subset)
-
-  // delay(3000);
+  delay(3000);
 }
 #endif
 
@@ -159,38 +155,6 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
 }
 
 /**
- * Works on a subset of total leds, called lights (doesn't have to modify brightness of whole thing)
- *  *** Does rely on what the global brightness is set to, so this might just break after using it once.
- *      Needs to be tested.
- */
-void setBrightnessTo(CRGB lights[], int numLights, int newBrightness) {
-  uint8_t currentBrightness = FastLED.getBrightness();
-
-  if (currentBrightness == newBrightness) {  // no change
-
-    return;
-
-  } else if (currentBrightness < newBrightness) {  // increasing brightness
-
-    for (int i = 0; i < numLights; i++) {
-      lights[i].r = min(255, lights[i].r * newBrightness / currentBrightness);
-      lights[i].g = min(255, lights[i].g * newBrightness / currentBrightness);
-      lights[i].b = min(255, lights[i].b * newBrightness / currentBrightness);
-    }
-
-  } else {  // decreasing brightness
-
-    int difference = currentBrightness - newBrightness;
-
-    for (int i = 0; i < numLights; i++) {
-      lights[i].fadeLightBy(difference);
-    }
-  }
-
-  FastLED.show();
-}
-
-/**
  * duration is given in seconds.
  *
  * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
@@ -216,6 +180,8 @@ void fadeToBlack(int duration) {
 }
 
 /**
+ * Slowly and "smoothly" transitions the brightness of all LEDs to the targetBrightness over the given duration.
+ *
  * duration is given in seconds.
  * targetBrightness should generally not be set beyond 32 (64 likely maximum for safety/consistent power delivery)
  *
@@ -224,17 +190,25 @@ void fadeToBlack(int duration) {
  * If you want to use it on a specific subset of LEDs, will have to provide
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
-void fadeToBright(int duration, int targetBrightness) {
-  unsigned long startTime = millis();
-  unsigned long endTime = startTime + duration;
+void fadeToBrightness(int duration, int targetBrightness) {
+  uint8_t curBrightness = FastLED.getBrightness();
+  if (curBrightness == targetBrightness) return;
 
-  while (millis() < endTime) {
-    double progress = ((millis() - startTime) / 1000) / duration;  // divide by 1000 to convert ms to s
-
-    // linearly scale the brightness fade
-    uint8_t newBrightness = (uint8_t)(targetBrightness * progress);
-    FastLED.setBrightness(newBrightness);
-    FastLED.show();
+  int updatesPerSec;
+  if (targetBrightness > curBrightness) {  // increase brightness to target
+    updatesPerSec = (targetBrightness - curBrightness) / duration;
+    for (int i = curBrightness; i < targetBrightness; i++) {
+      FastLED.setBrightness(i);
+      FastLED.show();
+      delay(1000 / updatesPerSec);
+    }
+  } else {  // decrease brightness to target
+    updatesPerSec = (curBrightness - targetBrightness) / duration;
+    for (int i = curBrightness; i > targetBrightness; i--) {
+      FastLED.setBrightness(i);
+      FastLED.show();
+      delay(1000 / updatesPerSec);
+    }
   }
 
   FastLED.setBrightness(targetBrightness);  // just in case it doesnt fully work lol
