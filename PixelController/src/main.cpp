@@ -37,7 +37,6 @@ uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
 
-
 /* Variables for XY() and XYsafe() */
 // Params for width and height
 const uint8_t kMatrixWidth = 16;
@@ -82,15 +81,16 @@ void setup() {
  * MARK: Looping
  */
 void loop() {
-
   // Test the fade to black function
-  fadeToBlack(3); // fades over 3s
+  fadeToBlack(3);  // fades over 3s
   FastLED.show();
   delay(1000);
-
-  // Test the fade in function
-  fadeToBright(3, 8); // fades back in over 3s to a brightness value of 8
+  FastLED.setBrightness(MAX_BRIGHTNESS);  // set the max brightness for the LEDs
   FastLED.show();
+  delay(1000);
+  // Test the fade in function
+  // fadeToBright(3, 8); // fades back in over 3s to a brightness value of 8
+  // FastLED.show();
 
   // Test the setBrightnessTo function on all LEDs
 
@@ -98,7 +98,7 @@ void loop() {
 
   // Test the setBrightnessTo function on some subset of LEDs again (same or different subset)
 
-  delay(3000);
+  // delay(3000);
 }
 #endif
 
@@ -113,59 +113,49 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
   CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
 
   // Copy current state to temp array
-  for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++)
-  {
+  for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++) {
     temp[i] = leds[i];
   }
 
-  switch (direction)
-  {
-  case RIGHT:
-    for (int y = 0; y < NUM_LEDS_Y; y++)
-    {
-      for (int x = 0; x < NUM_LEDS_X; x++)
-      {
-        int newX = (x + 1) % NUM_LEDS_X;
-        leds[XY(newX, y)] = temp[XY(x, y)];
+  switch (direction) {
+    case RIGHT:
+      for (int y = 0; y < NUM_LEDS_Y; y++) {
+        for (int x = 0; x < NUM_LEDS_X; x++) {
+          int newX = (x + 1) % NUM_LEDS_X;
+          leds[XY(newX, y)] = temp[XY(x, y)];
+        }
       }
-    }
-    break;
+      break;
 
-  case LEFT:
-    for (int y = 0; y < NUM_LEDS_Y; y++)
-    {
-      for (int x = 0; x < NUM_LEDS_X; x++)
-      {
-        int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
-        leds[XY(newX, y)] = temp[XY(x, y)];
+    case LEFT:
+      for (int y = 0; y < NUM_LEDS_Y; y++) {
+        for (int x = 0; x < NUM_LEDS_X; x++) {
+          int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
+          leds[XY(newX, y)] = temp[XY(x, y)];
+        }
       }
-    }
-    break;
+      break;
 
-  case UP:
-    for (int x = 0; x < NUM_LEDS_X; x++)
-    {
-      for (int y = 0; y < NUM_LEDS_Y; y++)
-      {
-        int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
-        leds[XY(x, newY)] = temp[XY(x, y)];
+    case UP:
+      for (int x = 0; x < NUM_LEDS_X; x++) {
+        for (int y = 0; y < NUM_LEDS_Y; y++) {
+          int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
+          leds[XY(x, newY)] = temp[XY(x, y)];
+        }
       }
-    }
-    break;
+      break;
 
-  case DOWN:
-    for (int x = 0; x < NUM_LEDS_X; x++)
-    {
-      for (int y = 0; y < NUM_LEDS_Y; y++)
-      {
-        int newY = (y + 1) % NUM_LEDS_Y;
-        leds[XY(x, newY)] = temp[XY(x, y)];
+    case DOWN:
+      for (int x = 0; x < NUM_LEDS_X; x++) {
+        for (int y = 0; y < NUM_LEDS_Y; y++) {
+          int newY = (y + 1) % NUM_LEDS_Y;
+          leds[XY(x, newY)] = temp[XY(x, y)];
+        }
       }
-    }
-    break;
+      break;
   }
 
-  FastLED.show(); // Update the LED display
+  FastLED.show();  // Update the LED display
 }
 
 /**
@@ -176,11 +166,11 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
 void setBrightnessTo(CRGB lights[], int numLights, int newBrightness) {
   uint8_t currentBrightness = FastLED.getBrightness();
 
-  if (currentBrightness == newBrightness) { // no change
-    
+  if (currentBrightness == newBrightness) {  // no change
+
     return;
 
-  } else if (currentBrightness < newBrightness) { // increasing brightness
+  } else if (currentBrightness < newBrightness) {  // increasing brightness
 
     for (int i = 0; i < numLights; i++) {
       lights[i].r = min(255, lights[i].r * newBrightness / currentBrightness);
@@ -188,8 +178,8 @@ void setBrightnessTo(CRGB lights[], int numLights, int newBrightness) {
       lights[i].b = min(255, lights[i].b * newBrightness / currentBrightness);
     }
 
-  } else { // decreasing brightness
-    
+  } else {  // decreasing brightness
+
     int difference = currentBrightness - newBrightness;
 
     for (int i = 0; i < numLights; i++) {
@@ -202,37 +192,36 @@ void setBrightnessTo(CRGB lights[], int numLights, int newBrightness) {
 
 /**
  * duration is given in seconds.
- * 
+ *
  * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
- * 
- * If you want to use it on a specific subset of LEDs, will have to provide 
+ *
+ * If you want to use it on a specific subset of LEDs, will have to provide
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
 void fadeToBlack(int duration) {
-  unsigned long startTime = millis();
-  unsigned long endTime = startTime + duration;
-  uint8_t brightness = FastLED.getBrightness();
+  uint8_t initialBrightness = FastLED.getBrightness();
+  if (initialBrightness == 0) return;
 
-  while (millis() < endTime) {
-    double progress = ((millis() - startTime) / 1000) / duration; // divide by 1000 to convert ms to s
+  int updatesPerSec = initialBrightness / duration;
 
-    // linearly scale the brightness fade
-    uint8_t newBrightness = (uint8_t) (brightness * (1.0 - progress));
-    FastLED.setBrightness(newBrightness);
+  for (int i = initialBrightness; i > 0; i--) {
+    FastLED.setBrightness(i);
     FastLED.show();
+    delay(1000 / updatesPerSec);
   }
 
-  FastLED.setBrightness(0); // just in case it doesnt fully work lol
+  // Ensure the brightness is fully set to 0 at the end
+  FastLED.setBrightness(0);
   FastLED.show();
 }
 
 /**
  * duration is given in seconds.
  * targetBrightness should generally not be set beyond 32 (64 likely maximum for safety/consistent power delivery)
- * 
+ *
  * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
- * 
- * If you want to use it on a specific subset of LEDs, will have to provide 
+ *
+ * If you want to use it on a specific subset of LEDs, will have to provide
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
 void fadeToBright(int duration, int targetBrightness) {
@@ -240,19 +229,17 @@ void fadeToBright(int duration, int targetBrightness) {
   unsigned long endTime = startTime + duration;
 
   while (millis() < endTime) {
-    double progress = ((millis() - startTime) / 1000) / duration; // divide by 1000 to convert ms to s
-    
+    double progress = ((millis() - startTime) / 1000) / duration;  // divide by 1000 to convert ms to s
+
     // linearly scale the brightness fade
-    uint8_t newBrightness = (uint8_t) (targetBrightness * progress);
+    uint8_t newBrightness = (uint8_t)(targetBrightness * progress);
     FastLED.setBrightness(newBrightness);
     FastLED.show();
   }
 
-  FastLED.setBrightness(targetBrightness); // just in case it doesnt fully work lol
+  FastLED.setBrightness(targetBrightness);  // just in case it doesnt fully work lol
   FastLED.show();
 }
-
-
 
 /**
  * Draws a single frame of the rainbow effect
