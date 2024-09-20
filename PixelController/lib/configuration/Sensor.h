@@ -15,6 +15,7 @@ enum SensorType {
     S_ANALOG = 2
 };
     
+extern std::vector<bool> sensorStates;
 void IRAM_ATTR onSensorTriggered(void *arg);
 
 class Sensor {
@@ -44,7 +45,6 @@ public:
 };
 
 
-
 class SensorManager {
 public:
     SensorManager() = default;
@@ -57,11 +57,9 @@ public:
 
 private:
     std::vector<Sensor *> sensors;
-    std::vector<bool> sensorStates;
 
     void removeSensorInterrupts(std::vector<Sensor *> sensors);
     void addSensorInterrupts(std::vector<Sensor *> sensors);
-
 };
 
 #endif // PIXELCONTROLLER_SENSOR_H

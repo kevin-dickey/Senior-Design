@@ -1,8 +1,9 @@
 #include <iostream>
-
 #include <fstream>
+
 #include "../include/json.hpp"
 #include "../lib/configuration/Configuration.h"
+#include "../lib/configuration/Sensor.h"
 
 using json = nlohmann::json;
 
@@ -14,7 +15,7 @@ using json = nlohmann::json;
 #define PROJECT_DIR PROJECT_DIR
 
 #include <FastLED.h>
-#define COLOR_ORDER RBG
+#define COLOR_ORDER GRB
 #define CHIPSET WS2811
 
 #endif
@@ -43,7 +44,7 @@ int main()
 #define LED_PIN 13
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
-#define NUM_LEDS 60 
+#define NUM_LEDS 60
 #define MAX_BRIGHTNESS 25 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 
 /**
@@ -52,28 +53,39 @@ int main()
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //   of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
-Sensor *sensor0, *sensor2, *sensor12, *sensor14;
+Sensor *sensor0, *sensor2, *sensor3, *sensor12, *sensor14;
 int hue;
+char set_sensors;
 
+std::vector<Sensor *> a_sensors;
+std::vector<Sensor *> b_sensors;
 
 void setup()
 {
-  Serial.begin(115200);                                                                           // for setting up stuff to print to serial monitor
+  Serial.begin(115200);          // for setting up stuff to print to serial monitor
+  delay(3000);                   // delay for 3 seconds to give time to open the serial monitor
+  Serial.println("Starting..."); // print to the serial monitor that the program is starting
 
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
-  pinMode(LED_BUILTIN, OUTPUT); // setup the built-in LED for the esp32
+  pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
+  Serial.println("Initialized FastLED...");
 
-  sensor0 = new Sensor(0, 0, BINARY, new Pair(0, 0));
-  sensor2 = new Sensor(0, 2, BINARY, new Pair(0, 0));
-  sensor12 = new Sensor(1, 12, BINARY, new Pair(0, 0));
-  sensor14 = new Sensor(2, 14, BINARY, new Pair(0, 0));
+  Pair_t sensor_pos = {x : 0, y : 0};
+  // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
+  sensor0 = new Sensor(0, 0, S_BINARY, sensor_pos);
+  sensor2 = new Sensor(1, 4, S_BINARY, sensor_pos);
+  sensor3 = new Sensor(2, 16, S_BINARY, sensor_pos);
+  sensor12 = new Sensor(0, 12, S_BINARY, sensor_pos);
+  sensor14 = new Sensor(1, 14, S_BINARY, sensor_pos);
 
-  a_sensors = std::vector<Sensor*>{sensor0, sensor2};
-  b_sensors = std::vector<Sensor*>{sensor12, sensor14};
+  a_sensors = std::vector<Sensor *>{sensor0, sensor2, sensor3};
+  b_sensors = std::vector<Sensor *>{sensor12, sensor14, sensor3};
 
   sensorManager = new SensorManager();
-  sensorManager->addSensors(a_sensors);
+  sensorManager->setSensors(a_sensors);
+  set_sensors = 'a';
+  Serial.println("Initialized Sensors...");
 
   hue = 30;
 }
@@ -85,18 +97,32 @@ void setup()
  */
 void loop()
 {
-  if (digitalRead(SENSOR_PIN) == LOW){
-    std::cout << "Sensor triggered" << std::endl;
-    fill_solid(leds, NUM_LEDS, CRGB::CadetBlue);
-    FastLED.show();
-    delay(2000);
-    return;
+  auto sensor_states = sensorManager->getSensorStates(true);
+
+  if (Serial.read() == 'r' || sensor_states[2])
+  {
+    sensorManager->setSensors(set_sensors == 'a' ? b_sensors : a_sensors);
+    set_sensors = set_sensors == 'a' ? 'b' : 'a';
   }
-  fill_rainbow(leds, NUM_LEDS, hue, 7); // fill the LEDs with a rainbow effect
-  hue += 1;                             // increment the hue for the next frame
-  hue %= 256;                           // keep the hue within the range of 0-255
-  FastLED.show();                       // show the LEDs
-  delay(1000 / 60);                     // delay for 60fps
+
+  if (sensor_states[0])
+  {
+    fill_solid(leds, NUM_LEDS, CRGB::DarkViolet);
+  }
+  else if (sensor_states[1])
+  {
+    fill_solid(leds, NUM_LEDS, CRGB::DarkOrange);
+  }
+  else
+  {
+    fill_rainbow(leds, NUM_LEDS, hue, 12); // fill the LEDs with a rainbow effect
+    hue += 5;                              // increment the hue for the next frame
+    hue %= 256;                            // keep the hue within the range of 0-255
+  }
+
+  FastLED.show(); // show the LEDs
+
+  delay(1000);     // delay for 100 milliseconds
 }
 
 #endif
