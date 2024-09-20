@@ -19,10 +19,14 @@ using json = nlohmann::json;
 
 #endif
 
+SensorManager *sensorManager;
+
 #if USE_EMULATOR
 
 int main()
 {
+  sensorManager = new SensorManager();
+
   std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
   Show show = loadShow(filePath);
   std::cout << "test";
@@ -37,10 +41,9 @@ int main()
 #else
 
 #define LED_PIN 13
-#define SENSOR_PIN 12 
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
-#define NUM_LEDS 100
+#define NUM_LEDS 60 
 #define MAX_BRIGHTNESS 25 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
 
 /**
@@ -49,15 +52,28 @@ int main()
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //   of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
+Sensor *sensor0, *sensor2, *sensor12, *sensor14;
 int hue;
+
 
 void setup()
 {
   Serial.begin(115200);                                                                           // for setting up stuff to print to serial monitor
+
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
   FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
-
   pinMode(LED_BUILTIN, OUTPUT); // setup the built-in LED for the esp32
+
+  sensor0 = new Sensor(0, 0, BINARY, new Pair(0, 0));
+  sensor2 = new Sensor(0, 2, BINARY, new Pair(0, 0));
+  sensor12 = new Sensor(1, 12, BINARY, new Pair(0, 0));
+  sensor14 = new Sensor(2, 14, BINARY, new Pair(0, 0));
+
+  a_sensors = std::vector<Sensor*>{sensor0, sensor2};
+  b_sensors = std::vector<Sensor*>{sensor12, sensor14};
+
+  sensorManager = new SensorManager();
+  sensorManager->addSensors(a_sensors);
 
   hue = 30;
 }

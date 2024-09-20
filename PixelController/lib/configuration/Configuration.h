@@ -10,7 +10,7 @@
 #include "Sensor.h"
 
 
-struct Show {
+typedef struct Show {
     std::string name;
     double duration;
     std::vector<Layout*> layouts;
@@ -45,9 +45,9 @@ struct Show {
         for (auto effect : effects) { delete effect; }
         for (auto sensor : sensors) { delete sensor; }
     }
-};
+} Show_t;
 
-Show loadShow(const std::string& filename) {
+Show_t loadShow(const std::string& filename) {
     std::ifstream f3(filename);
     nlohmann::json data3 = nlohmann::json::parse(f3);
     Show show = Show::from_json(data3);

@@ -7,25 +7,32 @@
 
 #include "../../include/json.hpp"
 
-struct Pair {
+typedef struct Pair
+{
     int x;
     int y;
 
-    static Pair *from_json(const nlohmann::json &j) {
-        return new Pair{j["x"], j["y"]};
+    static Pair from_json(const nlohmann::json &j)
+    {
+        return {
+            x : j["x"],
+            y : j["y"]
+        };
     }
-};
+} Pair_t;
 
-struct Translation {
-    Pair *end_pos;
+typedef struct Translation
+{
+    Pair_t end_pos;
     double durationMs;
 
-    static Translation *from_json(const nlohmann::json &j) {
-        auto *translation = new Translation();
-        translation->end_pos = Pair::from_json(j["end_pos"]);
-        translation->durationMs = j["durationMs"];
-        return translation;
+    static Translation from_json(const nlohmann::json &j)
+    {
+        return {
+            end_pos : Pair_t::from_json(j["end_pos"]),
+            durationMs : j["durationMs"]
+        };
     }
-};
+} Translation_t;
 
-#endif //PIXELCONTROLLER_SPATIALS_H
+#endif // PIXELCONTROLLER_SPATIALS_H
