@@ -10,12 +10,16 @@
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
+#define SENSOR_DEBOUNCE_MS 5000
+
 enum SensorType {
     S_BINARY = 1,
     S_ANALOG = 2
 };
     
-extern std::vector<bool> sensorStates;
+extern std::vector<bool> triggeredInterrupts;
+extern std::vector<long> sensorLastTriggeredMillis;
+
 void IRAM_ATTR onSensorTriggered(void *arg);
 
 class Sensor {
