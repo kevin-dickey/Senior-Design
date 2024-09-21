@@ -1,35 +1,18 @@
-import React, {useState} from 'react';
-import {
-    Box,
-    Button,
-    Slider,
-    Drawer,
-    Divider,
-    IconButton,
-    FormControl,
-    InputLabel, Select, MenuItem
-} from '@mui/material';
-import {
-    ExpandLess,
-    ExpandMore,
-    Pause,
-    PlayArrow,
-    FastForward,
-    FastRewind,
-    SkipNext,
-    SkipPrevious,
-    Save,
-} from '@mui/icons-material';
+import React, {useState, useEffect} from 'react';
+import {useLocation} from "react-router-dom"
+import {Box} from '@mui/material';
 import Draggable from 'react-draggable';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {EffectList, validateEffects} from "../editors/EffectList";
-import {ShowFileExport} from "../serialization/ShowFileExport";
+import {validateEffects} from "../editors/EffectList";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
 import {GridLayout} from "../serialization/Layout";
+import storageManager from "../../Managers/ShowStorageManager";
 import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
+import {EntityPalette} from "../../containers/EntityPalette";
+import {TimelineContainer} from "../../containers/TimelineContainer";
 
 
 const makeShow = () => {
@@ -48,21 +31,29 @@ const makeShow = () => {
 }
 
 const Configuration: React.FC = () => {
-    const [isShapesOpen, setIsShapesOpen] = useState(true);
-    const [isEffectsOpen, setIsEffectsOpen] = useState(true);
-    const [isColorsOpen, setIsColorsOpen] = useState(true);
-    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
+    const location = useLocation();
 
-    const [show, setShow] = useState(makeShow());
+    const [loadingShow, setLoadingShow] = useState(true);
+    const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
-    const [selectedEffectType, setSelectedEffectType] = useState<string>('');
+    const [creatingEffectType, setCreatingEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
     const nodeRef = React.useRef(null);
 
+    useEffect(() => {
+        if (location.state && location.state.path) {
+            console.log('Loaded show!: ' + location.state.path);
+            const serializedShow = storageManager.loadShow(location.state.path);
+            console.log(serializedShow);
+            setShow(serializedShow);
+        } else {
+            console.log('Creating new show!');
+            setShow(makeShow());
+        }
+        setLoadingShow(false);
+    }, [location.state]);
+
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
-        // Create a copy of the show
-        // Update the effect in the copy
-        // Set the show to the copy
         if (show == null) {
             throw Error("Show must not be null!");
         }
@@ -86,17 +77,21 @@ const Configuration: React.FC = () => {
         setShow(updatedShow);
     }
 
+    // TODO: Save As
     const saveShow = async (show: Show) => {
         console.log('Saving show: ' + show.name);
         console.log(show);
 
         const errors = await validateEffects(show.effects);
         if (errors.length > 0) {
-            console.log(`Errors found: ${errors}`);
+            console.log(`Errors found: ${errors.map((e: any) => e.message).join(', ')}`);
             console.log('Show not saved. Please fix errors and try again.');
             return;
         }
-        console.log('Show not saved... Not yet implemented!');
+        // FIXME: For now this is fine, but once we open configuration without a file, we need to
+        //  prompt the user for a folder & file name to save under.
+        storageManager.saveShow(location.state.path, show);
+        console.log('Show saved successfully');
     }
 
     const closeEffectPane = () => {
@@ -107,108 +102,118 @@ const Configuration: React.FC = () => {
 
     // TODO: Save As
 
-    const toggleShapes = () => setIsShapesOpen(!isShapesOpen);
-    const toggleEffects = () => setIsEffectsOpen(!isEffectsOpen);
-    const toggleColors = () => setIsColorsOpen(!isColorsOpen);
-
     return (
         <div>
-            {show &&
-                <Box display="flex" height="100vh" bgcolor="#181818" color="#ffffff">
+            {loadingShow && <div>Loading...</div>}
+            {!loadingShow && show && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        height: '100vh',
+                        bgcolor: '#181818',
+                        color: '#ffffff',
+                        overflow: 'hidden'
+                    }}
+                >
                     {/* Sidebar */}
-                    <Drawer
-                        variant="permanent"
-                        anchor="left"
+                    <EntityPalette
+                        show={show}
+                        saveShow={saveShow}
+                        selectedEffectId={selectedEffectId}
+                        setSelectedEffectId={setSelectedEffectId}
+                        createEffectType={creatingEffectType}
+                        setCreateEffectType={setCreatingEffectType}
+                        creatingNewEffect={creatingNewEffect}
+                        setCreatingNewEffect={setCreatingNewEffect}
+                    />
+
+                    <Box
                         sx={{
-                            width: '15%',
-                            height: '100vh',
-                            '& .MuiDrawer-paper': {
-                                width: '15%',
-                                bgcolor: '#2a2a2a',
-                                overflow: 'auto',
-                            },
+                            width: '100%',
+                            height: '100%',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            overflow: 'hidden',
                         }}
                     >
-                        <Box>
-                            <Button
-                                fullWidth onClick={toggleShapes}
-                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                                Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
-                            </Button>
-                            {isShapesOpen &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Shapes content</Box>}
-                        </Box>
-                        <Divider sx={{bgcolor: '#444'}}/>
-                        <Box>
-                            <Button
-                                fullWidth onClick={toggleEffects}
-                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                                Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
-                            </Button>
-                            {isEffectsOpen &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Effects content</Box>}
-                        </Box>
-                        <Divider sx={{bgcolor: '#444'}}/>
-                        <Box>
-                            <Button
-                                fullWidth onClick={toggleColors}
-                                sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                                Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
-                            </Button>
-                            {isColorsOpen && (
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                    <input type="color" value="#9731f2" readOnly={true}/>
-                                </Box>
-                            )}
-                        </Box>
-                        <Divider sx={{bgcolor: '#444'}}/>
-                        <Box>
-                            <Button
-                                fullWidth
-                                onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
-                                sx={{color: '#fff', justifyContent: 'flex-start'}}
-                            >
-                                Effects in Show {isEffectsListOpen ? <ExpandLess/> : <ExpandMore/>}
-                            </Button>
-                            {isEffectsListOpen && (
-                                <div>
-                                    <EffectList
-                                        effects={show.effects}
-                                        onEffectSelected={(effectId: number) => {
-                                            const finalSelectedId = selectedEffectId === effectId ? null : effectId;
-                                            setSelectedEffectId(finalSelectedId);
-                                        }}/>
-                                    <FormControl fullWidth>
-                                        <InputLabel id="effect-type-label">Effect Type</InputLabel>
-                                        <Select
-                                            labelId="effect-type-label"
-                                            id="effect-type"
-                                            value={selectedEffectType}
-                                            label="Effect Type"
-                                            onChange={(e) => setSelectedEffectType(e.target.value)}
-                                            variant='filled'
-                                        >
-                                            <MenuItem value="RainbowEffect">Rainbow
-                                                Effect</MenuItem>
-                                            <MenuItem value="RippleEffect">Ripple Effect</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                    <Button
-                                        onClick={() => {
-                                            if (selectedEffectType === '') {
-                                                // TODO: Display a warning that the effect type must
-                                                //   be selected. Maybe use formik for this
-                                                return;
-                                            }
-                                            setSelectedEffectId(null);
-                                            setCreatingNewEffect(true);
-                                        }}
-                                    >
-                                        Add Effect
-                                    </Button>
-                                </div>
-                            )}
+                        {/* Grid Container */}
+                        <Box
+                            sx={{
+                                width: '85%',
+                                height: '85%',
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                overflow: 'hidden',
+                            }}
+                        >
+                            {creatingNewEffect &&
+                                <Draggable
+                                    nodeRef={nodeRef}
+                                >
+                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}} ref={nodeRef}>
+                                        <CreateEffectFormContainer
+                                            effectType={creatingEffectType}
+                                            onSubmit={(values) => {
+                                                show.addEffect(values);
+                                                setCreatingNewEffect(false);
+                                            }}
+                                        />
+                                    </Box>
+                                </Draggable>
+                            }
+                            {selectedEffectId != null &&
+                                <Draggable nodeRef={nodeRef}>
+                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}} ref={nodeRef}>
+                                        <EditEffectFormContainer
+                                            key={selectedEffectId}
+                                            // TODO: This will error if selectedEffectId isn't present in .effects
+                                            effect={show.getEffectById(selectedEffectId)!}
+                                            onSubmit={(effect: any) => {
+                                                console.log("Saving effect: " + effect);
+                                                updateEffect(effect, selectedEffectId);
+                                            }}
+                                            onDelete={(effectId: number) => {
+                                                console.log("Deleting effect: " + effectId);
+                                                deleteEffect(effectId);
+                                                setSelectedEffectId(null);
+                                            }}
+                                        />
+                                    </Box>
+                                </Draggable>
+                            }
 
+                            <TransformWrapper
+                                initialScale={1}
+                                wheel={{step: 0.5}}
+                                minScale={.5}
+                                maxScale={5}
+                            >
+                                {({zoomIn, zoomOut, resetTransform}) => (
+                                    <TransformComponent wrapperStyle={{flex: 1}}>
+                                        <Box flexDirection="column">
+                                            {/* Generate a grid of dots to represent LEDs */}
+                                            {[...Array(50)].map((_, rowIndex) => (
+                                                <Box key={rowIndex} display="flex" gap={0.5}>
+                                                    {[...Array(50)].map((_, colIndex) => (
+                                                        <Box
+                                                            key={colIndex}
+                                                            sx={{
+                                                                width: 10,
+                                                                height: 10,
+                                                                bgcolor: '#222',
+                                                                borderRadius: '50%',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </TransformComponent>
+                                )}
+                            </TransformWrapper>
+                        </Box>
                             <Button
                                 variant="contained"
                                 startIcon={<Save/>}
@@ -316,52 +321,28 @@ const Configuration: React.FC = () => {
 
                     </Box>
 
-                    {/* Timeline Container */}
-                    <Box
-                        position="absolute"
-                        bottom={0}
-                        right={0}
-                        width="80%"
-                        height="10%"
-                        bgcolor="#2a2a2a"
-                        p={2}
-                        zIndex={1}
-                    >
-                        {/**add better time indicator */}
-                        <Slider
-                            defaultValue={0}
-                            aria-label="Time Slider"
-                            valueLabelDisplay="auto"
-                            min={0}
-                            max={100}
-                            sx={{width: '100%', color: '#fff'}}
-                        />
-                        <Box mt={2} display="flex" gap={2} justifyContent="center">
-                            <IconButton aria-label="Skip Previous" sx={{color: '#fff'}}>
-                                <SkipPrevious/>
-                            </IconButton>
-                            <IconButton aria-label="Rewind" sx={{color: '#fff'}}>
-                                <FastRewind/>
-                            </IconButton>
-                            <IconButton aria-label="Pause" sx={{color: '#fff'}}>
-                                <Pause/>
-                            </IconButton>
-                            <IconButton aria-label="Play" sx={{color: '#fff'}}>
-                                <PlayArrow/>
-                            </IconButton>
-                            <IconButton aria-label="Fast Forward" sx={{color: '#fff'}}>
-                                <FastForward/>
-                            </IconButton>
-                            <IconButton aria-label="Skip Next" sx={{color: '#fff'}}>
-                                <SkipNext/>
-                            </IconButton>
+                        {/* Timeline Container */}
+                        <Box
+                            position="absolute"
+                            bottom={0}
+                            right={0}
+                            width="80%"
+                            height="15vh"
+                            bgcolor="#2a2a2a"
+                            p={2}
+                            zIndex={1}
+                        >
+                            {/**add better time indicator */}
+                            <TimelineContainer
+                                effects={show.effects}
+                                onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                            />
                         </Box>
                     </Box>
                 </Box>
-            }
+            )}
         </div>
     );
-}
-
+};
 
 export default Configuration;

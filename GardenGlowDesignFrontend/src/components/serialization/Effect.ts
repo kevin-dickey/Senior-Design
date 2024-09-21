@@ -13,6 +13,7 @@ export class Translation {
 export class Effect {
     id: number;
     name: string;
+    layer: number;
     origin: Pair;
     size: Pair;
     startTimeMs: number;
@@ -28,6 +29,8 @@ export class Effect {
                 id: number = -1) {
         this.id = id;
         this.name = name;
+        // FIXME: Add support for multiple layers
+        this.layer = 1;
         this.origin = origin;
         this.size = size;
         this.startTimeMs = startTimeMs;
@@ -48,6 +51,18 @@ export class Effect {
             size: this.size,
             translation: this.translation
         };
+    }
+
+    static fromJSON(data: any) {
+        const effect = new Effect(
+            data.name,
+            data.origin,
+            data.size,
+            data.startTime,
+            data.duration,
+            data.translation
+        );
+        return effect;
     }
 }
 
@@ -70,7 +85,17 @@ export class RainbowEffect extends Effect {
         this.speed = speed;
     }
 
-    static override emptyEffect() {
+    static fromEffect(effect: Effect, colors: string[], speed: number): RainbowEffect {
+        return new RainbowEffect(
+            effect.origin,
+            effect.size,
+            effect.startTimeMs,
+            effect.durationMs,
+            colors,
+            speed);
+    }
+
+    static emptyEffect() {
         return new RainbowEffect(new Pair(0, 0), new Pair(20, 20), -1, -1, [], -1);
     }
 
@@ -81,6 +106,14 @@ export class RainbowEffect extends Effect {
             colors: this.colors,
             speed: this.speed,
         };
+    }
+
+    static fromJSON(data: any) {
+        return RainbowEffect.fromEffect(
+            super.fromJSON(data),
+            data.colors,
+            data.speed
+        );
     }
 }
 
@@ -108,11 +141,31 @@ export class RippleEffect extends Effect {
         return new RippleEffect(new Pair(0, 0), new Pair(20, 20), -1, -1, new Pair(0, 0), -1);
     }
 
+    static fromEffect(effect: Effect, ripple_origin: Pair, speed: number) {
+        // TODO: Splay the effect attributes for easy addition.
+        return new RippleEffect(
+            effect.origin,
+            effect.size,
+            effect.startTimeMs,
+            effect.durationMs,
+            ripple_origin,
+            speed
+        );
+    }
+
     toJSON() {
         return {
             ...super.toJSON(),
             ripple_origin: this.ripple_origin,
             speed: this.speed,
         };
+    }
+
+    static fromJSON(data: any) {
+        return RippleEffect.fromEffect(
+            super.fromJSON(data),
+            data.ripple_origin,
+            data.speed
+        );
     }
 }
