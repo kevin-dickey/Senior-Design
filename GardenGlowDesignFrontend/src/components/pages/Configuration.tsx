@@ -207,6 +207,7 @@ const Configuration: React.FC = () => {
                                                         show.addEffect(values);
                                                         setCreatingNewEffect(false);
                                                     }}
+                                                    onClose={() => closeEffectPane()}
                                                 />
                                             </Box>
                                         </Draggable>
@@ -234,11 +235,11 @@ const Configuration: React.FC = () => {
                                                         deleteEffect(effectId);
                                                         setSelectedEffectId(null);
                                                     }}
+                                                    onClose={() => closeEffectPane()}
                                                 />
                                             </Box>
                                         </Draggable>
                                     }
-
                                     <GridContainer show={show}/>
                                 </Box>
 
