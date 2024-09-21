@@ -127,6 +127,7 @@ const Configuration: React.FC = () => {
                         setCreatingNewEffect={setCreatingNewEffect}
                     />
 
+                    {/* Right-hand side */}
                     <Box
                         sx={{
                             width: '100%',
@@ -148,6 +149,35 @@ const Configuration: React.FC = () => {
                                 overflow: 'hidden',
                             }}
                         >
+                            <TransformWrapper
+                                initialScale={1}
+                                wheel={{step: 0.5}}
+                                minScale={.5}
+                                maxScale={5}
+                            >
+                                {({zoomIn, zoomOut, resetTransform}) => (
+                                    <TransformComponent wrapperStyle={{flex: 1}}>
+                                        <Box flexDirection="column">
+                                            {/* Generate a grid of dots to represent LEDs */}
+                                            {[...Array(50)].map((_, rowIndex) => (
+                                                <Box key={rowIndex} display="flex" gap={0.5}>
+                                                    {[...Array(50)].map((_, colIndex) => (
+                                                        <Box
+                                                            key={colIndex}
+                                                            sx={{
+                                                                width: 20,
+                                                                height: 20,
+                                                                bgcolor: '#222',
+                                                                borderRadius: '50%',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </TransformComponent>
+                                )}
+                            </TransformWrapper>
                             {creatingNewEffect &&
                                 <Draggable
                                     nodeRef={nodeRef}
@@ -159,6 +189,7 @@ const Configuration: React.FC = () => {
                                                 show.addEffect(values);
                                                 setCreatingNewEffect(false);
                                             }}
+                                            onClose={() => closeEffectPane()}
                                         />
                                     </Box>
                                 </Draggable>
@@ -179,147 +210,12 @@ const Configuration: React.FC = () => {
                                                 deleteEffect(effectId);
                                                 setSelectedEffectId(null);
                                             }}
+                                            onClose={() => closeEffectPane()}
                                         />
                                     </Box>
                                 </Draggable>
                             }
-
-                            <TransformWrapper
-                                initialScale={1}
-                                wheel={{step: 0.5}}
-                                minScale={.5}
-                                maxScale={5}
-                            >
-                                {({zoomIn, zoomOut, resetTransform}) => (
-                                    <TransformComponent wrapperStyle={{flex: 1}}>
-                                        <Box flexDirection="column">
-                                            {/* Generate a grid of dots to represent LEDs */}
-                                            {[...Array(50)].map((_, rowIndex) => (
-                                                <Box key={rowIndex} display="flex" gap={0.5}>
-                                                    {[...Array(50)].map((_, colIndex) => (
-                                                        <Box
-                                                            key={colIndex}
-                                                            sx={{
-                                                                width: 10,
-                                                                height: 10,
-                                                                bgcolor: '#222',
-                                                                borderRadius: '50%',
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            ))}
-                                        </Box>
-                                    </TransformComponent>
-                                )}
-                            </TransformWrapper>
                         </Box>
-                            <Button
-                                variant="contained"
-                                startIcon={<Save/>}
-                                onClick={() => saveShow(show)}
-                            >
-                                Save Show
-                            </Button>
-                            <ShowFileExport show={show}/>
-                        </Box>
-                    </Drawer>
-
-                    {/* Grid Container */}
-                    <Box
-                        sx={{
-                            width: '85%',
-                            height: '85%',
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            overflow: 'hidden',
-                        }}
-                    >
-                        <TransformWrapper
-                            initialScale={1}
-                            wheel={{step: 0.5}}
-                            minScale={.5}
-                            maxScale={5}
-                        >
-                            {({zoomIn, zoomOut, resetTransform}) => (
-                                <TransformComponent wrapperStyle={{flex: 1}}>
-                                    <Box flexDirection="column">
-                                        {/* Generate a grid of dots to represent LEDs */}
-                                        {[...Array(50)].map((_, rowIndex) => (
-                                            <Box key={rowIndex} display="flex" gap={0.5}>
-                                                {[...Array(50)].map((_, colIndex) => (
-                                                    <Box
-                                                        key={colIndex}
-                                                        sx={{
-                                                            width: 10,
-                                                            height: 10,
-                                                            bgcolor: '#222',
-                                                            borderRadius: '50%',
-                                                        }}
-                                                    />
-                                                ))}
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                </TransformComponent>
-                            )}
-                        </TransformWrapper>
-
-                        {creatingNewEffect &&
-                            // FIXME: Be more DRY
-                            <Draggable
-                                nodeRef={nodeRef}
-                            >
-                                <Box
-                                    sx={{
-                                        bgcolor: '#3a3a3a',
-                                        p: 2,
-                                        width: '40vw'
-                                    }}
-                                    ref={nodeRef}
-                                >
-                                    <CreateEffectFormContainer
-                                        effectType={selectedEffectType}
-                                        onSubmit={(values) => {
-                                            show.addEffect(values);
-                                            setCreatingNewEffect(false);
-                                        }}
-                                        onClose={() => closeEffectPane()}
-                                    />
-                                </Box>
-                            </Draggable>
-                        }
-                        {selectedEffectId != null &&
-                            <Draggable nodeRef={nodeRef}>
-                                <Box
-                                    sx={{
-                                        bgcolor: '#3a3a3a',
-                                        p: 2,
-                                        width: '40vw'
-                                    }}
-                                    ref={nodeRef}
-                                >
-                                    <EditEffectFormContainer
-                                        key={selectedEffectId}
-                                        // TODO: This will error if selectedEffectId isn't present in .effects
-                                        effect={show.getEffectById(selectedEffectId)!}
-                                        onSubmit={(effect: any) => {
-                                            console.log("Saving effect: " + effect);
-                                            updateEffect(effect, selectedEffectId);
-                                        }}
-                                        onDelete={(effectId: number) => {
-                                            console.log("Deleting effect: " + effectId);
-                                            deleteEffect(effectId);
-                                            setSelectedEffectId(null);
-                                        }}
-                                        onClose={() => closeEffectPane()}
-                                    />
-                                </Box>
-                            </Draggable>
-                        }
-
-                    </Box>
 
                         {/* Timeline Container */}
                         <Box

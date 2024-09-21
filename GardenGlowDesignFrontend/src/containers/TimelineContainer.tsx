@@ -133,7 +133,7 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
         let updatedEffects = [...props.effects];
 
         editorData.forEach((row) => {
-            row.actions.forEach((action) => {
+            row.actions.forEach((action: TimelineAction) => {
                 updatedEffects = updateEffectTiming(updatedEffects, action);
                 console.log(action);
             });
