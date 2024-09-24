@@ -1,0 +1,88 @@
+{
+  "name": "Boo Hoo!",
+  "duration": 12000,
+  "endless": true,
+  "effects": [
+    {
+      "id": 1,
+      "name": "Orange Sweep",
+      "startTime": 0,
+      "duration": 2000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 10
+    },
+    {
+      "id": 2,
+      "name": "Ghost",
+      "startTime": 2000,
+      "duration": 2000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "ripple_origin": {
+        "x": 0,
+        "y": 0
+      },
+      "speed": 40
+    },
+    {
+      "id": 3,
+      "name": "Scary Pumpkin",
+      "startTime": 4000,
+      "duration": 1000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "ripple_origin": {
+        "x": 0,
+        "y": 0
+      },
+      "speed": 1
+    }
+  ],
+  "layouts": [
+    {
+      "shape": "grid",
+      "width": 20,
+      "height": 20
+    }
+  ],
+  "sensors": [
+    {
+      "id": 1,
+      "type": "S_BINARY",
+      "location": {
+        "x": 10,
+        "y": 0
+      },
+      "pin": 12
+    },
+    {
+      "id": 2,
+      "type": "S_BINARY",
+      "location": {
+        "x": 20,
+        "y": 10
+      },
+      "pin": 13
+    }
+  ]
+}

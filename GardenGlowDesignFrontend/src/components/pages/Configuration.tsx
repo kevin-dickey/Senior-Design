@@ -33,19 +33,30 @@ const Configuration: React.FC = () => {
     const location = useLocation();
 
     const [loadingShow, setLoadingShow] = useState(true);
+    const [showPath, setShowPath] = useState<string | null>(null);
     const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [creatingEffectType, setCreatingEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
 
     useEffect(() => {
-        if (location.state && location.state.path) {
-            console.log('Loaded show!: ' + location.state.path);
-            const serializedShow = storageManager.loadShow(location.state.path);
-            console.log(serializedShow);
-            setShow(serializedShow);
+        if (location.state) {
+            if (location.state.show) {
+                console.log("Loading show:" + location.state.show);
+                setShow(location.state.show);
+
+                if (location.state.path) {
+                    setShowPath(location.state.path);
+                } else {
+                    console.warn('Path not set in location state. Must prompt user for save location.');
+                }
+            } else if (location.state.path) {
+                console.log("Loading show from path: " + location.state.path);
+                storageManager.loadShow(location.state.path).then(loadedShow => setShow(loadedShow));
+                setShowPath(location.state.path);
+            }
         } else {
-            console.log('Creating new show!');
+            console.warn('No location state found. Creating a new show.');
             setShow(makeShow());
         }
         setLoadingShow(false);
@@ -88,7 +99,11 @@ const Configuration: React.FC = () => {
         }
         // FIXME: For now this is fine, but once we open configuration without a file, we need to
         //  prompt the user for a folder & file name to save under.
-        storageManager.saveShow(location.state.path, show);
+        if (showPath == null) {
+            console.error('No show path set. Prompt the user for a path!');
+            return;
+        }
+        storageManager.saveShow(showPath, show);
         console.log('Show saved successfully');
     }
 

@@ -12,6 +12,7 @@ import {
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
 import {useNavigate} from 'react-router-dom';
+import {Show} from "../serialization/Show";
 
 const darkTheme = createTheme({
     palette: {
@@ -33,9 +34,10 @@ export interface FoldersOverviewProps {
     folders: Folder[];
     onAddFolder: (folderName: string) => void;
     onAddFile: (fileName: string, folderName: string) => void;
+    loadShow: (path: string) => Promise<Show>;
 }
 
-const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, onAddFile}) => {
+const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, onAddFile, loadShow}) => {
     const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
     const navigate = useNavigate();
 
@@ -51,6 +53,13 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
         console.log(filePath);
         navigate('/configuration', {state: {path: filePath}});
     };
+
+    const handleExampleFileClick = (file: File) => {
+        console.log("Creating a new show from example: " + file.name);
+        loadShow('exampleShows/' + file.path).then(show => {
+            navigate('/configuration', {state: {show: show, path: 'shows/test_show.json'}});
+        });
+    }
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -104,6 +113,10 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                                 </Grid>
                             ))}
                         </Grid>
+                        <Typography
+                            variant="h4"
+                            onClick={() => handleExampleFileClick({name: 'Hallo-weeny', path: "hallo-weeny.json"})}
+                        >Example Shows</Typography>
                     </>
                 )}
             </Container>

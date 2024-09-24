@@ -9,6 +9,8 @@ import OverviewContainer from './containers/OverviewContainer';
 function App() {
     return (
         <Router>
+            {/*TODO: A <Routes> block bitches when nothing matches it.
+                Because we have another in OverviewContainer, we get errors.*/}
             <Routes>
                 <Route path="/" element={<HomePage/>}/>
                 <Route path="/login" element={<LoginContainer/>}/>

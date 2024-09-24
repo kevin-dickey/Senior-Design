@@ -24,10 +24,14 @@ const reduceFiles = (files: string[]): Folder[] => {
         }
 
         try {
-            folder.files.push({
-                name: storageManager.loadShow(file).name,
-                path: file,
-            });
+            storageManager.loadShow(file)
+                .then(show => {
+                    console.log(`Loaded show: ${show.name}`);
+                    folder!.files.push({
+                        name: show.name,
+                        path: file
+                    })
+                })
         } catch (e) {
             console.error(`Could not load show: ${file} - ${e}`);
         }
@@ -56,6 +60,10 @@ const FoldersOverviewContainer: React.FC = () => {
         setFolders(reduceFiles(storageManager.listShows()));
     };
 
+    const loadShow = (path: string) => {
+        return storageManager.loadShow(path);
+    }
+
     return (
         <Routes>
             <Route path="/shows">
@@ -65,6 +73,7 @@ const FoldersOverviewContainer: React.FC = () => {
                         folders={folders}
                         onAddFolder={addNewFolder}
                         onAddFile={addNewFile}
+                        loadShow={loadShow}
                     />
                 }/>
                 <Route path="new-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>

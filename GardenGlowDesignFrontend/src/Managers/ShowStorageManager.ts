@@ -3,7 +3,7 @@ import {deserializeShow} from "../utils/deserializeShow";
 
 interface IShowStorage {
     saveShow(path: string, show: Show): void;
-    loadShow(path: string): Show;
+    loadShow(path: string): Promise<Show>;
     deleteShow(path: string): void;
     listShows(directory?: string): string[];
 }
@@ -16,14 +16,22 @@ export class LocalStorageManager implements IShowStorage {
         localStorage.setItem(`${this.rootKey}/${path}`, showData);
     }
 
-    loadShow(path: string): Show {
+    loadShow = async (path: string): Promise<Show> => {
+        // If we have a show file starting with exampleShows/, it's not in local storage
+        // and we should fetch it from the public folder.
+        if (path.startsWith('exampleShows/')) {
+            const resp = await fetch(path);
+            const showData = await resp.json();
+            return deserializeShow(showData);
+        }
+
         const showData = localStorage.getItem(`${this.rootKey}/${path}`);
         if (!showData) {
             throw new Error(`Show file not found at path: ${path}`);
         }
         const parsedData = JSON.parse(showData);
         return deserializeShow(parsedData);
-    }
+    };
 
     deleteShow(path: string): void {
         if (!localStorage.getItem(`${this.rootKey}/${path}`)) {
