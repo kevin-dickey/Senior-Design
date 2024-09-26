@@ -27,6 +27,10 @@ export class Show {
         return max().id + 1;
     }
 
+    getFileName() : string {
+        return this.name.replace(/ /g, '_');
+    }
+
     getEffectById(id: number): Effect | undefined {
         return this.effects.find(effect => effect.id === id);
     }
@@ -60,9 +64,8 @@ export class Show {
         const dataStr = "data:text/json;charset=utf-8," +
             encodeURIComponent(JSON.stringify(this.toJSON()));
         const downloadAnchorNode = document.createElement('a');
-        const fileName = `${this.name.replace(/ /g, '_')}.json`;
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", fileName);
+        downloadAnchorNode.setAttribute("download", this.getFileName() + '.json');
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();

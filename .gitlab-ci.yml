@@ -1,5 +1,3 @@
-image: python:3.11
-
 cache:
   paths:
     - ~/.cache/pip
@@ -7,15 +5,73 @@ cache:
 
 stages:
   - build
+  - deploy
 
-before_script:
-  - pip install -U platformio
+.assume_role: &assume_role
+    - >
+      STS=($(aws sts assume-role-with-web-identity
+      --role-arn ${ROLE_ARN}
+      --role-session-name "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+      --web-identity-token $ID_TOKEN
+      --duration-seconds 3600
+      --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
+      --output text))
+    - export AWS_ACCESS_KEY_ID="${STS[0]}"
+    - export AWS_SECRET_ACCESS_KEY="${STS[1]}"
+    - export AWS_SESSION_TOKEN="${STS[2]}"
+
+
+build artifact:
+  stage: build
+  image: node:latest
+  before_script:
+    - cd GardenGlowDesignFrontend
+    - mkdir -p ./build
+    - npm install
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - ./GardenGlowDesignFrontend/build/
+    when: always
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - GardenGlowDesignFrontend/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - GardenGlowDesignFrontend/**/*
+
+deploy s3:
+  stage: deploy
+  image:
+    name: amazon/aws-cli:latest
+    entrypoint: 
+      - '/usr/bin/env'
+  id_tokens:
+      ID_TOKEN:
+        aud: react_s3_gardenglow
+  before_script:
+    - cd GardenGlowDesignFrontend
+  script:
+    - *assume_role
+    - aws s3 sync build/ s3://$S3_BUCKET
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - GardenGlowDesignFrontend/**/*
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - GardenGlowDesignFrontend/**/*
 
 PlatformIO-esp32-build:
   stage: build
+  image: python:3.11
+  before_script:
+    - pip install -U platformio
   script: "platformio run -e nodemcu-32s -d ./PixelController/"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       when: always
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:

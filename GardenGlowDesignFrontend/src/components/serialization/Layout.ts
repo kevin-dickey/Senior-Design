@@ -1,12 +1,16 @@
 export class Layout {
     shape?: string | null = null;
 
-    constructor() {}
-
     toJSON() {
         return {
             shape: this.shape
         };
+    }
+
+    static fromJSON(data: any) : Layout{
+        const layout = new Layout();
+        Object.assign(layout, data);
+        return layout;
     }
 }
 
