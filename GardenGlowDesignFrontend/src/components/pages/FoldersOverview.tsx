@@ -65,13 +65,13 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                 ) : (
                     <>
                         <Button
-                            onClick={() => navigate('new-folder')}
+                            onClick={() => navigate('/shows/add-folder')}
                             variant="contained"
                             color="primary">
                             New Folder
                         </Button>
                         <Button
-                            onClick={() => navigate('new')} variant="contained"
+                            onClick={() => navigate('/shows/add-file')} variant="contained"
                             color="secondary" sx={{ml: 2}}>
                             New File
                         </Button>

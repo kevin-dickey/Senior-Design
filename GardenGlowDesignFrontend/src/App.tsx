@@ -17,6 +17,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginContainer />} />
         <Route path="/configuration" element={<Configuration />}/>
+        <Route path="/shows/*" element={<OverviewContainer  />} />
         <Route path="/grid" element={<LEDGrid/>} />
       </Routes>
     </Router>
