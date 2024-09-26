@@ -45,6 +45,7 @@ uint16_t XYsafe(uint8_t x, uint8_t y);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
 
 void parseBitmapData(const char *hexData);
+void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 CRGB hexToCRGB(const char *hex);
 
 void shiftLeds(CRGB leds[], ShiftDirection direction);
@@ -96,6 +97,16 @@ const char *pumpkin =
     "ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff "
     "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
 
+const char *pumpkin8bit =
+    "000000 000000 000000 000000 267f00 267f00 000000 000000 "
+    "000000 000000 000000 267f00 267f00 000000 000000 000000 "
+    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 "
+    "ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 "
+    "ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 "
+    "ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 "
+    "ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 "
+    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+
 /**
  * MARK: Setup
  */
@@ -103,11 +114,15 @@ void setup() {
     Serial.begin(115200);                                                                          // for setting up stuff to print to serial monitor
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
-    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    // fill_solid(leds, NUM_LEDS, CRGB::Red);
     FastLED.show();
 
-    parseBitmapData(pumpkin);  // currently sets all of the leds on the matrix to be the pumpkin stuff
+    loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
+    // parseBitmapData(pumpkin);  // currently sets all of the leds on the matrix to be the pumpkin stuff
 }
+
+int count = 0;
+bool goUp = true;
 
 /**
  * MARK: Looping
@@ -115,9 +130,44 @@ void setup() {
 void loop() {
     shiftLeds(leds, RIGHT);
 
+    if (count % 2 == 0) {
+        if (goUp) {
+            shiftLeds(leds, UP);
+        } else {
+            shiftLeds(leds, DOWN);
+        }
+    }
+    count++;
+
+    // Reverse the vertical direction every 4 frames (2 up, 2 down)
+    if (count % 4 == 0) {
+        goUp = !goUp;
+    }
+
     delay(50);
 }
 #endif
+
+// Function to load an 8x8 bitmap from a hex string
+void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth) {
+    for (uint8_t y = 0; y < bitmapHeight; y++) {
+        for (uint8_t x = 0; x < bitmapWidth; x++) {
+            // Calculate the position in the string
+            int index = (y * bitmapWidth + x) * 7;  // 6 for color + 1 for space
+
+            // Extract the hex color (6 characters)
+            char hexColor[7];  // 6 for color + 1 for null terminator
+            strncpy(hexColor, &bitmap[index], 6);
+            hexColor[6] = '\0';  // Null-terminate the string
+
+            // Only load if within bounds
+            if (startX + x < kMatrixWidth && startY + y < kMatrixHeight) {
+                leds[XY(startX + x, startY + y)] = hexToCRGB(hexColor);
+            }
+        }
+    }
+    FastLED.show();
+}
 
 void shiftLeds(CRGB leds[], ShiftDirection direction) {
     CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
