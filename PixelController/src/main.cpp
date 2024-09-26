@@ -27,6 +27,13 @@
 
 #endif
 
+enum ShiftDirection {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN
+};
+
 void fadeToBlack(int duration);
 void fadeToBrightness(int duration, int targetBrightness);
 
@@ -39,6 +46,8 @@ void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // 
 
 void parseBitmapData(const char *hexData);
 CRGB hexToCRGB(const char *hex);
+
+void shiftLeds(CRGB leds[], ShiftDirection direction);
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
@@ -58,14 +67,14 @@ int prevLeds4[NUM_LEDS] = {0};
 
 #if USE_EMULATOR
 void loop_callback() {
-  // modified call to meet new method signature
-  static int rippleCountah = 0;
-  rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah);  // purple :D
-  std ::cout << "Ripple effect frame 1/13" << std::endl;
+    // modified call to meet new method signature
+    static int rippleCountah = 0;
+    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah);  // purple :D
+    std ::cout << "Ripple effect frame 1/13" << std::endl;
 }
 
 int main() {
-  emulator(loop_callback);
+    emulator(loop_callback);
 }
 #else
 
@@ -91,90 +100,73 @@ const char *pumpkin =
  * MARK: Setup
  */
 void setup() {
-  Serial.begin(115200);                                                                          // for setting up stuff to print to serial monitor
-  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
-  FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
-  fill_solid(leds, NUM_LEDS, CRGB::Red);
-  FastLED.show();
+    Serial.begin(115200);                                                                          // for setting up stuff to print to serial monitor
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show();
 
-  parseBitmapData(pumpkin);  // currently sets all of the leds on the matrix to be the pumpkin stuff
+    parseBitmapData(pumpkin);  // currently sets all of the leds on the matrix to be the pumpkin stuff
 }
 
 /**
  * MARK: Looping
  */
-void loop() {  // for some reason whenever the loop resets so does the brightness? not sure why
-  // Test the fade to black function
-  fadeToBlack(3);  // fades over 3s
-  delay(1000);
+void loop() {
+    shiftLeds(leds, RIGHT);
 
-  // FastLED.setBrightness(MAX_BRIGHTNESS);  // set the max brightness for the LEDs
-  // FastLED.show();
-  delay(1000);
-
-  // Test the fade in function
-  fadeToBrightness(3, 8);  // fades back in over 3s to a brightness value of 8
-
-  fadeToBrightness(5, 1);
-
-  delay(3000);
+    delay(50);
 }
 #endif
 
-enum ShiftDirection {
-  LEFT,
-  RIGHT,
-  UP,
-  DOWN
-};
-
 void shiftLeds(CRGB leds[], ShiftDirection direction) {
-  CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
+    CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
 
-  // Copy current state to temp array
-  for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++) {
-    temp[i] = leds[i];
-  }
+    // Copy current state to temp array
+    for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++) {
+        temp[i] = leds[i];
+    }
 
-  switch (direction) {
-    case RIGHT:
-      for (int y = 0; y < NUM_LEDS_Y; y++) {
-        for (int x = 0; x < NUM_LEDS_X; x++) {
-          int newX = (x + 1) % NUM_LEDS_X;
-          leds[XY(newX, y)] = temp[XY(x, y)];
-        }
-      }
-      break;
+    switch (direction) {
+        case RIGHT:  // if you look closely right and left might look flipped, and you're right!
+                     // don't ask me why, it just works :)
+            for (int y = 0; y < NUM_LEDS_Y; y++) {
+                for (int x = 0; x < NUM_LEDS_X; x++) {
+                    int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
+                    leds[XY(newX, y)] = temp[XY(x, y)];
+                }
+            }
+            break;
 
-    case LEFT:
-      for (int y = 0; y < NUM_LEDS_Y; y++) {
-        for (int x = 0; x < NUM_LEDS_X; x++) {
-          int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
-          leds[XY(newX, y)] = temp[XY(x, y)];
-        }
-      }
-      break;
+        case LEFT:
+            for (int y = 0; y < NUM_LEDS_Y; y++) {
+                for (int x = 0; x < NUM_LEDS_X; x++) {
+                    int newX = (x + 1) % NUM_LEDS_X;
+                    leds[XY(newX, y)] = temp[XY(x, y)];
+                }
+            }
+            break;
 
-    case UP:
-      for (int x = 0; x < NUM_LEDS_X; x++) {
-        for (int y = 0; y < NUM_LEDS_Y; y++) {
-          int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
-          leds[XY(x, newY)] = temp[XY(x, y)];
-        }
-      }
-      break;
+        case UP:
+            for (int x = 0; x < NUM_LEDS_X; x++) {
+                for (int y = 0; y < NUM_LEDS_Y; y++) {
+                    int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
+                    leds[XY(x, newY)] = temp[XY(x, y)];
+                }
+            }
+            break;
 
-    case DOWN:
-      for (int x = 0; x < NUM_LEDS_X; x++) {
-        for (int y = 0; y < NUM_LEDS_Y; y++) {
-          int newY = (y + 1) % NUM_LEDS_Y;
-          leds[XY(x, newY)] = temp[XY(x, y)];
-        }
-      }
-      break;
-  }
+        case DOWN:
+            for (int x = 0; x < NUM_LEDS_X; x++) {
+                for (int y = 0; y < NUM_LEDS_Y; y++) {
+                    int newY = (y + 1) % NUM_LEDS_Y;
+                    leds[XY(x, newY)] = temp[XY(x, y)];
+                }
+            }
+            break;
+    }
 
-  FastLED.show();  // Update the LED display
+    FastLED.show();  // Update the LED display
 }
 
 /**
@@ -186,20 +178,20 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
 void fadeToBlack(int duration) {
-  uint8_t initialBrightness = FastLED.getBrightness();
-  if (initialBrightness == 0) return;
+    uint8_t initialBrightness = FastLED.getBrightness();
+    if (initialBrightness == 0) return;
 
-  int updatesPerSec = initialBrightness / duration;
+    int updatesPerSec = initialBrightness / duration;
 
-  for (int i = initialBrightness; i > 0; i--) {
-    FastLED.setBrightness(i);
+    for (int i = initialBrightness; i > 0; i--) {
+        FastLED.setBrightness(i);
+        FastLED.show();
+        delay(1000 / updatesPerSec);
+    }
+
+    // Ensure the brightness is fully set to 0 at the end
+    FastLED.setBrightness(0);
     FastLED.show();
-    delay(1000 / updatesPerSec);
-  }
-
-  // Ensure the brightness is fully set to 0 at the end
-  FastLED.setBrightness(0);
-  FastLED.show();
 }
 
 /**
@@ -214,72 +206,72 @@ void fadeToBlack(int duration) {
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
 void fadeToBrightness(int duration, int targetBrightness) {
-  uint8_t curBrightness = FastLED.getBrightness();
-  if (curBrightness == targetBrightness) return;
+    uint8_t curBrightness = FastLED.getBrightness();
+    if (curBrightness == targetBrightness) return;
 
-  int updatesPerSec;
-  if (targetBrightness > curBrightness) {  // increase brightness to target
-    updatesPerSec = (targetBrightness - curBrightness) / duration;
-    for (int i = curBrightness; i < targetBrightness; i++) {
-      FastLED.setBrightness(i);
-      FastLED.show();
-      delay(1000 / updatesPerSec);
+    int updatesPerSec;
+    if (targetBrightness > curBrightness) {  // increase brightness to target
+        updatesPerSec = (targetBrightness - curBrightness) / duration;
+        for (int i = curBrightness; i < targetBrightness; i++) {
+            FastLED.setBrightness(i);
+            FastLED.show();
+            delay(1000 / updatesPerSec);
+        }
+    } else {  // decrease brightness to target
+        updatesPerSec = (curBrightness - targetBrightness) / duration;
+        for (int i = curBrightness; i > targetBrightness; i--) {
+            FastLED.setBrightness(i);
+            FastLED.show();
+            delay(1000 / updatesPerSec);
+        }
     }
-  } else {  // decrease brightness to target
-    updatesPerSec = (curBrightness - targetBrightness) / duration;
-    for (int i = curBrightness; i > targetBrightness; i--) {
-      FastLED.setBrightness(i);
-      FastLED.show();
-      delay(1000 / updatesPerSec);
-    }
-  }
 
-  FastLED.setBrightness(targetBrightness);  // just in case it doesnt fully work lol
-  FastLED.show();
+    FastLED.setBrightness(targetBrightness);  // just in case it doesnt fully work lol
+    FastLED.show();
 }
 
 // Function to convert a 6-character hex string to CRGB
 CRGB hexToCRGB(const char *hex) {
-  uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
-  uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
-  uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
-  return CRGB(r, g, b);
+    uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
+    uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
+    uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
+    return CRGB(r, g, b);
 }
 
 // Function to parse the bitmap data from a hex string
 void parseBitmapData(const char *hexData) {
-  int index = 0;
-  while (*hexData) {
-    // Skip spaces
-    if (*hexData == ' ') {
-      hexData++;
-      continue;
-    }
+    int index = 0;
+    while (*hexData) {
+        // Skip spaces
+        if (*hexData == ' ') {
+            hexData++;
+            continue;
+        }
 
-    // Convert the next 6 characters to CRGB and store in the leds array
-    if (index < NUM_LEDS) {
-      leds[index] = hexToCRGB(hexData);
-      hexData += 6;  // Move to the next color
-      index++;
-    } else {
-      break;  // Avoid exceeding the array size
+        // Convert the next 6 characters to CRGB and store in the leds array
+        if (index < NUM_LEDS) {
+            leds[index] = hexToCRGB(hexData);
+            hexData += 6;  // Move to the next color
+            index++;
+        } else {
+            break;  // Avoid exceeding the array size
+        }
     }
-  }
 }
 
 /**
  * Draws a single frame of the rainbow effect
  */
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
-  uint8_t lineStartHue = startHue8;
-  for (uint8_t y = 0; y < kMatrixHeight; y++) {
-    lineStartHue += yHueDelta8;
-    uint8_t pixelHue = lineStartHue;
-    for (uint8_t x = 0; x < kMatrixWidth; x++) {
-      pixelHue += xHueDelta8;
-      leds[XY(x, y)] = CHSV(pixelHue, 255, 255);
+    uint8_t lineStartHue = startHue8;
+    for (uint8_t y = 0; y < kMatrixHeight; y++) {
+        lineStartHue += yHueDelta8;
+        uint8_t pixelHue = lineStartHue;
+        for (uint8_t x = 0; x < kMatrixWidth; x++) {
+            pixelHue += xHueDelta8;
+            leds[XY(x, y)] = CHSV(pixelHue, 255, 255);
+        }
     }
-  }
 }
 
 /**
@@ -300,40 +292,40 @@ void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
  */
 void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width) {
-  uint8_t maxDistance = 19;  // max(NUM_LEDS_X, NUM_LEDS_Y);
+    uint8_t maxDistance = 19;  // max(NUM_LEDS_X, NUM_LEDS_Y);
 
-  // Iterate through the LED matrix
-  for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
-    for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
-      // Calculate distance and ripple distance
-      uint8_t distance = calculateDistance(center_x, center_y, x, y);
-      uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance);
-      uint8_t brightness;
-      uint16_t xy_val = XY(x, y);
+    // Iterate through the LED matrix
+    for (uint8_t x = 0; x < NUM_LEDS_X; x++) {
+        for (uint8_t y = 0; y < NUM_LEDS_Y; y++) {
+            // Calculate distance and ripple distance
+            uint8_t distance = calculateDistance(center_x, center_y, x, y);
+            uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance);
+            uint8_t brightness;
+            uint16_t xy_val = XY(x, y);
 
-      if (prevLeds[xy_val] == 1) {
-        prevLeds[xy_val] = 0;
-        CRGB updatedColor = CRGB(leds[xy_val].r - (r * MAX_BRIGHTNESS), leds[xy_val].g - (g * MAX_BRIGHTNESS), leds[xy_val].b - (b * MAX_BRIGHTNESS));
-        leds[xy_val] = updatedColor;
-        continue;
-      }
+            if (prevLeds[xy_val] == 1) {
+                prevLeds[xy_val] = 0;
+                CRGB updatedColor = CRGB(leds[xy_val].r - (r * MAX_BRIGHTNESS), leds[xy_val].g - (g * MAX_BRIGHTNESS), leds[xy_val].b - (b * MAX_BRIGHTNESS));
+                leds[xy_val] = updatedColor;
+                continue;
+            }
 
-      // Determine brightness based on distance from center and rippleCounter
-      if (rippleDistance <= width) {
-        brightness = MAX_BRIGHTNESS;
-        prevLeds[xy_val] = 1;
-      } else {
-        brightness = 0;  // Dim brightness value outside the ripple's ring
-        prevLeds[xy_val] = 0;
-      }
+            // Determine brightness based on distance from center and rippleCounter
+            if (rippleDistance <= width) {
+                brightness = MAX_BRIGHTNESS;
+                prevLeds[xy_val] = 1;
+            } else {
+                brightness = 0;  // Dim brightness value outside the ripple's ring
+                prevLeds[xy_val] = 0;
+            }
 
-      // Create a CRGB object with the calculated color and brightness
-      CRGB newColor = CRGB(r * brightness, g * brightness, b * brightness);
+            // Create a CRGB object with the calculated color and brightness
+            CRGB newColor = CRGB(r * brightness, g * brightness, b * brightness);
 
-      // Add the newColor to the existing LED color using blend function
-      leds[xy_val] += newColor;
+            // Add the newColor to the existing LED color using blend function
+            leds[xy_val] += newColor;
+        }
     }
-  }
 }
 
 /**
@@ -343,10 +335,10 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int r
  * Calculates the distance between two (x, y) points provided.
  */
 uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t y) {
-  // Calculate Euclidean distance from center point to point (x, y)
-  int dx = x - center_x;
-  int dy = y - center_y;
-  return static_cast<uint8_t>(sqrt(dx * dx + dy * dy));
+    // Calculate Euclidean distance from center point to point (x, y)
+    int dx = x - center_x;
+    int dy = y - center_y;
+    return static_cast<uint8_t>(sqrt(dx * dx + dy * dy));
 }
 
 /**
@@ -358,12 +350,12 @@ uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t
  * (Effectively Depricated)
  */
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
-  // uint8_t delta = abs(rippleCounter - distance);
-  // uint8_t maxDistance = NUM_LEDS / 2;
-  // uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
-  // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
-  // return brightness > MAX_BRIGHTNESS ? 0 : brightness;
-  return 0;
+    // uint8_t delta = abs(rippleCounter - distance);
+    // uint8_t maxDistance = NUM_LEDS / 2;
+    // uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
+    // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
+    // return brightness > MAX_BRIGHTNESS ? 0 : brightness;
+    return 0;
 }
 
 /**
@@ -375,47 +367,47 @@ uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
  * If that doesn't work, try changing kMatrixSerpentineLayout (not applicable for testbench, we know the value it needs to be).
  */
 uint16_t XY(uint8_t x, uint8_t y) {
-  int i;
+    int i;
 
-  if (kMatrixSerpentineLayout == false) {
-    if (kMatrixVertical == false) {
-      i = (y * kMatrixWidth) + x;
-    } else {
-      i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
+    if (kMatrixSerpentineLayout == false) {
+        if (kMatrixVertical == false) {
+            i = (y * kMatrixWidth) + x;
+        } else {
+            i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
+        }
     }
-  }
 
-  if (kMatrixSerpentineLayout == true) {
-    if (kMatrixVertical == false) {
-      if (y & 0x01) {
-        // Odd rows run backwards
-        uint8_t reverseX = (kMatrixWidth - 1) - x;
-        i = (y * kMatrixWidth) + reverseX;
-      } else {
-        // Even rows run forwards
-        i = (y * kMatrixWidth) + x;
-      }
-    } else {  // vertical positioning
-      if (x & 0x01) {
-        i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
-      } else {
-        i = kMatrixHeight * (kMatrixWidth - x) - (y + 1);
-      }
-    }
-  };
+    if (kMatrixSerpentineLayout == true) {
+        if (kMatrixVertical == false) {
+            if (y & 0x01) {
+                // Odd rows run backwards
+                uint8_t reverseX = (kMatrixWidth - 1) - x;
+                i = (y * kMatrixWidth) + reverseX;
+            } else {
+                // Even rows run forwards
+                i = (y * kMatrixWidth) + x;
+            }
+        } else {  // vertical positioning
+            if (x & 0x01) {
+                i = kMatrixHeight * (kMatrixWidth - (x + 1)) + y;
+            } else {
+                i = kMatrixHeight * (kMatrixWidth - x) - (y + 1);
+            }
+        }
+    };
 
-  return i;
+    return i;
 }
 
 /**
  * Makes sure the specified point is in bounds before calculating its (x, y) position.
  */
 uint16_t XYsafe(uint8_t x, uint8_t y) {
-  if (x >= kMatrixWidth)
-    return -1;
-  if (y >= kMatrixHeight)
-    return -1;
-  return XY(x, y);
+    if (x >= kMatrixWidth)
+        return -1;
+    if (y >= kMatrixHeight)
+        return -1;
+    return XY(x, y);
 }
 
 /***********************************************************************************************************/
