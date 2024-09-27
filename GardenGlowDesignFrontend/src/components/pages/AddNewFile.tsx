@@ -1,7 +1,18 @@
 import React, {useState} from 'react';
-import {Button, TextField, Box, MenuItem, Select, FormControl, InputLabel} from '@mui/material';
+import {
+    Button,
+    TextField,
+    Box,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
+    ThemeProvider
+} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
 import {Folder} from "./FoldersOverview";
+import darkTheme from "../../utils/Theming";
+import CssBaseline from "@mui/material/CssBaseline";
 
 interface AddNewFileProps {
     folders: Folder[];
@@ -21,41 +32,45 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
     };
 
     return (
-        <Box sx={{p: 2}}>
-            <TextField
-                label="File Name"
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                fullWidth
-            />
-            <FormControl fullWidth sx={{mt: 2}}>
-                <InputLabel>Folder</InputLabel>
-                <Select
-                    value={selectedFolder}
-                    onChange={(e) => setSelectedFolder(e.target.value)}
-                >
-                    {folders.map((folder) => (
-                        <MenuItem key={folder.name} value={folder.name}>
-                            {folder.name}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-            <Box sx={{display: 'flex', gap: 2, mt: 2}}>
-                <Button variant="contained" color="primary" onClick={handleSave}>
-                    Save
-                </Button>
-                <Button
-                    variant="outlined"
-                    color="secondary"
-                    onClick={() =>
-                        navigate('/shows')
-                    }
-                >
-                    Cancel
-                </Button>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            <Box sx={{p: 2}}>
+                <TextField
+                    label="File Name"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
+                    fullWidth
+                />
+                <FormControl fullWidth sx={{mt: 2}}>
+                    <InputLabel>Folder</InputLabel>
+                    <Select
+                        value={selectedFolder}
+                        onChange={(e) => setSelectedFolder(e.target.value)}
+                        variant={'outlined'}
+                    >
+                        {folders.map((folder) => (
+                            <MenuItem key={folder.name} value={folder.name}>
+                                {folder.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <Box sx={{display: 'flex', gap: 2, mt: 2}}>
+                    <Button variant="contained" color="primary" onClick={handleSave}>
+                        Save
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() =>
+                            navigate('/shows')
+                        }
+                    >
+                        Cancel
+                    </Button>
+                </Box>
             </Box>
-        </Box>
+        </ThemeProvider>
     );
 };
 

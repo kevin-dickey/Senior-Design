@@ -1,13 +1,8 @@
-import { Container, Typography, Box, Button, ThemeProvider, createTheme } from '@mui/material';
+import { Container, Typography, Box, Button, ThemeProvider} from '@mui/material';
 import React from "react";
 import { Link } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+import darkTheme from "../../utils/Theming";
 
 const HomePage : React.FC = () => {
   return (
