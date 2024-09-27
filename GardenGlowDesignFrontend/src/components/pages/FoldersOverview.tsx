@@ -32,7 +32,7 @@ export interface Folder {
 export interface FoldersOverviewProps {
     folders: Folder[];
     onAddFolder: (folderName: string) => void;
-    onAddFile: (fileName: string, folderName: string) => void;
+    onAddFile: (fileName: string, folderName: string, width: number, height: number) => void;
 }
 
 const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, onAddFile}) => {

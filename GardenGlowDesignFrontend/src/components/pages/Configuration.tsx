@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation} from "react-router-dom"
 import {Box} from '@mui/material';
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
@@ -92,6 +92,18 @@ const Configuration: React.FC = () => {
         console.log('Show saved successfully');
     }
 
+    function startEffect(): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
     return (
         <div>
             {loadingShow && <div>Loading...</div>}
@@ -115,6 +127,9 @@ const Configuration: React.FC = () => {
                         setCreateEffectType={setCreatingEffectType}
                         creatingNewEffect={creatingNewEffect}
                         setCreatingNewEffect={setCreatingNewEffect}
+                        startEffect={startEffect}
+                        handleInputChange={handleInputChange}
+                        handleEffectChange={handleEffectChange}
                     />
 
                     <Box
@@ -174,13 +189,12 @@ const Configuration: React.FC = () => {
                                 minScale={.5}
                                 maxScale={5}
                             >
-                                {({zoomIn, zoomOut, resetTransform}) => (
-                                    <TransformComponent wrapperStyle={{flex: 1}}>
+                                 {({ zoomIn, zoomOut, resetTransform }) => (
+                                    <TransformComponent wrapperStyle={{ flex: 1 }}>
                                         <Box flexDirection="column">
-                                            {/* Generate a grid of dots to represent LEDs */}
-                                            {[...Array(50)].map((_, rowIndex) => (
-                                                <Box key={rowIndex} display="flex" gap={0.5}>
-                                                    {[...Array(50)].map((_, colIndex) => (
+                                            {Array.from({ length: (show.layouts[0] as GridLayout).height }).map((_, rowIndex) => (
+                                                <Box key={rowIndex} display="flex" gap={0.3}>
+                                                    {Array.from({ length: (show.layouts[0] as GridLayout).width }).map((_, colIndex) => (
                                                         <Box
                                                             key={colIndex}
                                                             sx={{
