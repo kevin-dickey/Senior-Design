@@ -6,6 +6,7 @@ interface IShowStorage {
     loadShow(path: string): Promise<Show>;
     deleteShow(path: string): void;
     listShows(directory?: string): string[];
+    listExampleShows(): Promise<string[]>;
 }
 
 export class LocalStorageManager implements IShowStorage {
@@ -56,6 +57,21 @@ export class LocalStorageManager implements IShowStorage {
         }
         return shows;
     }
+
+    listExampleShows = async (): Promise<string[]> => {
+        // Read from the public/exampleShows/show-manifest.txt file and return the list of shows.
+        const shows: string[] = [];
+        // Fetch and read the text file
+        const response = await fetch('exampleShows/show-manifest.txt');
+        const text = await response.text();
+        // Split the text into lines
+        const lines = text.split('\n');
+        // Remove any empty lines
+        const validLines = lines.filter(line => line.length > 0);
+        // Add each line to the shows array
+        validLines.forEach(line => shows.push(line));
+        return shows;
+    };
 
     createFolder(folderName: string): void {
         localStorage.setItem(`${this.rootKey}/${folderName}/`, '');

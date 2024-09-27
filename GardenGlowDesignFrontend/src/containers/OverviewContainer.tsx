@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Routes, Route} from 'react-router-dom';
 import FoldersOverview, {Folder} from '../components/pages/FoldersOverview';
 import AddNewFolder from '../components/pages/AddNewFolder';
@@ -41,11 +41,32 @@ const reduceFiles = (files: string[]): Folder[] => {
 }
 
 const FoldersOverviewContainer: React.FC = () => {
-    const [folders, setFolders] = useState<Folder[]>(reduceFiles(storageManager.listShows()));
+    const [loading, setLoading] = useState(true);
+    const [folders, setFolders] = useState<Folder[] | null>(null);
+
+    useEffect(() => {
+        const fetchFolders = async () => {
+            const folders = await loadFolders();
+            setFolders(folders);
+            setLoading(false);
+        };
+
+        fetchFolders();
+    }, []);
+
+    const loadFolders = async () => {
+        let loadedFolders: Folder[] = [];
+        loadedFolders = loadedFolders.concat(reduceFiles(storageManager.listShows()));
+
+        const shows = await storageManager.listExampleShows()
+        const exampleFolders = reduceFiles(shows);
+        loadedFolders = loadedFolders.concat(exampleFolders);
+        return loadedFolders;
+    };
 
     const addNewFolder = (folderName: string) => {
         storageManager.createFolder(folderName);
-        setFolders([...folders, {name: folderName, files: []}]);
+        setFolders([...folders!, {name: folderName, files: []}]);
     };
 
     const addNewFile = (fileName: string, folderName: string) => {
@@ -71,6 +92,7 @@ const FoldersOverviewContainer: React.FC = () => {
                     index element={
                     <FoldersOverview
                         folders={folders}
+                        loading={loading}
                         onAddFolder={addNewFolder}
                         onAddFile={addNewFile}
                         loadShow={loadShow}
@@ -81,7 +103,7 @@ const FoldersOverviewContainer: React.FC = () => {
                     path="new"
                     element={
                         <AddNewFile
-                            folders={folders}
+                            folders={folders!}
                             onAddFile={addNewFile}
                         />
                     }
