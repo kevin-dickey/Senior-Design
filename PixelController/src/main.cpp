@@ -162,7 +162,10 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
 
             // Only load if within bounds
             if (startX + x < kMatrixWidth && startY + y < kMatrixHeight) {
-                leds[XY(startX + x, startY + y)] = hexToCRGB(hexColor);
+                CRGB color = hexToCRGB(hexColor);
+                if (color != (CRGB::Black)) {   // black color is interpreted as intending to be transparent
+                    leds[XY(startX + x, startY + y)] = color; 
+                }
             }
         }
     }
