@@ -3,7 +3,6 @@ import {useLocation} from "react-router-dom"
 import {Box} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
-import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import {validateEffects} from "../editors/EffectList";
 import {Show} from "../serialization/Show";
 import {Effect, RainbowEffect} from "../serialization/Effect";
