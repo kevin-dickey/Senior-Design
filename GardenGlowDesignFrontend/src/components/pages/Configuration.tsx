@@ -190,8 +190,7 @@ const Configuration: React.FC = () => {
                                     </Box>
                                 }
 
-                                <GridContainer
-                                    show={show}/>
+                                <GridContainer show={show}/>
                             </Box>
 
                             {/* Timeline Container */}

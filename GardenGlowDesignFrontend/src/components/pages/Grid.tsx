@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import './LEDGrid.css'; // Include your CSS styles here
 
 const LEDGrid: React.FC = () => {
@@ -53,8 +53,7 @@ const LEDGrid: React.FC = () => {
                 Math.pow(rowIndex - numRows / 2, 2) +
                   Math.pow(colIndex - numCols / 2, 2)
               );
-              const colorIndex = Math.floor((distance + offset) % colors.length);
-              return colorIndex;
+              return Math.floor((distance + offset) % colors.length);
             })
         );
     });
