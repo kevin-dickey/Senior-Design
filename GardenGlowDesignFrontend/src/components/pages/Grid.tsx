@@ -22,7 +22,7 @@ const LEDGrid: React.FC = () => {
     '#9400D3', // Violet
   ];
 
-  const [colorOffset, setColorOffset] = useState(0);
+  const [, setColorOffset] = useState(0);
   const [isRunning, setIsRunning] = useState(false); // Track if the animation is running
   const [duration, setDuration] = useState(0); // User-defined duration
   const [effectType, setEffectType] = useState<'rainbow' | 'ripple'>('rainbow'); // Store the chosen effect
