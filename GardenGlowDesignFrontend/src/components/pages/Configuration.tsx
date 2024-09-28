@@ -1,17 +1,19 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import { useLocation } from "react-router-dom"
-import { Box } from '@mui/material';
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { validateEffects } from "../editors/EffectList";
-import { Show } from "../serialization/Show";
-import { Effect, RainbowEffect } from "../serialization/Effect";
-import { GridLayout } from "../serialization/Layout";
+import React, {useState, useEffect, ChangeEvent} from 'react';
+import {useLocation} from "react-router-dom"
+import {Box} from '@mui/material';
+import {ThemeProvider} from '@mui/material/styles';
+import CssBaseline from "@mui/material/CssBaseline";
+import {validateEffects} from "../editors/EffectList";
+import {Show} from "../serialization/Show";
+import {Effect, RainbowEffect} from "../serialization/Effect";
+import {GridLayout} from "../serialization/Layout";
 import storageManager from "../../Managers/ShowStorageManager";
-import { Pair } from "../serialization/Pair";
-import { CreateEffectFormContainer } from "../editors/CreateEffectFormContainer";
-import { EditEffectFormContainer } from "../editors/EditEffectFormContainer";
-import { EntityPalette } from "../../containers/EntityPalette";
-import { TimelineContainer } from "../../containers/TimelineContainer";
+import {Pair} from "../serialization/Pair";
+import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
+import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
+import {EntityPalette} from "../../containers/EntityPalette";
+import {TimelineContainer} from "../../containers/TimelineContainer";
+import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
 
 
@@ -32,6 +34,7 @@ const makeShow = () => {
 
 const Configuration: React.FC = () => {
     const location = useLocation();
+
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
@@ -108,104 +111,106 @@ const Configuration: React.FC = () => {
         <div>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        height: '100vh',
-                        bgcolor: '#181818',
-                        color: '#ffffff',
-                        overflow: 'hidden'
-                    }}
-                >
-                    {/* Sidebar */}
-                    <EntityPalette
-                        show={show}
-                        saveShow={saveShow}
-                        selectedEffectId={selectedEffectId}
-                        setSelectedEffectId={setSelectedEffectId}
-                        createEffectType={creatingEffectType}
-                        setCreateEffectType={setCreatingEffectType}
-                        creatingNewEffect={creatingNewEffect}
-                        setCreatingNewEffect={setCreatingNewEffect}
-                        startEffect={startEffect}
-                        handleInputChange={handleInputChange}
-                        handleEffectChange={handleEffectChange}
-                    />
-
+                <ThemeProvider theme={darkTheme}>
+                    <CssBaseline/>
                     <Box
                         sx={{
-                            width: '100%',
-                            height: '100%',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            overflow: 'hidden',
+                            display: 'flex',
+                            height: '100vh',
+                            bgcolor: '#181818',
+                            color: '#ffffff',
+                            overflow: 'hidden'
                         }}
                     >
-                        {/* Grid Container */}
+                        {/* Sidebar */}
+                        <EntityPalette
+                            show={show}
+                            saveShow={saveShow}
+                            selectedEffectId={selectedEffectId}
+                            setSelectedEffectId={setSelectedEffectId}
+                            createEffectType={creatingEffectType}
+                            setCreateEffectType={setCreatingEffectType}
+                            creatingNewEffect={creatingNewEffect}
+                            setCreatingNewEffect={setCreatingNewEffect}
+                            startEffect={startEffect}
+                            handleInputChange={handleInputChange}
+                            handleEffectChange={handleEffectChange}
+                        />
+
                         <Box
                             sx={{
-                                width: '85%',
-                                height: '85%',
+                                width: '100%',
+                                height: '100%',
                                 position: 'absolute',
                                 top: 0,
-                                right: 0,
+                                left: 0,
                                 overflow: 'hidden',
                             }}
                         >
-                            {creatingNewEffect &&
-                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
-                                    <CreateEffectFormContainer
-                                        effectType={creatingEffectType}
-                                        onSubmit={(values) => {
-                                            show.addEffect(values);
-                                            setCreatingNewEffect(false);
-                                        }}
-                                    />
-                                </Box>
-                            }
-                            {selectedEffectId != null &&
-                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
-                                    <EditEffectFormContainer
-                                        key={selectedEffectId}
-                                        // TODO: This will error if selectedEffectId isn't present in .effects
-                                        effect={show.getEffectById(selectedEffectId)!}
-                                        onSubmit={(effect: any) => {
-                                            console.log("Saving effect: " + effect);
-                                            updateEffect(effect, selectedEffectId);
-                                        }}
-                                        onDelete={(effectId: number) => {
-                                            console.log("Deleting effect: " + effectId);
-                                            deleteEffect(effectId);
-                                            setSelectedEffectId(null);
-                                        }}
-                                    />
-                                </Box>
-                            }
+                            {/* Grid Container */}
+                            <Box
+                                sx={{
+                                    width: '85%',
+                                    height: '85%',
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {creatingNewEffect &&
+                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                        <CreateEffectFormContainer
+                                            effectType={creatingEffectType}
+                                            onSubmit={(values) => {
+                                                show.addEffect(values);
+                                                setCreatingNewEffect(false);
+                                            }}
+                                        />
+                                    </Box>
+                                }
+                                {selectedEffectId != null &&
+                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                        <EditEffectFormContainer
+                                            key={selectedEffectId}
+                                            // TODO: This will error if selectedEffectId isn't present in .effects
+                                            effect={show.getEffectById(selectedEffectId)!}
+                                            onSubmit={(effect: any) => {
+                                                console.log("Saving effect: " + effect);
+                                                updateEffect(effect, selectedEffectId);
+                                            }}
+                                            onDelete={(effectId: number) => {
+                                                console.log("Deleting effect: " + effectId);
+                                                deleteEffect(effectId);
+                                                setSelectedEffectId(null);
+                                            }}
+                                        />
+                                    </Box>
+                                }
 
-                            <GridContainer
-                                show={show} />
-                        </Box>
+                                <GridContainer show={show}/>
+                            </Box>
 
-                        {/* Timeline Container */}
-                        <Box
-                            position="absolute"
-                            bottom={0}
-                            right={0}
-                            width="80%"
-                            height="15vh"
-                            bgcolor="#2a2a2a"
-                            p={2}
-                            zIndex={1}
-                        >
-                            {/**add better time indicator */}
-                            <TimelineContainer
-                                effects={show.effects}
-                                onChangeEffects={(effects: Effect[]) => console.log(effects)}
-                            />
+                            {/* Timeline Container */}
+                            <Box
+                                position="absolute"
+                                bottom={0}
+                                right={0}
+                                width="80%"
+                                height="15vh"
+                                bgcolor="#2a2a2a"
+                                p={2}
+                                zIndex={1}
+                            >
+                                {/**add better time indicator */}
+                                <TimelineContainer
+                                    effects={show.effects}
+                                    onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                                />
+                            </Box>
                         </Box>
                     </Box>
-                </Box>
+                </ThemeProvider>
             )}
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import './LEDGrid.css'; // Include your CSS styles here
 
 const LEDGrid: React.FC = () => {
@@ -22,7 +22,7 @@ const LEDGrid: React.FC = () => {
     '#9400D3', // Violet
   ];
 
-  const [colorOffset, setColorOffset] = useState(0);
+  const [, setColorOffset] = useState(0);
   const [isRunning, setIsRunning] = useState(false); // Track if the animation is running
   const [duration, setDuration] = useState(0); // User-defined duration
   const [effectType, setEffectType] = useState<'rainbow' | 'ripple'>('rainbow'); // Store the chosen effect
@@ -53,8 +53,7 @@ const LEDGrid: React.FC = () => {
                 Math.pow(rowIndex - numRows / 2, 2) +
                   Math.pow(colIndex - numCols / 2, 2)
               );
-              const colorIndex = Math.floor((distance + offset) % colors.length);
-              return colorIndex;
+              return Math.floor((distance + offset) % colors.length);
             })
         );
     });

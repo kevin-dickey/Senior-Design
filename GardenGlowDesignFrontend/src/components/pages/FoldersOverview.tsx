@@ -9,15 +9,11 @@ import {
     ListItem,
     Button
 } from '@mui/material';
-import {createTheme, ThemeProvider} from '@mui/material/styles';
+import {ThemeProvider} from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
 import {useNavigate} from 'react-router-dom';
+import darkTheme from "../../utils/Theming";
 
-const darkTheme = createTheme({
-    palette: {
-        mode: 'dark',
-    },
-});
 
 export interface File {
     name: string;
