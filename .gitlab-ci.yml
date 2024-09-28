@@ -71,9 +71,6 @@ deploy s3:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - GardenGlowDesignFrontend/**/*
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - GardenGlowDesignFrontend/**/*
   dependencies:
     - build artifact
 
