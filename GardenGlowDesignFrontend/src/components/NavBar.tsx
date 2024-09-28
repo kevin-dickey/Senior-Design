@@ -25,7 +25,6 @@ export interface NavBarProps {
     onClickSave: () => void;
 }
 
-const pages = ['Shows', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 
