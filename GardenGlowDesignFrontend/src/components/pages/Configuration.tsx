@@ -16,6 +16,8 @@ import {TimelineContainer} from "../../containers/TimelineContainer";
 import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
 
+import "./Configuration.css";
+
 
 const makeShow = () => {
     const show = new Show('Basic Show File', 10000);
@@ -99,24 +101,26 @@ const Configuration: React.FC = () => {
         throw new Error('Function not implemented.');
     }
 
+    // noinspection JSUnusedLocalSymbols
     function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
         throw new Error('Function not implemented.');
     }
 
+    // noinspection JSUnusedLocalSymbols
     function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
         throw new Error('Function not implemented.');
     }
 
     return (
-        <div>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
-                <ThemeProvider theme={darkTheme}>
-                    <CssBaseline/>
+                <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
                     <Box
                         sx={{
                             display: 'flex',
-                            height: '100vh',
+                            flexGrow: 1,
                             bgcolor: '#181818',
                             color: '#ffffff',
                             overflow: 'hidden'
@@ -141,21 +145,19 @@ const Configuration: React.FC = () => {
                             sx={{
                                 width: '100%',
                                 height: '100%',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
                                 overflow: 'hidden',
                             }}
                         >
                             {/* Grid Container */}
                             <Box
+                                id="grid-container"
                                 sx={{
-                                    width: '85%',
-                                    height: '85%',
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
+                                    flexGrow: 1,
                                     overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}
                             >
                                 {creatingNewEffect &&
@@ -193,11 +195,6 @@ const Configuration: React.FC = () => {
 
                             {/* Timeline Container */}
                             <Box
-                                position="absolute"
-                                bottom={0}
-                                right={0}
-                                width="80%"
-                                height="15vh"
                                 bgcolor="#2a2a2a"
                                 p={2}
                                 zIndex={1}
@@ -210,9 +207,9 @@ const Configuration: React.FC = () => {
                             </Box>
                         </Box>
                     </Box>
-                </ThemeProvider>
+                </Box>
             )}
-        </div>
+        </ThemeProvider>
     );
 };
 
