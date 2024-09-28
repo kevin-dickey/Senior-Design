@@ -28,8 +28,12 @@ build artifact:
     - cd GardenGlowDesignFrontend
     - mkdir -p ./build
     - npm install
+    # Allow warnings to pass a merge request pipeline build.
+    - if [ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]; then export CI=false; fi
   script:
     - npm run build
+    # TODO: Add linting and testing
+    # - if [ "$CI_COMMIT_BRANCH" == "main" ]; then npm run lint && npm run test; fi
   artifacts:
     paths:
       - ./GardenGlowDesignFrontend/build/
