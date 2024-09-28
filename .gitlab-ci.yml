@@ -34,6 +34,11 @@ build artifact:
     - npm run build
     # TODO: Add linting and testing
     # - if [ "$CI_COMMIT_BRANCH" == "main" ]; then npm run lint && npm run test; fi
+    - if grep -i "warning" build_output.log; then
+        echo "Warnings found during build";
+        curl --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" --data "body=Build warnings found: $(cat build_output.log)" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes";
+        exit 1;
+      fi
   artifacts:
     paths:
       - ./GardenGlowDesignFrontend/build/
