@@ -1,17 +1,18 @@
-import React, {useState, useEffect} from 'react';
-import {useLocation} from "react-router-dom"
-import {Box} from '@mui/material';
-import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {validateEffects} from "../editors/EffectList";
-import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
-import {GridLayout} from "../serialization/Layout";
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { useLocation } from "react-router-dom"
+import { Box } from '@mui/material';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { validateEffects } from "../editors/EffectList";
+import { Show } from "../serialization/Show";
+import { Effect, RainbowEffect } from "../serialization/Effect";
+import { GridLayout } from "../serialization/Layout";
 import storageManager from "../../Managers/ShowStorageManager";
-import {Pair} from "../serialization/Pair";
-import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
-import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
-import {EntityPalette} from "../../containers/EntityPalette";
-import {TimelineContainer} from "../../containers/TimelineContainer";
+import { Pair } from "../serialization/Pair";
+import { CreateEffectFormContainer } from "../editors/CreateEffectFormContainer";
+import { EditEffectFormContainer } from "../editors/EditEffectFormContainer";
+import { EntityPalette } from "../../containers/EntityPalette";
+import { TimelineContainer } from "../../containers/TimelineContainer";
+import GridContainer from '../../containers/GridContainer';
 
 
 const makeShow = () => {
@@ -31,7 +32,6 @@ const makeShow = () => {
 
 const Configuration: React.FC = () => {
     const location = useLocation();
-
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
@@ -92,6 +92,18 @@ const Configuration: React.FC = () => {
         console.log('Show saved successfully');
     }
 
+    function startEffect(): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
     return (
         <div>
             {loadingShow && <div>Loading...</div>}
@@ -115,6 +127,9 @@ const Configuration: React.FC = () => {
                         setCreateEffectType={setCreatingEffectType}
                         creatingNewEffect={creatingNewEffect}
                         setCreatingNewEffect={setCreatingNewEffect}
+                        startEffect={startEffect}
+                        handleInputChange={handleInputChange}
+                        handleEffectChange={handleEffectChange}
                     />
 
                     <Box
@@ -139,7 +154,7 @@ const Configuration: React.FC = () => {
                             }}
                         >
                             {creatingNewEffect &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
                                     <CreateEffectFormContainer
                                         effectType={creatingEffectType}
                                         onSubmit={(values) => {
@@ -150,7 +165,7 @@ const Configuration: React.FC = () => {
                                 </Box>
                             }
                             {selectedEffectId != null &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
                                     <EditEffectFormContainer
                                         key={selectedEffectId}
                                         // TODO: This will error if selectedEffectId isn't present in .effects
@@ -168,35 +183,8 @@ const Configuration: React.FC = () => {
                                 </Box>
                             }
 
-                            <TransformWrapper
-                                initialScale={1}
-                                wheel={{step: 0.5}}
-                                minScale={.5}
-                                maxScale={5}
-                            >
-                                {({zoomIn, zoomOut, resetTransform}) => (
-                                    <TransformComponent wrapperStyle={{flex: 1}}>
-                                        <Box flexDirection="column">
-                                            {/* Generate a grid of dots to represent LEDs */}
-                                            {[...Array(50)].map((_, rowIndex) => (
-                                                <Box key={rowIndex} display="flex" gap={0.5}>
-                                                    {[...Array(50)].map((_, colIndex) => (
-                                                        <Box
-                                                            key={colIndex}
-                                                            sx={{
-                                                                width: 10,
-                                                                height: 10,
-                                                                bgcolor: '#222',
-                                                                borderRadius: '50%',
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            ))}
-                                        </Box>
-                                    </TransformComponent>
-                                )}
-                            </TransformWrapper>
+                            <GridContainer
+                                show={show} />
                         </Box>
 
                         {/* Timeline Container */}
