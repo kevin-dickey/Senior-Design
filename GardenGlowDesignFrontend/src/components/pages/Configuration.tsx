@@ -2,7 +2,7 @@
 // This page is where the user can create, edit, and delete effects, as well as save and load shows.
 import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation} from "react-router-dom"
-import {Box} from '@mui/material';
+import {Box, Select} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 import {validateEffects} from "../editors/EffectList";
