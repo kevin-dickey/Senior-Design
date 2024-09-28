@@ -1,6 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation} from "react-router-dom"
-import {Box, ThemeProvider} from '@mui/material';
+import {Box} from '@mui/material';
+import {ThemeProvider} from '@mui/material/styles';
+import CssBaseline from "@mui/material/CssBaseline";
 import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
 import {validateEffects} from "../editors/EffectList";
 import {Show} from "../serialization/Show";
@@ -13,6 +15,7 @@ import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
 import darkTheme from "../../utils/Theming";
+import GridContainer from '../../containers/GridContainer';
 
 
 const makeShow = () => {
@@ -93,11 +96,24 @@ const Configuration: React.FC = () => {
         console.log('Show saved successfully');
     }
 
+    function startEffect(): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
     return (
         <div>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
                 <ThemeProvider theme={darkTheme}>
+                    <CssBaseline/>
                     <Box
                         sx={{
                             display: 'flex',
@@ -117,6 +133,9 @@ const Configuration: React.FC = () => {
                             setCreateEffectType={setCreatingEffectType}
                             creatingNewEffect={creatingNewEffect}
                             setCreatingNewEffect={setCreatingNewEffect}
+                            startEffect={startEffect}
+                            handleInputChange={handleInputChange}
+                            handleEffectChange={handleEffectChange}
                         />
 
                         <Box
@@ -170,35 +189,7 @@ const Configuration: React.FC = () => {
                                     </Box>
                                 }
 
-                                <TransformWrapper
-                                    initialScale={1}
-                                    wheel={{step: 0.5}}
-                                    minScale={.5}
-                                    maxScale={5}
-                                >
-                                    {({zoomIn, zoomOut, resetTransform}) => (
-                                        <TransformComponent wrapperStyle={{flex: 1}}>
-                                            <Box flexDirection="column">
-                                                {/* Generate a grid of dots to represent LEDs */}
-                                                {[...Array(50)].map((_, rowIndex) => (
-                                                    <Box key={rowIndex} display="flex" gap={0.5}>
-                                                        {[...Array(50)].map((_, colIndex) => (
-                                                            <Box
-                                                                key={colIndex}
-                                                                sx={{
-                                                                    width: 10,
-                                                                    height: 10,
-                                                                    bgcolor: '#222',
-                                                                    borderRadius: '50%',
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                        </TransformComponent>
-                                    )}
-                                </TransformWrapper>
+                                <GridContainer show={show}/>
                             </Box>
 
                             {/* Timeline Container */}

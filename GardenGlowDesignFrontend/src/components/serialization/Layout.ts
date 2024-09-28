@@ -1,13 +1,18 @@
 export class Layout {
     shape?: string | null = null;
+    type: string = 'layout'; 
 
     toJSON() {
         return {
-            shape: this.shape
+            shape: this.shape,
+            type: this.type
         };
     }
 
     static fromJSON(data: any) : Layout{
+        if (data.type === 'grid') {
+            return GridLayout.fromJSON(data); 
+        }
         const layout = new Layout();
         Object.assign(layout, data);
         return layout;
@@ -16,6 +21,7 @@ export class Layout {
 
 export class GridLayout extends Layout {
     shape = 'grid';
+    type = 'grid';
     width: number;
     height: number;
 
@@ -32,4 +38,11 @@ export class GridLayout extends Layout {
             height: this.height
         };
     }
+    
+    static fromJSON(data: any): GridLayout {
+        const layout = new GridLayout(data.width, data.height);
+        Object.assign(layout, data);
+        return layout;
+    }
+
 }
