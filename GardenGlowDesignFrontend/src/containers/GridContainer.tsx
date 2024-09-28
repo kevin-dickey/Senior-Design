@@ -12,16 +12,7 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
   const grid = show.layouts[0] as GridLayout;
 
   return (
-    <Box
-      sx={{
-        width: '85%',
-        height: '85%',
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        overflow: 'hidden',
-      }}
-    >
+
       <TransformWrapper
         initialScale={1}
         wheel={{ step: 0.5 }}
@@ -50,7 +41,6 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
           </TransformComponent>
         )}
       </TransformWrapper>
-    </Box>
   );
 };
 

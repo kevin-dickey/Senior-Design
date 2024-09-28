@@ -143,9 +143,49 @@ const Configuration: React.FC = () => {
                         }}
                     >
                         {/* Grid Container */}
-                        <GridContainer
-                            show={show} 
-                        />
+                        <Box
+                            sx={{
+                                width: '85%',
+                                height: '85%',
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                overflow: 'hidden',
+                            }}
+                        >
+                            {creatingNewEffect &&
+                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
+                                    <CreateEffectFormContainer
+                                        effectType={creatingEffectType}
+                                        onSubmit={(values) => {
+                                            show.addEffect(values);
+                                            setCreatingNewEffect(false);
+                                        }}
+                                    />
+                                </Box>
+                            }
+                            {selectedEffectId != null &&
+                                <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
+                                    <EditEffectFormContainer
+                                        key={selectedEffectId}
+                                        // TODO: This will error if selectedEffectId isn't present in .effects
+                                        effect={show.getEffectById(selectedEffectId)!}
+                                        onSubmit={(effect: any) => {
+                                            console.log("Saving effect: " + effect);
+                                            updateEffect(effect, selectedEffectId);
+                                        }}
+                                        onDelete={(effectId: number) => {
+                                            console.log("Deleting effect: " + effectId);
+                                            deleteEffect(effectId);
+                                            setSelectedEffectId(null);
+                                        }}
+                                    />
+                                </Box>
+                            }
+
+                            <GridContainer
+                                show={show} />
+                        </Box>
 
                         {/* Timeline Container */}
                         <Box
