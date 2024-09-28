@@ -48,7 +48,6 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                 [`& .MuiDrawer-paper`]: {width: drawerWidth, boxSizing: 'border-box'},
             }}
         >
-            <Toolbar/>
             <Box sx={{overflow: 'auto'}}>
                 <Box>
                     <Button
@@ -110,6 +109,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                                     value={props.createEffectType}
                                     label="Effect Type"
                                     onChange={(e) => props.setCreateEffectType(e.target.value)}
+                                    variant='outlined'
                                 >
                                     <MenuItem value="RainbowEffect">Rainbow
                                         Effect</MenuItem>
@@ -144,5 +144,5 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                 </Box>
             </Box>
         </Drawer>
-    )
+    );
 }
