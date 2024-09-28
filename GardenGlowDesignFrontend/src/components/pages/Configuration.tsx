@@ -1,17 +1,18 @@
-import React, {useState, useEffect, ChangeEvent} from 'react';
-import {useLocation} from "react-router-dom"
-import {Box} from '@mui/material';
-import {TransformWrapper, TransformComponent} from "react-zoom-pan-pinch";
-import {validateEffects} from "../editors/EffectList";
-import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
-import {GridLayout} from "../serialization/Layout";
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { useLocation } from "react-router-dom"
+import { Box } from '@mui/material';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { validateEffects } from "../editors/EffectList";
+import { Show } from "../serialization/Show";
+import { Effect, RainbowEffect } from "../serialization/Effect";
+import { GridLayout } from "../serialization/Layout";
 import storageManager from "../../Managers/ShowStorageManager";
-import {Pair} from "../serialization/Pair";
-import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
-import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
-import {EntityPalette} from "../../containers/EntityPalette";
-import {TimelineContainer} from "../../containers/TimelineContainer";
+import { Pair } from "../serialization/Pair";
+import { CreateEffectFormContainer } from "../editors/CreateEffectFormContainer";
+import { EditEffectFormContainer } from "../editors/EditEffectFormContainer";
+import { EntityPalette } from "../../containers/EntityPalette";
+import { TimelineContainer } from "../../containers/TimelineContainer";
+import GridContainer from '../../containers/GridContainer';
 
 
 const makeShow = () => {
@@ -31,7 +32,6 @@ const makeShow = () => {
 
 const Configuration: React.FC = () => {
     const location = useLocation();
-
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
@@ -143,75 +143,9 @@ const Configuration: React.FC = () => {
                         }}
                     >
                         {/* Grid Container */}
-                        <Box
-                            sx={{
-                                width: '85%',
-                                height: '85%',
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {creatingNewEffect &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                    <CreateEffectFormContainer
-                                        effectType={creatingEffectType}
-                                        onSubmit={(values) => {
-                                            show.addEffect(values);
-                                            setCreatingNewEffect(false);
-                                        }}
-                                    />
-                                </Box>
-                            }
-                            {selectedEffectId != null &&
-                                <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                    <EditEffectFormContainer
-                                        key={selectedEffectId}
-                                        // TODO: This will error if selectedEffectId isn't present in .effects
-                                        effect={show.getEffectById(selectedEffectId)!}
-                                        onSubmit={(effect: any) => {
-                                            console.log("Saving effect: " + effect);
-                                            updateEffect(effect, selectedEffectId);
-                                        }}
-                                        onDelete={(effectId: number) => {
-                                            console.log("Deleting effect: " + effectId);
-                                            deleteEffect(effectId);
-                                            setSelectedEffectId(null);
-                                        }}
-                                    />
-                                </Box>
-                            }
-
-                            <TransformWrapper
-                                initialScale={1}
-                                wheel={{step: 0.5}}
-                                minScale={.5}
-                                maxScale={5}
-                            >
-                                 {({ zoomIn, zoomOut, resetTransform }) => (
-                                    <TransformComponent wrapperStyle={{ flex: 1 }}>
-                                        <Box flexDirection="column">
-                                            {Array.from({ length: (show.layouts[0] as GridLayout).height }).map((_, rowIndex) => (
-                                                <Box key={rowIndex} display="flex" gap={0.3}>
-                                                    {Array.from({ length: (show.layouts[0] as GridLayout).width }).map((_, colIndex) => (
-                                                        <Box
-                                                            key={colIndex}
-                                                            sx={{
-                                                                width: 10,
-                                                                height: 10,
-                                                                bgcolor: '#222',
-                                                                borderRadius: '50%',
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            ))}
-                                        </Box>
-                                    </TransformComponent>
-                                )}
-                            </TransformWrapper>
-                        </Box>
+                        <GridContainer
+                            show={show} 
+                        />
 
                         {/* Timeline Container */}
                         <Box
