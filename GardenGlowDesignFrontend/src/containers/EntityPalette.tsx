@@ -24,6 +24,9 @@ export interface EntityPaletteProps {
     setCreateEffectType: (effectType: string) => void;
     creatingNewEffect: boolean;
     setCreatingNewEffect: (creatingNewEffect: boolean) => void;
+    startEffect: () => void;
+    handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    handleEffectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
 // TODO: Make this responsive or sum
@@ -137,6 +140,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                         Save Show
                     </Button>
                     <ShowFileExport show={props.show}/>
+                    <Button onClick={props.startEffect}>Start Effect</Button>
                 </Box>
             </Box>
         </Drawer>
