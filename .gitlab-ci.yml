@@ -5,6 +5,7 @@ cache:
 
 stages:
   - build
+  - embedded_build
   - deploy
 
 .assume_role: &assume_role
@@ -72,9 +73,11 @@ deploy s3:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - GardenGlowDesignFrontend/**/*
+  dependencies:
+    - build artifact
 
 PlatformIO-esp32-build:
-  stage: build
+  stage: embedded_build
   image: python:3.11
   before_script:
     - pip install -U platformio
