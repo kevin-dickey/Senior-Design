@@ -1,3 +1,5 @@
+// Main configuration page for the application. 
+// This page is where the user can create, edit, and delete effects, as well as save and load shows.
 import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation, useNavigate} from "react-router-dom"
 import {Box} from '@mui/material';
