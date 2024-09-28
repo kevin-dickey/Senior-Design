@@ -13,6 +13,7 @@ import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
+import NavBar from "../NavBar";
 import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
 
@@ -117,6 +118,12 @@ const Configuration: React.FC = () => {
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
                 <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <NavBar
+                        onClickSettings={() => console.log("Settings clicked")}
+                        onClickAccount={() => console.log("Account clicked")}
+                        onClickHome={() => console.log("Home clicked")}
+                        onClickSave={() => saveShow(show)}
+                    />
                     <Box
                         sx={{
                             display: 'flex',
