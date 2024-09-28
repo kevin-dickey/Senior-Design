@@ -1,7 +1,7 @@
 // Main configuration page for the application. 
 // This page is where the user can create, edit, and delete effects, as well as save and load shows.
 import React, {useState, useEffect, ChangeEvent} from 'react';
-import {useLocation} from "react-router-dom"
+import {useLocation, useNavigate} from "react-router-dom"
 import {Box, Select} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
@@ -15,8 +15,11 @@ import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
+import NavBar from "../NavBar";
 import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
+
+import "./Configuration.css";
 
 
 const makeShow = () => {
@@ -36,6 +39,7 @@ const makeShow = () => {
 
 const Configuration: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
@@ -101,24 +105,33 @@ const Configuration: React.FC = () => {
         throw new Error('Function not implemented.');
     }
 
+    // noinspection JSUnusedLocalSymbols
     function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
         throw new Error('Function not implemented.');
     }
 
+    // noinspection JSUnusedLocalSymbols
     function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
         throw new Error('Function not implemented.');
     }
 
     return (
-        <div>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
-                <ThemeProvider theme={darkTheme}>
-                    <CssBaseline/>
+                <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <NavBar
+                        showName={show.name}
+                        onClickSettings={() => console.log("Settings clicked")}
+                        onClickAccount={() => console.log("Account clicked")}
+                        onClickHome={() => navigate('/shows')}
+                        onClickSave={() => saveShow(show)}
+                    />
                     <Box
                         sx={{
                             display: 'flex',
-                            height: '100vh',
+                            flexGrow: 1,
                             bgcolor: '#181818',
                             color: '#ffffff',
                             overflow: 'hidden'
@@ -143,21 +156,19 @@ const Configuration: React.FC = () => {
                             sx={{
                                 width: '100%',
                                 height: '100%',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
                                 overflow: 'hidden',
                             }}
                         >
                             {/* Grid Container */}
                             <Box
+                                id="grid-container"
                                 sx={{
-                                    width: '85%',
-                                    height: '85%',
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
+                                    flexGrow: 1,
                                     overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}
                             >
                                 {creatingNewEffect &&
@@ -195,11 +206,6 @@ const Configuration: React.FC = () => {
 
                             {/* Timeline Container */}
                             <Box
-                                position="absolute"
-                                bottom={0}
-                                right={0}
-                                width="80%"
-                                height="15vh"
                                 bgcolor="#2a2a2a"
                                 p={2}
                                 zIndex={1}
@@ -212,9 +218,9 @@ const Configuration: React.FC = () => {
                             </Box>
                         </Box>
                     </Box>
-                </ThemeProvider>
+                </Box>
             )}
-        </div>
+        </ThemeProvider>
     );
 };
 

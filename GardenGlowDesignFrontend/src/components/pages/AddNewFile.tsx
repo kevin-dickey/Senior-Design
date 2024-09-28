@@ -7,8 +7,8 @@ import {
     Select,
     FormControl,
     InputLabel,
-    ThemeProvider
 } from '@mui/material';
+import {ThemeProvider} from '@mui/material/styles';
 import {useNavigate} from 'react-router-dom';
 import {Folder} from "./FoldersOverview";
 import darkTheme from "../../utils/Theming";
