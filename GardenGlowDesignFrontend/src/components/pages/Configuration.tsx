@@ -1,5 +1,5 @@
 import React, {useState, useEffect, ChangeEvent} from 'react';
-import {useLocation} from "react-router-dom"
+import {useLocation, useNavigate} from "react-router-dom"
 import {Box} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
@@ -13,6 +13,7 @@ import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
+import NavBar from "../NavBar";
 import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
 
@@ -36,6 +37,7 @@ const makeShow = () => {
 
 const Configuration: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [loadingShow, setLoadingShow] = useState(true);
     const [show, setShow] = useState<Show | null>(null);
@@ -117,6 +119,13 @@ const Configuration: React.FC = () => {
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
                 <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <NavBar
+                        showName={show.name}
+                        onClickSettings={() => console.log("Settings clicked")}
+                        onClickAccount={() => console.log("Account clicked")}
+                        onClickHome={() => navigate('/shows')}
+                        onClickSave={() => saveShow(show)}
+                    />
                     <Box
                         sx={{
                             display: 'flex',

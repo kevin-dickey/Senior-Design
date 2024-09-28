@@ -13,6 +13,7 @@ import {EffectList} from "../components/editors/EffectList";
 import React, {useState} from "react";
 import ShowFileExport from "../components/serialization/ShowFileExport";
 import {Show} from "../components/serialization/Show";
+import Toolbar from "@mui/material/Toolbar";
 
 export interface EntityPaletteProps {
     show: Show;
@@ -47,6 +48,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                 [`& .MuiDrawer-paper`]: {width: drawerWidth, boxSizing: 'border-box'},
             }}
         >
+            <Toolbar />
             <Box sx={{overflow: 'auto'}}>
                 <Box>
                     <Button
