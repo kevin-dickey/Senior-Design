@@ -12,7 +12,10 @@ import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {EntityPalette} from "../../containers/EntityPalette";
 import {TimelineContainer} from "../../containers/TimelineContainer";
+import CssBaseline from "@mui/material/CssBaseline";
 import darkTheme from "../../utils/Theming";
+
+import "./Configuration.css";
 
 
 const makeShow = () => {
@@ -94,135 +97,133 @@ const Configuration: React.FC = () => {
     }
 
     return (
-        <div>
+        <>
+            <CssBaseline/>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
                 <ThemeProvider theme={darkTheme}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            height: '100vh',
-                            bgcolor: '#181818',
-                            color: '#ffffff',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        {/* Sidebar */}
-                        <EntityPalette
-                            show={show}
-                            saveShow={saveShow}
-                            selectedEffectId={selectedEffectId}
-                            setSelectedEffectId={setSelectedEffectId}
-                            createEffectType={creatingEffectType}
-                            setCreateEffectType={setCreatingEffectType}
-                            creatingNewEffect={creatingNewEffect}
-                            setCreatingNewEffect={setCreatingNewEffect}
-                        />
-
+                    <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
                         <Box
                             sx={{
-                                width: '100%',
-                                height: '100%',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                overflow: 'hidden',
+                                display: 'flex',
+                                flexGrow: 1,
+                                bgcolor: '#181818',
+                                color: '#ffffff',
+                                overflow: 'hidden'
                             }}
                         >
-                            {/* Grid Container */}
+                            {/* Sidebar */}
+                            <EntityPalette
+                                show={show}
+                                saveShow={saveShow}
+                                selectedEffectId={selectedEffectId}
+                                setSelectedEffectId={setSelectedEffectId}
+                                createEffectType={creatingEffectType}
+                                setCreateEffectType={setCreatingEffectType}
+                                creatingNewEffect={creatingNewEffect}
+                                setCreatingNewEffect={setCreatingNewEffect}
+                            />
+
                             <Box
                                 sx={{
-                                    width: '85%',
-                                    height: '85%',
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                     overflow: 'hidden',
                                 }}
                             >
-                                {creatingNewEffect &&
-                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                        <CreateEffectFormContainer
-                                            effectType={creatingEffectType}
-                                            onSubmit={(values) => {
-                                                show.addEffect(values);
-                                                setCreatingNewEffect(false);
-                                            }}
-                                        />
-                                    </Box>
-                                }
-                                {selectedEffectId != null &&
-                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                        <EditEffectFormContainer
-                                            key={selectedEffectId}
-                                            // TODO: This will error if selectedEffectId isn't present in .effects
-                                            effect={show.getEffectById(selectedEffectId)!}
-                                            onSubmit={(effect: any) => {
-                                                console.log("Saving effect: " + effect);
-                                                updateEffect(effect, selectedEffectId);
-                                            }}
-                                            onDelete={(effectId: number) => {
-                                                console.log("Deleting effect: " + effectId);
-                                                deleteEffect(effectId);
-                                                setSelectedEffectId(null);
-                                            }}
-                                        />
-                                    </Box>
-                                }
-
-                                <TransformWrapper
-                                    initialScale={1}
-                                    wheel={{step: 0.5}}
-                                    minScale={.5}
-                                    maxScale={5}
+                                {/* Grid Container */}
+                                <Box
+                                    id="grid-container"
+                                    sx={{
+                                        flexGrow: 1,
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
                                 >
-                                    {({zoomIn, zoomOut, resetTransform}) => (
-                                        <TransformComponent wrapperStyle={{flex: 1}}>
-                                            <Box flexDirection="column">
-                                                {/* Generate a grid of dots to represent LEDs */}
-                                                {[...Array(50)].map((_, rowIndex) => (
-                                                    <Box key={rowIndex} display="flex" gap={0.5}>
-                                                        {[...Array(50)].map((_, colIndex) => (
-                                                            <Box
-                                                                key={colIndex}
-                                                                sx={{
-                                                                    width: 10,
-                                                                    height: 10,
-                                                                    bgcolor: '#222',
-                                                                    borderRadius: '50%',
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                        </TransformComponent>
-                                    )}
-                                </TransformWrapper>
-                            </Box>
+                                    {creatingNewEffect &&
+                                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                            <CreateEffectFormContainer
+                                                effectType={creatingEffectType}
+                                                onSubmit={(values) => {
+                                                    show.addEffect(values);
+                                                    setCreatingNewEffect(false);
+                                                }}
+                                            />
+                                        </Box>
+                                    }
+                                    {selectedEffectId != null &&
+                                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
+                                            <EditEffectFormContainer
+                                                key={selectedEffectId}
+                                                // TODO: This will error if selectedEffectId isn't present in .effects
+                                                effect={show.getEffectById(selectedEffectId)!}
+                                                onSubmit={(effect: any) => {
+                                                    console.log("Saving effect: " + effect);
+                                                    updateEffect(effect, selectedEffectId);
+                                                }}
+                                                onDelete={(effectId: number) => {
+                                                    console.log("Deleting effect: " + effectId);
+                                                    deleteEffect(effectId);
+                                                    setSelectedEffectId(null);
+                                                }}
+                                            />
+                                        </Box>
+                                    }
 
-                            {/* Timeline Container */}
-                            <Box
-                                position="absolute"
-                                bottom={0}
-                                right={0}
-                                width="80%"
-                                height="15vh"
-                                bgcolor="#2a2a2a"
-                                p={2}
-                                zIndex={1}
-                            >
-                                {/**add better time indicator */}
-                                <TimelineContainer
-                                    effects={show.effects}
-                                    onChangeEffects={(effects: Effect[]) => console.log(effects)}
-                                />
+                                    <TransformWrapper
+                                        initialScale={1}
+                                        wheel={{step: 0.5}}
+                                        centerOnInit={true}
+                                        minScale={.5}
+                                        maxScale={5}
+                                    >
+                                        {({zoomIn, zoomOut, resetTransform}) => (
+                                            <TransformComponent wrapperStyle={{flex: 1}}>
+                                                <Box flexDirection="column">
+                                                    {/* Generate a grid of dots to represent LEDs */}
+                                                    {[...Array(50)].map((_, rowIndex) => (
+                                                        <Box
+                                                            key={rowIndex} display="flex" gap={0.5}>
+                                                            {[...Array(50)].map((_, colIndex) => (
+                                                                <Box
+                                                                    key={colIndex}
+                                                                    sx={{
+                                                                        width: 10,
+                                                                        height: 10,
+                                                                        bgcolor: '#222',
+                                                                        borderRadius: '50%',
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                            </TransformComponent>
+                                        )}
+                                    </TransformWrapper>
+                                </Box>
+
+                                {/* Timeline Container */}
+                                <Box
+                                    bgcolor="#2a2a2a"
+                                    p={2}
+                                    zIndex={1}
+                                >
+                                    {/**add better time indicator */}
+                                    <TimelineContainer
+                                        effects={show.effects}
+                                        onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                                    />
+                                </Box>
                             </Box>
                         </Box>
                     </Box>
                 </ThemeProvider>
             )}
-        </div>
+        </>
     );
 };
 
