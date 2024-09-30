@@ -2,40 +2,26 @@
 // This page is where the user can create, edit, and delete effects, as well as save and load shows.
 import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation, useNavigate} from "react-router-dom"
+
 import {Box} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
-import {validateEffects} from "../editors/EffectList";
+
+import NavBar from "../NavBar";
 import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
-import {GridLayout} from "../serialization/Layout";
+import {Effect} from "../serialization/Effect";
+import {makeShow} from "../../Managers/ConfigurationManager";
 import storageManager from "../../Managers/ShowStorageManager";
-import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
+import {validateEffects} from "../editors/EffectList";
 import {EntityPalette} from "../../containers/EntityPalette";
-import {TimelineContainer} from "../../containers/TimelineContainer";
-import NavBar from "../NavBar";
-import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
+import {TimelineContainer} from "../../containers/TimelineContainer";
 
+import darkTheme from "../../utils/Theming";
 import "./Configuration.css";
 
-
-const makeShow = () => {
-    const show = new Show('Basic Show File', 10000);
-    const effect = RainbowEffect.emptyEffect();
-
-    show.addEffect(effect);
-    const effect2 = new RainbowEffect(new Pair(0, 0), new Pair(16, 16),
-        1000, 1000, ['#420', '#696969'], 1000, 'Crazy Train');
-    show.addEffect(effect2);
-
-    const grid = new GridLayout(10, 10);
-    show.addLayout(grid);
-
-    return show;
-}
 
 const Configuration: React.FC = () => {
     const location = useLocation();
