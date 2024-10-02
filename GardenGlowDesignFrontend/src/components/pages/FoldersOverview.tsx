@@ -55,7 +55,7 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({
     };
 
     const handleFileClick = (file: File) => {
-        if (file.path.startsWith('exampleShows/')) {
+        if (file.path.startsWith('/exampleShows/')) {
             console.log("Creating a new show from example: " + file.name);
             loadShow(file.path).then(show => {
                 navigate('/configuration', {state: {show: show}});

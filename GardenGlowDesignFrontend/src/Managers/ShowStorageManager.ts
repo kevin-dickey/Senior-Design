@@ -20,7 +20,7 @@ export class LocalStorageManager implements IShowStorage {
     loadShow = async (path: string): Promise<Show> => {
         // If we have a show file starting with exampleShows/, it's not in local storage
         // and we should fetch it from the public folder.
-        if (path.startsWith('exampleShows/')) {
+        if (path.startsWith('/exampleShows/')) {
             const resp = await fetch(path);
             const showData = await resp.json();
             return deserializeShow(showData);
@@ -62,7 +62,7 @@ export class LocalStorageManager implements IShowStorage {
         // Read from the public/exampleShows/show-manifest.txt file and return the list of shows.
         const shows: string[] = [];
         // Fetch and read the text file
-        const response = await fetch('exampleShows/show-manifest.txt');
+        const response = await fetch('/exampleShows/show-manifest.txt');
         const text = await response.text();
         // Split the text into lines
         const lines = text.split('\n');
