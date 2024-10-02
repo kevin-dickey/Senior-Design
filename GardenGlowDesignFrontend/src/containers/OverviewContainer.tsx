@@ -5,6 +5,7 @@ import AddNewFolder from '../components/pages/AddNewFolder';
 import AddNewFile from '../components/pages/AddNewFile';
 import storageManager from "../Managers/ShowStorageManager";
 import {Show} from "../components/serialization/Show";
+import {GridLayout} from '../components/serialization/Layout';
 
 const reduceFiles = (files: string[]): Folder[] => {
     return files.reduce((acc: Folder[], file: string) => {
@@ -69,7 +70,7 @@ const FoldersOverviewContainer: React.FC = () => {
         setFolders([...folders!, {name: folderName, files: []}]);
     };
 
-    const addNewFile = (fileName: string, folderName: string) => {
+    const addNewFile = (fileName: string, folderName: string, width: number, height: number) => {
         // TODO: Just navigate to configurator with a new show name?
         //  Only save to disk and ask for a name on first save?
         // FIXME: This is the same translation as in Show.ts:getFileName. Should be in one place.
@@ -77,7 +78,10 @@ const FoldersOverviewContainer: React.FC = () => {
         //  then the save show logic would handle the rest.
         // TODO: Pre-set duration. Allow changing in the UI & First setting it in the
         //  configurator if not already set.
-        storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, new Show(fileName, 5000));
+        const show = new Show(fileName, 5000);
+        const layout = new GridLayout(width, height);
+        show.addLayout(layout);
+        storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, show);
         setFolders(reduceFiles(storageManager.listShows()));
     };
 
@@ -89,25 +93,21 @@ const FoldersOverviewContainer: React.FC = () => {
         <Routes>
             <Route path="/shows">
                 <Route
-                    index element={
-                    <FoldersOverview
-                        folders={folders}
-                        loading={loading}
-                        onAddFolder={addNewFolder}
-                        onAddFile={addNewFile}
-                        loadShow={loadShow}
-                    />
-                }/>
-                <Route path="new-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
-                <Route
-                    path="new"
+                    index
                     element={
-                        <AddNewFile
-                            folders={folders!}
+                        <FoldersOverview
+                            folders={folders}
+                            loading={loading}
+                            onAddFolder={addNewFolder}
                             onAddFile={addNewFile}
+                            loadShow={loadShow}
                         />
                     }
                 />
+                <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
+                <Route
+                    path="add-file"
+                    element={<AddNewFile folders={folders!} onAddFile={addNewFile}/>}/>
             </Route>
         </Routes>
     );

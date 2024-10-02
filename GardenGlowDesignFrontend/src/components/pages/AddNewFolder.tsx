@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Button, TextField, Box, ThemeProvider} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
 import darkTheme from "../../utils/Theming";
+import CssBaseline from "@mui/material/CssBaseline";
 
 interface AddNewFolderProps {
     onAddFolder: (folderName: string) => void;
@@ -20,6 +21,7 @@ const AddNewFolder: React.FC<AddNewFolderProps> = ({onAddFolder}) => {
 
     return (
         <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
             <Box sx={{p: 2}}>
                 <TextField
                     label="Folder Name"

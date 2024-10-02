@@ -5,20 +5,21 @@ import Configuration from './components/pages/Configuration';
 import './App.css';
 import LoginContainer from './containers/LoginContainer';
 import OverviewContainer from './containers/OverviewContainer';
+import LEDGrid from './components/pages/Grid';
+
 
 function App() {
-    return (
-        <Router>
-            {/*TODO: A <Routes> block bitches when nothing matches it.
-                Because we have another in OverviewContainer, we get errors.*/}
-            <Routes>
-                <Route path="/" element={<HomePage/>}/>
-                <Route path="/login" element={<LoginContainer/>}/>
-                <Route path="/configuration" element={<Configuration/>}/>
-            </Routes>
-            <OverviewContainer/>
-        </Router>
-    );
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginContainer />} />
+        <Route path="/configuration" element={<Configuration />}/>
+        <Route path="/shows/*" element={<OverviewContainer  />} />
+        <Route path="/grid" element={<LEDGrid/>} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
