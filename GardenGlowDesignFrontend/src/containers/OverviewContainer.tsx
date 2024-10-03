@@ -6,7 +6,6 @@ import AddNewFile from '../components/pages/AddNewFile';
 import storageManager from "../Managers/ShowStorageManager";
 import {Show} from "../components/serialization/Show";
 import {GridLayout} from '../components/serialization/Layout';
-import {Box} from "@mui/material";
 
 const reduceFiles = async (files: string[]): Promise<Folder[]> => {
     const folderMap: { [key: string]: Folder } = {};
@@ -14,7 +13,7 @@ const reduceFiles = async (files: string[]): Promise<Folder[]> => {
 
     files.forEach(file => {
         const parts = file.split('/');
-        const folderName = parts[1];
+        const folderName = parts[0];
 
         if (!folderMap[folderName]) {
             folderMap[folderName] = {name: folderName, files: []};
@@ -105,9 +104,7 @@ const FoldersOverviewContainer: React.FC = () => {
                 }
             />
             <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
-            <Route
-                path="add-file"
-                element={<AddNewFile folders={folders!} onAddFile={addNewFile}/>}/>
+            <Route path="add-file" element={<AddNewFile folders={folders!} onAddFile={addNewFile}/>}/>
         </Routes>
     );
 };

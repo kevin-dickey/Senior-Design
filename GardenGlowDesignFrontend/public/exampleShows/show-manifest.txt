@@ -1,2 +1,2 @@
-/exampleShows/hallo-weeny.json
-/exampleShows/christmas-y.json
+exampleShows/hallo-weeny.json
+exampleShows/christmas-y.json
