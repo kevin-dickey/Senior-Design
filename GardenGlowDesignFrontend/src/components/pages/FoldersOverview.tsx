@@ -39,8 +39,6 @@ export interface FoldersOverviewProps {
 const FoldersOverview: React.FC<FoldersOverviewProps> = ({
                                                              folders,
                                                              loading,
-                                                             onAddFolder,
-                                                             onAddFile,
                                                              loadShow
                                                          }) => {
     const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
