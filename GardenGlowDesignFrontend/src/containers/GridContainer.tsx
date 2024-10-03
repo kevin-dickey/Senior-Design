@@ -16,6 +16,7 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
       <TransformWrapper
         initialScale={1}
         wheel={{ step: 0.5 }}
+        centerOnInit={true}
         minScale={0.5}
         maxScale={5}
       >
