@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import FoldersOverview, { Folder } from '../components/pages/FoldersOverview';
+import React, {useState} from 'react';
+import {Route, Routes} from 'react-router-dom';
+import FoldersOverview, {Folder} from '../components/pages/FoldersOverview';
 import AddNewFolder from '../components/pages/AddNewFolder';
 import AddNewFile from '../components/pages/AddNewFile';
 import storageManager from "../Managers/ShowStorageManager";
-import { Show } from "../components/serialization/Show";
-import { GridLayout } from '../components/serialization/Layout';
-import {DialogContainer} from "./DialogContainer";
+import {Show} from "../components/serialization/Show";
+import {GridLayout} from '../components/serialization/Layout';
 
 const reduceFiles = (files: string[]): Folder[] => {
     return files.reduce((acc: Folder[], file: string) => {
@@ -16,7 +15,7 @@ const reduceFiles = (files: string[]): Folder[] => {
         // Find the folder in the accumulator
         let folder = acc.find(f => f.name === folderName);
         if (!folder) {
-            folder = { name: folderName, files: [] };
+            folder = {name: folderName, files: []};
             acc.push(folder);
         }
 
@@ -43,7 +42,7 @@ const FoldersOverviewContainer: React.FC = () => {
 
     const addNewFolder = (folderName: string) => {
         storageManager.createFolder(folderName);
-        setFolders([...folders, { name: folderName, files: [] }]);
+        setFolders([...folders, {name: folderName, files: []}]);
     };
 
     const addNewFile = (fileName: string, folderName: string, width: number, height: number) => {
@@ -66,18 +65,16 @@ const FoldersOverviewContainer: React.FC = () => {
             <Route
                 index
                 element={
-                <>
                     <FoldersOverview
                         folders={folders}
                         onAddFolder={addNewFolder}
                         onAddFile={addNewFile}
                     />
-                    <DialogContainer />
-                </>
                 }
             />
-            <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder} />} />
-            <Route path="add-file" element={<AddNewFile folders={folders} onAddFile={addNewFile} />} />
+            <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
+            <Route
+                path="add-file" element={<AddNewFile folders={folders} onAddFile={addNewFile}/>}/>
         </Routes>
     );
 };

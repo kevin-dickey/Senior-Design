@@ -1,77 +1,141 @@
 import * as React from 'react';
-import {Unstable_NumberInput as NumberInput} from '@mui/base/Unstable_NumberInput';
+import * as yup from 'yup';
+import {Field, Form, Formik} from "formik";
+
+import {ThemeProvider} from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import darkTheme from "../utils/Theming";
+
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import TextField from "@mui/material/TextField";
+
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-export function DialogContainer() {
-    const [open, setOpen] = React.useState(false);
-    const [durationSeconds, setDurationSeconds] = React.useState<number | null>(null);
+import {Show} from "../components/serialization/Show";
+import {GridLayout} from "../components/serialization/Layout";
 
+export interface DialogContainerProps {
+    show: Show | null,
+    open: boolean,
+    onClose: () => void
+    onSubmit: (formValues: any) => void,
+}
 
-    const handleClickOpen = () => {
-        setOpen(true);
+export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
+    const grid = props.show?.layouts[0] as GridLayout;
+
+    const initialValues = props.show ? {
+        showName: props.show.name,
+        durationSeconds: Math.floor(props.show.duration / 1000),
+        height: grid.height,
+        width: grid.width,
+        } : {
+        showName: '',
+        durationSeconds: 0,
+        height: 0,
+        width: 0
     };
 
-    const handleClose = () => {
-        setOpen(false);
-    };
+    const validationSchema = yup.object({
+        showName: yup
+            .string()
+            .label("Show Name")
+            .required(),
+        durationSeconds: yup
+            .number()
+            .label("Show Duration")
+            .required()
+            .positive(),
+        height: yup
+            .number()
+            .label("Field Height")
+            .required()
+            .positive(),
+        width: yup
+            .number()
+            .label("Field Width")
+            .required()
+            .positive(),
+    });
 
     return (
-        <React.Fragment>
-            <Button variant="outlined" onClick={handleClickOpen}>
-                Open form dialog
-            </Button>
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                PaperProps={{
-                    component: 'form',
-                    onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                        const formData = new FormData(event.currentTarget);
-                        const formJson = Object.fromEntries((formData as any).entries());
-                        const email = formJson.email;
-                        console.log(email);
-                        handleClose();
-                    },
-                }}
-            >
-                <DialogTitle>Show Configuration</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        TODO: Copy ... Update the show attributes here!
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        required
-                        margin="dense"
-                        id="showName"
-                        name="showName"
-                        label="Show Name"
-                        fullWidth
-                        variant="standard"
-                    />
-                    <TextField
-                        required
-                        margin="dense"
-                        id="showDuration"
-                        name="showDuration"
-                        label="Show Duration"
-                        type="number"
-                        fullWidth
-                        variant="standard"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button type="submit">Subscribe</Button>
-                </DialogActions>
-            </Dialog>
-        </React.Fragment>
-    );
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
+            <React.Fragment>
+                <Dialog
+                    open={props.open}
+                    onClose={props.onClose}
+                >
+                    <DialogTitle>Show Configuration</DialogTitle>
+                    <Formik
+                        initialValues={initialValues}
+                        validationSchema={validationSchema}
+                        onSubmit={(values) => {props.onSubmit(values)}}
+                    >
+                        {({errors, touched}) => (
+                            <Form>
+                                <DialogContent>
+                                    <DialogContentText>
+                                        Update the show attributes here!
+                                    </DialogContentText>
+                                    <Field
+                                        as={TextField}
+                                        id="showName"
+                                        name="showName"
+                                        label="Show Name"
+                                        fullWidth
+                                        margin="dense"
+                                        error={touched.showName && Boolean(errors.showName)}
+                                        helperText={touched.showName && errors.showName}
+                                    />
+                                    <Field
+                                        as={TextField}
+                                        id="durationSeconds"
+                                        name="durationSeconds"
+                                        label="Duration (seconds)"
+                                        type="number"
+                                        fullWidth
+                                        margin="dense"
+                                        error={touched.durationSeconds && Boolean(errors.durationSeconds)}
+                                        helperText={touched.durationSeconds && errors.durationSeconds}
+                                    />
+                                    <Field
+                                        as={TextField}
+                                        id="height"
+                                        name="height"
+                                        label="Height"
+                                        type="number"
+                                        fullWidth
+                                        margin="dense"
+                                        error={touched.height && Boolean(errors.height)}
+                                        helperText={touched.height && errors.height}
+                                    />
+                                    <Field
+                                        as={TextField}
+                                        id="width"
+                                        name="width"
+                                        label="Width"
+                                        type="number"
+                                        fullWidth
+                                        margin="dense"
+                                        error={touched.width && Boolean(errors.width)}
+                                        helperText={touched.width && errors.width}
+                                    />
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={props.onClose}>Cancel</Button>
+                                    <Button type="submit">Submit</Button>
+                                </DialogActions>
+                            </Form>
+                        )}
+                    </Formik>
+                </Dialog>
+            </React.Fragment>
+        </ThemeProvider>
+    )
+        ;
 }
