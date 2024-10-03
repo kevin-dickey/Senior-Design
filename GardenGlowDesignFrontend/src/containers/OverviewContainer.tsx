@@ -6,6 +6,7 @@ import AddNewFile from '../components/pages/AddNewFile';
 import storageManager from "../Managers/ShowStorageManager";
 import { Show } from "../components/serialization/Show";
 import { GridLayout } from '../components/serialization/Layout';
+import {DialogContainer} from "./DialogContainer";
 
 const reduceFiles = (files: string[]): Folder[] => {
     return files.reduce((acc: Folder[], file: string) => {
@@ -65,11 +66,14 @@ const FoldersOverviewContainer: React.FC = () => {
             <Route
                 index
                 element={
+                <>
                     <FoldersOverview
                         folders={folders}
                         onAddFolder={addNewFolder}
                         onAddFile={addNewFile}
                     />
+                    <DialogContainer />
+                </>
                 }
             />
             <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder} />} />
