@@ -1,12 +1,15 @@
-#define USE_EMULATOR 0
-
 #include <iostream>
+#include <fstream>
+#include "../include/json.hpp"
 
-#define LED_PIN 13
-#define NUM_LEDS_X 16
-#define NUM_LEDS_Y 16
-#define NUM_LEDS NUM_LEDS_X *NUM_LEDS_Y
-#define MAX_BRIGHTNESS 6  // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
+using json = nlohmann::json;
+
+#define LED_PIN         13
+#define NUM_LEDS_X      16
+#define NUM_LEDS_Y      16
+#define NUM_LEDS        100
+#define MAX_BRIGHTNESS  6 // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
+
 
 /* Declarations for the buttons, number corresponds to pin on the ESP32 */
 #define INPUT_BTN_NE 34
@@ -16,7 +19,7 @@
 
 #if USE_EMULATOR
 
-#include "../ImGUI_Emulator/Window.h"
+#include "../lib/configuration/Configuration.h"
 
 #else
 
@@ -24,6 +27,7 @@
 
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
+
 
 #endif
 
@@ -34,6 +38,7 @@ enum ShiftDirection {
     DOWN
 };
 
+
 void fadeToBlack(int duration);
 void fadeToBrightness(int duration, int targetBrightness);
 
@@ -41,6 +46,7 @@ void rippleEffect(int r, int g, int b, uint8_t center_x, uint8_t center_y, int r
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
+
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
 
@@ -49,6 +55,7 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
 CRGB hexToCRGB(const char *hex);
 
 void shiftLeds(CRGB leds[], ShiftDirection direction);
+
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
@@ -60,24 +67,32 @@ const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
+<<<<<<< PixelController/src/main.cpp
 CRGB leds[NUM_LEDS];
 int prevLeds1[NUM_LEDS] = {0};
 int prevLeds2[NUM_LEDS] = {0};
 int prevLeds3[NUM_LEDS] = {0};
 int prevLeds4[NUM_LEDS] = {0};
 
-#if USE_EMULATOR
-void loop_callback() {
-    // modified call to meet new method signature
-    static int rippleCountah = 0;
-    rippleEffect(255, 0, 255, NUM_LEDS_X / 2, NUM_LEDS_Y / 2, rippleCountah);  // purple :D
-    std ::cout << "Ripple effect frame 1/13" << std::endl;
-}
+# if USE_EMULATOR
 
 int main() {
-    emulator(loop_callback);
+    std::ifstream f3("../lib/configuration/test/Basic_Show_File.json");
+    json data3 = json::parse(f3);
+    Show show = Show::from_json(data3);
+    f3.close();
+
+    std::cout << "Show Name: " << show.name << std::endl;
+    std::cout << "Show Duration: " << show.duration << std::endl;
+
+    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
+    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+
+    return 0;
 }
-#else
+
+# else
 
 const char *pumpkin =
     "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
@@ -106,7 +121,6 @@ const char *pumpkin8bit =
     "ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 "
     "ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 "
     "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
-
 /**
  * MARK: Setup
  */
@@ -146,7 +160,6 @@ void loop() {
 
     delay(50);
 }
-#endif
 
 // Function to load an 8x8 bitmap from a hex string
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth) {
@@ -499,3 +512,4 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
 //                        |
 //                        |
 //    19 < 18 < 17 < 16 < 15
+# endif
