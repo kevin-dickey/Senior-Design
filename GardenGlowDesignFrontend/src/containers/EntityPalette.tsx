@@ -8,10 +8,9 @@ import {
     MenuItem,
     Select
 } from "@mui/material";
-import {ExpandLess, ExpandMore, Save} from "@mui/icons-material";
+import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import {EffectList} from "../components/editors/EffectList";
 import React, {useState} from "react";
-import ShowFileExport from "../components/serialization/ShowFileExport";
 import {Show} from "../components/serialization/Show";
 import Toolbar from "@mui/material/Toolbar";
 
@@ -132,15 +131,6 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                             </Button>
                         </div>
                     )}
-
-                    <Button
-                        variant="contained"
-                        startIcon={<Save/>}
-                        onClick={() => props.saveShow(props.show)}
-                    >
-                        Save Show
-                    </Button>
-                    <ShowFileExport show={props.show}/>
                     <Button onClick={props.startEffect}>Start Effect</Button>
                 </Box>
             </Box>
