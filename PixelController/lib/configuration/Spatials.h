@@ -14,10 +14,7 @@ typedef struct Pair
 
     static Pair from_json(const nlohmann::json &j)
     {
-        return {
-            x : j["x"],
-            y : j["y"]
-        };
+        return {j["x"],j["y"]};
     }
 } Pair_t;
 
@@ -26,12 +23,12 @@ typedef struct Translation
     Pair_t end_pos;
     double durationMs;
 
-    static Translation from_json(const nlohmann::json &j)
+    static Translation *from_json(const nlohmann::json &j)
     {
-        return {
-            end_pos : Pair_t::from_json(j["end_pos"]),
-            durationMs : j["durationMs"]
-        };
+        auto *translation = new Translation();
+        translation->end_pos = Pair_t::from_json(j["end_pos"]);
+        translation->durationMs = j["durationMs"];
+        return translation;
     }
 } Translation_t;
 

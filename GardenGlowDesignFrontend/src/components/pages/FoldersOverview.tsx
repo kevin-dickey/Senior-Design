@@ -9,15 +9,11 @@ import {
     ListItem,
     Button
 } from '@mui/material';
-import {createTheme, ThemeProvider} from '@mui/material/styles';
+import {ThemeProvider} from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
 import {useNavigate} from 'react-router-dom';
+import darkTheme from "../../utils/Theming";
 
-const darkTheme = createTheme({
-    palette: {
-        mode: 'dark',
-    },
-});
 
 export interface File {
     name: string;
@@ -32,7 +28,7 @@ export interface Folder {
 export interface FoldersOverviewProps {
     folders: Folder[];
     onAddFolder: (folderName: string) => void;
-    onAddFile: (fileName: string, folderName: string) => void;
+    onAddFile: (fileName: string, folderName: string, width: number, height: number) => void;
 }
 
 const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, onAddFile}) => {
@@ -65,13 +61,13 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                 ) : (
                     <>
                         <Button
-                            onClick={() => navigate('new-folder')}
+                            onClick={() => navigate('/shows/add-folder')}
                             variant="contained"
                             color="primary">
                             New Folder
                         </Button>
                         <Button
-                            onClick={() => navigate('new')} variant="contained"
+                            onClick={() => navigate('/shows/add-file')} variant="contained"
                             color="secondary" sx={{ml: 2}}>
                             New File
                         </Button>

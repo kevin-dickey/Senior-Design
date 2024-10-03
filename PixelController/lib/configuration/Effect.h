@@ -42,7 +42,7 @@ public:
         std::unique_ptr<Translation_t> translation = nullptr;
         if (j.contains("translation"))
         {
-            translation.reset(new Translation_t(Translation_t::from_json(j["translation"])));
+            translation.reset(Translation_t::from_json(j["translation"]));
         }
 
         return new Effect(
@@ -81,7 +81,7 @@ public:
 
         if (j.contains("translation"))
         {
-            translation.reset(new Translation_t(Translation_t::from_json(j["translation"])));
+            translation.reset(Translation_t::from_json(j["translation"]));
         }
 
         std::vector<std::string> colors;
@@ -128,7 +128,7 @@ public:
 
         if (j.contains("translation"))
         {
-            translation.reset(new Translation_t(Translation_t::from_json(j["translation"])));
+            translation.reset(Translation_t::from_json(j["translation"]));
         }
 
         return new RippleEffect(

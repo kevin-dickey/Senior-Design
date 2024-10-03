@@ -3,9 +3,12 @@
 
 #include <iostream>
 #include <vector>
-#include <Arduino.h>
 
+// Only include Arduino.h if not using the emulator
+#ifndef USE_EMULATOR
+#include <Arduino.h>
 #include "esp_attr.h"
+#endif
 
 #include "../../include/json.hpp"
 #include "Spatials.h"
@@ -20,7 +23,9 @@ enum SensorType {
 extern std::vector<bool> triggeredInterrupts;
 extern std::vector<long> sensorLastTriggeredMillis;
 
+#ifndef USE_EMULATOR
 void IRAM_ATTR onSensorTriggered(void *arg);
+#endif
 
 class Sensor {
 public:

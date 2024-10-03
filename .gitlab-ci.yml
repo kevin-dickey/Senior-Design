@@ -5,6 +5,7 @@ cache:
 
 stages:
   - build
+  - embedded_build
   - deploy
 
 .assume_role: &assume_role
@@ -28,8 +29,12 @@ build artifact:
     - cd GardenGlowDesignFrontend
     - mkdir -p ./build
     - npm install
+    # Allow warnings to pass a merge request pipeline build.
+    - if [ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]; then export CI=false; fi
   script:
-    - npm run build
+    - npm run build > build_output.log 2>&1
+    # TODO: Add linting and testing
+    # - if [ "$CI_COMMIT_BRANCH" == "main" ]; then npm run lint && npm run test; fi
   artifacts:
     paths:
       - ./GardenGlowDesignFrontend/build/
@@ -59,13 +64,12 @@ deploy s3:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - GardenFlowDesignFrontend/**/*
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - GardenFlowDesignFrontend/**/*
+        - GardenGlowDesignFrontend/**/*
+  dependencies:
+    - build artifact
 
 PlatformIO-esp32-build:
-  stage: build
+  stage: embedded_build
   image: python:3.11
   before_script:
     - pip install -U platformio

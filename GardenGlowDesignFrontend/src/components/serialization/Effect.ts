@@ -61,7 +61,8 @@ export class Effect {
             data.size,
             data.startTime,
             data.duration,
-            data.translation
+            data.translation,
+            data.id
         );
         return effect;
     }
@@ -93,7 +94,9 @@ export class RainbowEffect extends Effect {
             effect.startTimeMs,
             effect.durationMs,
             colors,
-            speed);
+            speed,
+            effect.name,
+            effect.id);
     }
 
     static emptyEffect() {
@@ -150,7 +153,10 @@ export class RippleEffect extends Effect {
             effect.startTimeMs,
             effect.durationMs,
             ripple_origin,
-            speed
+            speed,
+            effect.translation,
+            effect.name,
+            effect.id
         );
     }
 
