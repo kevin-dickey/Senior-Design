@@ -67,7 +67,6 @@ const bool kMatrixVertical = false;
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-<<<<<<< PixelController/src/main.cpp
 CRGB leds[NUM_LEDS];
 int prevLeds1[NUM_LEDS] = {0};
 int prevLeds2[NUM_LEDS] = {0};
