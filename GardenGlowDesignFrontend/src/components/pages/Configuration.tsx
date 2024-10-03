@@ -127,6 +127,10 @@ const Configuration: React.FC = () => {
                         onClickAccount={() => console.log("Account clicked")}
                         onClickHome={() => navigate('/shows')}
                         onClickSave={() => saveShow(show)}
+                        onClickExport={() => {
+                            console.log("Export Show")
+                            show.exportToFile();
+                        }}
                     />
                     <Box
                         sx={{

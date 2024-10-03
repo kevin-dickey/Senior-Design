@@ -14,7 +14,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import {ClassNameMap} from "@mui/styles";
-import {Chip} from "@mui/material";
+import {Chip, Popover} from "@mui/material";
 
 export interface NavBarProps {
     classes?: (Partial<ClassNameMap<never>>) | undefined;
@@ -23,6 +23,7 @@ export interface NavBarProps {
     onClickAccount: () => void;
     onClickHome: () => void;
     onClickSave: () => void;
+    onClickExport: () => void;
 }
 
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
@@ -30,6 +31,8 @@ const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 const NavBar: React.FC<NavBarProps> = (props) => {
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
+    const [anchorElSave, setAnchorElSave] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorElSave);
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -38,6 +41,20 @@ const NavBar: React.FC<NavBarProps> = (props) => {
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
+
+    const handleSavePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElSave(event.currentTarget);
+    }
+
+    const handleSavePopoverClose = () => {
+        setAnchorElSave(null);
+    }
+
+    const handleSaveClick = () => {
+        if (open) {
+            props.onClickSave();
+        }
+    }
 
     return (
         <AppBar position="static" sx={{zIndex: (theme) => theme.zIndex.drawer + 1}}>
@@ -91,16 +108,42 @@ const NavBar: React.FC<NavBarProps> = (props) => {
                         sx={{
                             flexGrow: 0
                         }}
+                        onMouseEnter={handleSavePopoverOpen}
+                        onMouseLeave={handleSavePopoverClose}
+                        onClick={handleSaveClick}
                     >
                         <IconButton
                             size="large"
                             edge="start"
                             color="inherit"
                             aria-label="Save Show"
-                            onClick={props.onClickSave}
                         >
                             <SaveRoundedIcon/>
                         </IconButton>
+                        <Popover
+                            open={open}
+                            anchorEl={anchorElSave}
+                            onClose={handleSavePopoverClose}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                        >
+                            <MenuItem
+                                onClick={() => {
+                                    props.onClickSave();
+                                    handleSavePopoverClose();
+                                }}>
+                                Save
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    props.onClickExport();
+                                    handleSavePopoverClose();
+                                }}>
+                                Export
+                            </MenuItem>
+                        </Popover>
                         <IconButton
                             size="large"
                             edge="start"
