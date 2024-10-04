@@ -207,7 +207,7 @@ const Configuration: React.FC = () => {
                             {/* Timeline Container */}
                             <Box
                                 bgcolor="#2a2a2a"
-                                p={2}
+                                paddingTop={1}
                                 zIndex={1}
                             >
                                 {/**add better time indicator */}

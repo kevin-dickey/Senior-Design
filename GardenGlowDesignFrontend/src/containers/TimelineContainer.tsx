@@ -93,6 +93,12 @@ interface TimelineEditorProps {
 const TimelineEditor: React.FC<TimelineEditorProps> = (
     {timelineEffects, timelineRows, onChangeTimelineRows, onClickActionOnly, style}
 ) => {
+    const CustomScale = (props: { scale: number }) => {
+        const {scale} = props;
+        const min = parseInt(scale / 60 + '');
+        const second = (scale % 60 + '').padStart(2, '0');
+        return <>{`${min}:${second}`}</>
+    }
 
     return (
         <Timeline
@@ -101,8 +107,14 @@ const TimelineEditor: React.FC<TimelineEditorProps> = (
             onClickActionOnly={onClickActionOnly}
             editorData={timelineRows}
             effects={timelineEffects}
+            scale={1}
+            // TODO: This is a hack to make the scale render nicely. Need interactive resizing!
+            scaleWidth={50}
+            gridSnap={true}
+            scaleSplitCount={5}
             hideCursor={false}
             autoScroll={true}
+            getScaleRender={(scale: number) => <CustomScale scale={scale}/>}
             getActionRender={(action: TimelineAction) => {
                 const customAction = action as CustomTimelineAction;
                 return (
