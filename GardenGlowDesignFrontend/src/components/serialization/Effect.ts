@@ -12,6 +12,7 @@ export class Translation {
 
 export class Effect {
     id: number;
+    type: string;
     name: string;
     layer: number;
     origin: Pair;
@@ -26,9 +27,11 @@ export class Effect {
                 startTimeMs: number,
                 durationMs: number,
                 translation?: Translation,
-                id: number = -1) {
+                id: number = -1,
+                type: string = "Effect") {
         this.id = id;
         this.name = name;
+        this.type = type;
         // FIXME: Add support for multiple layers
         this.layer = 1;
         this.origin = origin;
@@ -45,6 +48,7 @@ export class Effect {
     toJSON() {
         return {
             id: this.id,
+            type: this.name,
             name: this.name,
             startTime: this.startTimeMs,
             duration: this.durationMs,
@@ -82,7 +86,7 @@ export class RainbowEffect extends Effect {
         name: string = 'rainbow',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, undefined, id);
+        super(name, origin, size, startTimeMs, durationMs, undefined, id, 'RainbowEffect');
         this.colors = colors;
         this.speed = speed;
     }
@@ -136,7 +140,7 @@ export class RippleEffect extends Effect {
         name: string = 'ripple',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, translation, id);
+        super(name, origin, size, startTimeMs, durationMs, translation, id, 'RippleEffect');
         this.ripple_origin = ripple_origin;
         this.speed = speed;
     }

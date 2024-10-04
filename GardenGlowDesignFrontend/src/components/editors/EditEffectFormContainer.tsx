@@ -24,7 +24,11 @@ export const EditEffectFormContainer: React.FC<EditEffectFormContainerProps> =
                     onSubmit={onSubmit}
                     onDelete={onDelete}
                 />;
+            case Effect:
+                console.warn('Base effect constructor used:', effect);
+                return null;
             default:
+                console.error('Unknown effect type:', effect.constructor);
                 return null;
         }
     };
