@@ -7,11 +7,13 @@ import {
     CssBaseline,
     List,
     ListItem,
-    Button
+    Button,
+    Box
 } from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import FilesOverview from './FilesOverview';
 import {useNavigate} from 'react-router-dom';
+import {Show} from "../serialization/Show";
 import darkTheme from "../../utils/Theming";
 
 
@@ -26,12 +28,19 @@ export interface Folder {
 }
 
 export interface FoldersOverviewProps {
-    folders: Folder[];
+    folders: Folder[] | null;
+    // Totally an anti-pattern to have these here, but I don't feel like refactoring.
+    loading: boolean;
     onAddFolder: (folderName: string) => void;
     onAddFile: (fileName: string, folderName: string, width: number, height: number) => void;
+    loadShow: (path: string) => Promise<Show>;
 }
 
-const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, onAddFile}) => {
+const FoldersOverview: React.FC<FoldersOverviewProps> = ({
+                                                             folders,
+                                                             loading,
+                                                             loadShow
+                                                         }) => {
     const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
     const navigate = useNavigate();
 
@@ -43,10 +52,23 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
         setSelectedFolder(null);
     };
 
-    const handleFileClick = (filePath: string) => {
-        console.log(filePath);
-        navigate('/configuration', {state: {path: filePath}});
-    };
+    const handleFileClick = (file: File) => {
+        if (file.path.startsWith('/exampleShows/')) {
+            console.log("Creating a new show from example: " + file.name);
+            loadShow(file.path).then(show => {
+                navigate('/configuration', {state: {show: show}});
+            });
+        }
+        navigate('/configuration', {state: {path: file.path}});
+    }
+
+    if (loading) {
+        return (
+            <Box>
+                <Typography variant="h4">Loading...</Typography>
+            </Box>
+        )
+    }
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -72,33 +94,35 @@ const FoldersOverview: React.FC<FoldersOverviewProps> = ({folders, onAddFolder, 
                             New File
                         </Button>
                         <Grid container spacing={2}>
-                            {folders.map((folder, index) => (
-                                <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                                    <Paper elevation={3} style={{padding: '16px'}}>
-                                        <Typography
-                                            variant="h6"
-                                            style={{cursor: 'pointer'}}
-                                            onClick={() => handleFolderClick(folder)}
-                                        >
-                                            {folder.name}
-                                        </Typography>
-                                        <List>
-                                            {folder.files.map((file, fileIndex) => (
-                                                <ListItem
-                                                    key={fileIndex}
-                                                    onClick={() => handleFileClick(file.path)}
-                                                    style={{cursor: 'pointer'}}
-                                                >
-                                                    <Typography
-                                                        variant="body2">
-                                                        {file.name}
-                                                    </Typography>
-                                                </ListItem>
-                                            ))}
-                                        </List>
-                                    </Paper>
-                                </Grid>
-                            ))}
+                            {folders && folders.length > 0 && (
+                                folders.map((folder, index) => (
+                                    <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                                        <Paper elevation={3} style={{padding: '16px'}}>
+                                            <Typography
+                                                variant="h6"
+                                                style={{cursor: 'pointer'}}
+                                                onClick={() => handleFolderClick(folder)}
+                                            >
+                                                {folder.name}
+                                            </Typography>
+                                            <List>
+                                                {folder.files.map((file, fileIndex) => (
+                                                    <ListItem
+                                                        key={fileIndex}
+                                                        onClick={() => handleFileClick(file)}
+                                                        style={{cursor: 'pointer'}}
+                                                    >
+                                                        <Typography
+                                                            variant="body2">
+                                                            {file.name}
+                                                        </Typography>
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </Paper>
+                                    </Grid>
+                                ))
+                            )}
                         </Grid>
                     </>
                 )}

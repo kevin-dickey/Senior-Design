@@ -1,48 +1,73 @@
-import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import FoldersOverview, { Folder } from '../components/pages/FoldersOverview';
+import React, {useEffect, useState} from 'react';
+import {Routes, Route} from 'react-router-dom';
+import FoldersOverview, {Folder} from '../components/pages/FoldersOverview';
 import AddNewFolder from '../components/pages/AddNewFolder';
 import AddNewFile from '../components/pages/AddNewFile';
 import storageManager from "../Managers/ShowStorageManager";
-import { Show } from "../components/serialization/Show";
-import { GridLayout } from '../components/serialization/Layout';
+import {Show} from "../components/serialization/Show";
+import {GridLayout} from '../components/serialization/Layout';
 
-const reduceFiles = (files: string[]): Folder[] => {
-    return files.reduce((acc: Folder[], file: string) => {
+const reduceFiles = async (files: string[]): Promise<Folder[]> => {
+    const folderMap: { [key: string]: Folder } = {};
+    const showPromises: Promise<void>[] = [];
+
+    files.forEach(file => {
         const parts = file.split('/');
         const folderName = parts[0];
 
-        // Find the folder in the accumulator
-        let folder = acc.find(f => f.name === folderName);
-        if (!folder) {
-            folder = { name: folderName, files: [] };
-            acc.push(folder);
+        if (!folderMap[folderName]) {
+            folderMap[folderName] = {name: folderName, files: []};
         }
 
-        // Skip folders
-        if (file.endsWith('/')) {
-            return acc;
-        }
+        if (!file.endsWith('/')) {
+            const showPromise = storageManager.loadShow(file)
+                .then(show => {
+                    console.log(`Loaded show: ${show.name}`);
+                    folderMap[folderName].files.push({
+                        name: show.name,
+                        path: file
+                    });
+                })
+                .catch(e => {
+                    console.error(`Could not load show: ${file} - ${e}`);
+                });
 
-        try {
-            folder.files.push({
-                name: storageManager.loadShow(file).name,
-                path: file,
-            });
-        } catch (e) {
-            console.error(`Could not load show: ${file} - ${e}`);
+            showPromises.push(showPromise);
         }
+    });
 
-        return acc;
-    }, []);
-}
+    await Promise.all(showPromises);
+
+    return Object.values(folderMap);
+};
 
 const FoldersOverviewContainer: React.FC = () => {
-    const [folders, setFolders] = useState<Folder[]>(reduceFiles(storageManager.listShows()));
+    const [loading, setLoading] = useState(true);
+    const [folders, setFolders] = useState<Folder[] | null>(null);
+
+    useEffect(() => {
+        const fetchFolders = async () => {
+            const folders = await loadFolders();
+            setFolders(folders);
+            setLoading(false);
+        };
+
+        fetchFolders();
+    }, []);
+
+    const loadFolders = async () => {
+        let loadedFolders: Folder[] = [];
+        loadedFolders = loadedFolders.concat(await reduceFiles(storageManager.listShows()));
+
+        const shows = await storageManager.listExampleShows()
+        const exampleFolders = await reduceFiles(shows);
+        loadedFolders = loadedFolders.concat(exampleFolders);
+        return loadedFolders;
+    };
 
     const addNewFolder = (folderName: string) => {
         storageManager.createFolder(folderName);
-        setFolders([...folders, { name: folderName, files: [] }]);
+        setFolders([...folders!, {name: folderName, files: []}]);
     };
 
     const addNewFile = (fileName: string, folderName: string, width: number, height: number) => {
@@ -57,8 +82,12 @@ const FoldersOverviewContainer: React.FC = () => {
         const layout = new GridLayout(width, height);
         show.addLayout(layout);
         storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, show);
-        setFolders(reduceFiles(storageManager.listShows()));
+        reduceFiles(storageManager.listShows()).then(folders => setFolders(folders));
     };
+
+    const loadShow = (path: string) => {
+        return storageManager.loadShow(path);
+    }
 
     return (
         <Routes>
@@ -67,13 +96,15 @@ const FoldersOverviewContainer: React.FC = () => {
                 element={
                     <FoldersOverview
                         folders={folders}
+                        loading={loading}
                         onAddFolder={addNewFolder}
                         onAddFile={addNewFile}
+                        loadShow={loadShow}
                     />
                 }
             />
-            <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder} />} />
-            <Route path="add-file" element={<AddNewFile folders={folders} onAddFile={addNewFile} />} />
+            <Route path="add-folder" element={<AddNewFolder onAddFolder={addNewFolder}/>}/>
+            <Route path="add-file" element={<AddNewFile folders={folders!} onAddFile={addNewFile}/>}/>
         </Routes>
     );
 };
