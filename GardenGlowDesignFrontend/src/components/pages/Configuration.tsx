@@ -1,6 +1,6 @@
-// Main configuration page for the application. 
+// Main configuration page for the application.
 // This page is where the user can create, edit, and delete effects, as well as save and load shows.
-import React, {useState, useEffect, ChangeEvent} from 'react';
+import React, {ChangeEvent, useEffect, useState} from 'react';
 import {useLocation, useNavigate} from "react-router-dom"
 import {Box} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
@@ -214,6 +214,11 @@ const Configuration: React.FC = () => {
                                 <TimelineContainer
                                     effects={show.effects}
                                     onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                                    onChangeSelectedEffectId={(effectId: number) => {
+                                        effectId === selectedEffectId ?
+                                            setSelectedEffectId(null) :
+                                            setSelectedEffectId(effectId);
+                                    }}
                                 />
                             </Box>
                         </Box>

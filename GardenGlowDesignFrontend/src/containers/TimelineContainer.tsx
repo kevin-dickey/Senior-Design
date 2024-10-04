@@ -1,4 +1,4 @@
-import React from 'react' ;
+import React from 'react';
 import {Box, IconButton} from "@mui/material";
 import {
     FastForward,
@@ -13,7 +13,7 @@ import {
     TimelineAction,
     TimelineEffect,
     TimelineRow
-} from '@xzdarcy/react-timeline-editor' ;
+} from '@xzdarcy/react-timeline-editor';
 
 import './TimelineContainer.css';
 import {Effect} from "../components/serialization/Effect";
@@ -82,17 +82,23 @@ interface TimelineEditorProps {
     timelineEffects: Record<string, TimelineEffect>;
     timelineRows: TimelineRow[];
     onChangeTimelineRows: (editorData: TimelineRow[]) => boolean | void;
+    onClickActionOnly: (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
+        action: TimelineAction;
+        row: TimelineRow;
+        time: number;
+    }) => void;
     style?: React.CSSProperties;
 }
 
 const TimelineEditor: React.FC<TimelineEditorProps> = (
-    {timelineEffects, timelineRows, onChangeTimelineRows, style}
+    {timelineEffects, timelineRows, onChangeTimelineRows, onClickActionOnly, style}
 ) => {
 
     return (
         <Timeline
             style={{width: 'auto', ...style}}
             onChange={onChangeTimelineRows}
+            onClickActionOnly={onClickActionOnly}
             editorData={timelineRows}
             effects={timelineEffects}
             hideCursor={false}
@@ -112,6 +118,7 @@ const TimelineEditor: React.FC<TimelineEditorProps> = (
 export interface TimelineContainerProps {
     effects: Effect[];
     onChangeEffects: (effects: Effect[]) => void;
+    onChangeSelectedEffectId: (effectId: number) => void;
 }
 
 export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
@@ -143,12 +150,23 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
         return true;
     }
 
+    const handleClickActionOnly = (e: React.MouseEvent<HTMLElement, MouseEvent>, param: {
+        action: TimelineAction;
+        row: TimelineRow;
+        time: number;
+    }) => {
+        // Update the selected effect Id
+        const effectId = parseInt(param.action.id);
+        props.onChangeSelectedEffectId(effectId);
+    }
+
     return (
         <Box className='TimelineContainer'>
             <TimelineEditor
                 timelineEffects={timelineEffects}
                 timelineRows={timelineRows}
                 onChangeTimelineRows={onChangeTimelineRows}
+                onClickActionOnly={handleClickActionOnly}
             />
             <Box
                 sx={{
