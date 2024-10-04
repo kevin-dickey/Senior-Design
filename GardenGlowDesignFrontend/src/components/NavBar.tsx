@@ -106,44 +106,49 @@ const NavBar: React.FC<NavBarProps> = (props) => {
 
                     <Box
                         sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
                             flexGrow: 0
                         }}
-                        onMouseEnter={handleSavePopoverOpen}
-                        onMouseLeave={handleSavePopoverClose}
-                        onClick={handleSaveClick}
                     >
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            aria-label="Save Show"
+                        <Box
+                            onMouseEnter={handleSavePopoverOpen}
+                            onMouseLeave={handleSavePopoverClose}
+                            onClick={handleSaveClick}
                         >
-                            <SaveRoundedIcon/>
-                        </IconButton>
-                        <Popover
-                            open={open}
-                            anchorEl={anchorElSave}
-                            onClose={handleSavePopoverClose}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            }}
-                        >
-                            <MenuItem
-                                onClick={() => {
-                                    props.onClickSave();
-                                    handleSavePopoverClose();
-                                }}>
-                                Save
-                            </MenuItem>
-                            <MenuItem
-                                onClick={() => {
-                                    props.onClickExport();
-                                    handleSavePopoverClose();
-                                }}>
-                                Export
-                            </MenuItem>
-                        </Popover>
+                            <IconButton
+                                size="large"
+                                edge="start"
+                                color="inherit"
+                                aria-label="Save Show"
+                            >
+                                <SaveRoundedIcon/>
+                            </IconButton>
+                            <Popover
+                                open={open}
+                                anchorEl={anchorElSave}
+                                onClose={handleSavePopoverClose}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'left',
+                                }}
+                            >
+                                <MenuItem
+                                    onClick={() => {
+                                        props.onClickSave();
+                                        handleSavePopoverClose();
+                                    }}>
+                                    Save
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        props.onClickExport();
+                                        handleSavePopoverClose();
+                                    }}>
+                                    Export
+                                </MenuItem>
+                            </Popover>
+                        </Box>
                         <IconButton
                             size="large"
                             edge="start"
