@@ -48,7 +48,7 @@ export class Effect {
     toJSON() {
         return {
             id: this.id,
-            type: this.name,
+            type: this.type,
             name: this.name,
             startTime: this.startTimeMs,
             duration: this.durationMs,
@@ -59,7 +59,7 @@ export class Effect {
     }
 
     static fromJSON(data: any) {
-        const effect = new Effect(
+        return new Effect(
             data.name,
             data.origin,
             data.size,
@@ -68,7 +68,6 @@ export class Effect {
             data.translation,
             data.id
         );
-        return effect;
     }
 }
 
