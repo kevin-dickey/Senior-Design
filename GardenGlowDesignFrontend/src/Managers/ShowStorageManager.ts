@@ -3,9 +3,10 @@ import {deserializeShow} from "../utils/deserializeShow";
 
 interface IShowStorage {
     saveShow(path: string, show: Show): void;
-    loadShow(path: string): Show;
+    loadShow(path: string): Promise<Show>;
     deleteShow(path: string): void;
     listShows(directory?: string): string[];
+    listExampleShows(): Promise<string[]>;
 }
 
 export class LocalStorageManager implements IShowStorage {
@@ -16,14 +17,22 @@ export class LocalStorageManager implements IShowStorage {
         localStorage.setItem(`${this.rootKey}/${path}`, showData);
     }
 
-    loadShow(path: string): Show {
+    loadShow = async (path: string): Promise<Show> => {
+        // If we have a show file starting with exampleShows/, it's not in local storage
+        // and we should fetch it from the public folder.
+        if (path.startsWith('exampleShows/')) {
+            const resp = await fetch('/' + path);
+            const showData = await resp.json();
+            return deserializeShow(showData);
+        }
+
         const showData = localStorage.getItem(`${this.rootKey}/${path}`);
         if (!showData) {
             throw new Error(`Show file not found at path: ${path}`);
         }
         const parsedData = JSON.parse(showData);
         return deserializeShow(parsedData);
-    }
+    };
 
     deleteShow(path: string): void {
         if (!localStorage.getItem(`${this.rootKey}/${path}`)) {
@@ -48,6 +57,21 @@ export class LocalStorageManager implements IShowStorage {
         }
         return shows;
     }
+
+    listExampleShows = async (): Promise<string[]> => {
+        // Read from the public/exampleShows/show-manifest.txt file and return the list of shows.
+        const shows: string[] = [];
+        // Fetch and read the text file
+        const response = await fetch('/exampleShows/show-manifest.txt');
+        const text = await response.text();
+        // Split the text into lines
+        const lines = text.split('\n');
+        // Remove any empty lines
+        const validLines = lines.filter(line => line.length > 0);
+        // Add each line to the shows array
+        validLines.forEach(line => shows.push(line));
+        return shows;
+    };
 
     createFolder(folderName: string): void {
         localStorage.setItem(`${this.rootKey}/${folderName}/`, '');

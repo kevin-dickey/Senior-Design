@@ -1,48 +1,36 @@
-// Main configuration page for the application. 
+// Main configuration page for the application.
 // This page is where the user can create, edit, and delete effects, as well as save and load shows.
 import React, {useState, useEffect, ChangeEvent} from 'react';
 import {useLocation, useNavigate} from "react-router-dom"
+
 import {Box} from '@mui/material';
 import {ThemeProvider} from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
-import {validateEffects} from "../editors/EffectList";
+
+import NavBar from "../NavBar";
 import {Show} from "../serialization/Show";
-import {Effect, RainbowEffect} from "../serialization/Effect";
-import {GridLayout} from "../serialization/Layout";
+import {Effect} from "../serialization/Effect";
+import {makeShow} from "../../Managers/ConfigurationManager";
 import storageManager from "../../Managers/ShowStorageManager";
-import {Pair} from "../serialization/Pair";
 import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
+import {validateEffects} from "../editors/EffectList";
 import {EntityPalette} from "../../containers/EntityPalette";
-import {TimelineContainer} from "../../containers/TimelineContainer";
-import NavBar from "../NavBar";
-import darkTheme from "../../utils/Theming";
 import GridContainer from '../../containers/GridContainer';
+import {TimelineContainer} from "../../containers/TimelineContainer";
 
+import darkTheme from "../../utils/Theming";
 import "./Configuration.css";
 import {DialogContainer} from "../../containers/DialogContainer";
+import {GridLayout} from "../serialization/Layout";
 
-
-const makeShow = () => {
-    const show = new Show('Basic Show File', 10000);
-    const effect = RainbowEffect.emptyEffect();
-
-    show.addEffect(effect);
-    const effect2 = new RainbowEffect(new Pair(0, 0), new Pair(16, 16),
-        1000, 1000, ['#420', '#696969'], 1000, 'Crazy Train');
-    show.addEffect(effect2);
-
-    const grid = new GridLayout(10, 10);
-    show.addLayout(grid);
-
-    return show;
-}
 
 const Configuration: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
     const [loadingShow, setLoadingShow] = useState(true);
+    const [showPath, setShowPath] = useState<string | null>(null);
     const [show, setShow] = useState<Show | null>(null);
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [creatingEffectType, setCreatingEffectType] = useState<string>('');
@@ -50,13 +38,23 @@ const Configuration: React.FC = () => {
     const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
 
     useEffect(() => {
-        if (location.state && location.state.path) {
-            console.log('Loaded show!: ' + location.state.path);
-            const serializedShow = storageManager.loadShow(location.state.path);
-            console.log(serializedShow);
-            setShow(serializedShow);
+        if (location.state) {
+            if (location.state.show) {
+                console.log("Loading show:" + location.state.show);
+                setShow(location.state.show);
+
+                if (location.state.path) {
+                    setShowPath(location.state.path);
+                } else {
+                    console.warn('Path not set in location state. Must prompt user for save location.');
+                }
+            } else if (location.state.path) {
+                console.log("Loading show from path: " + location.state.path);
+                storageManager.loadShow(location.state.path).then(loadedShow => setShow(loadedShow));
+                setShowPath(location.state.path);
+            }
         } else {
-            console.log('Creating new show!');
+            console.warn('No location state found. Creating a new show.');
             setShow(makeShow());
         }
         setLoadingShow(false);
@@ -99,7 +97,11 @@ const Configuration: React.FC = () => {
         }
         // FIXME: For now this is fine, but once we open configuration without a file, we need to
         //  prompt the user for a folder & file name to save under.
-        storageManager.saveShow(location.state.path, show);
+        if (showPath == null) {
+            console.error('No show path set. Prompt the user for a path!');
+            return;
+        }
+        storageManager.saveShow(showPath, show);
         console.log('Show saved successfully');
     }
 

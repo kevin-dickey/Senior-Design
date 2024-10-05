@@ -93,8 +93,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
                 </Box>
             </Box>
         </ThemeProvider>
-    )
-        ;
+    );
 };
 
 export default AddNewFile;
