@@ -49,6 +49,9 @@ build artifact:
 
 deploy s3:
   stage: deploy
+  needs:
+    - job: build artifact
+      artifacts: true
   image:
     name: amazon/aws-cli:latest
     entrypoint: 
@@ -70,6 +73,7 @@ deploy s3:
 
 PlatformIO-esp32-build:
   stage: embedded_build
+  needs: []
   image: python:3.11
   before_script:
     - pip install -U platformio
