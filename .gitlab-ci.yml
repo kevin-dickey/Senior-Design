@@ -42,10 +42,10 @@ build artifact:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - GardenGlowDesignFrontend/**/*
+        - GardenFlowDesignFrontend/**/*
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
-        - GardenGlowDesignFrontend/**/*
+        - GardenFlowDesignFrontend/**/*
 
 deploy s3:
   stage: deploy
