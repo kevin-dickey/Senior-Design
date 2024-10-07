@@ -21,6 +21,8 @@ import {TimelineContainer} from "../../containers/TimelineContainer";
 
 import darkTheme from "../../utils/Theming";
 import "./Configuration.css";
+import {DialogContainer} from "../../containers/DialogContainer";
+import {GridLayout} from "../serialization/Layout";
 
 
 const Configuration: React.FC = () => {
@@ -33,6 +35,7 @@ const Configuration: React.FC = () => {
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
     const [creatingEffectType, setCreatingEffectType] = useState<string>('');
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
+    const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
 
     useEffect(() => {
         if (location.state) {
@@ -124,7 +127,10 @@ const Configuration: React.FC = () => {
                 <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
                     <NavBar
                         showName={show.name}
-                        onClickSettings={() => console.log("Settings clicked")}
+                        onClickSettings={() => {
+                            console.log("Settings clicked")
+                            setShowConfigPanelOpen(true)
+                        }}
                         onClickAccount={() => console.log("Account clicked")}
                         onClickHome={() => navigate('/shows')}
                         onClickSave={() => saveShow(show)}
@@ -230,6 +236,28 @@ const Configuration: React.FC = () => {
                     </Box>
                 </Box>
             )}
+
+            {/* Show Settings Pane */}
+            <DialogContainer
+                show={show}
+                open={showConfigPanelOpen}
+                onSubmit={(formValues) => {
+                    console.log("Saving show settings");
+                    console.log(formValues);
+                    const newShow = new Show(formValues.showName, formValues.durationSeconds * 1000);
+                    newShow.addLayout(new GridLayout(formValues.width, formValues.height));
+
+                    if (show) {
+                        for (const effect of show.effects) {
+                            newShow.addEffect(effect);
+                        }
+                    }
+
+                    setShow(newShow);
+                    setShowConfigPanelOpen(false);
+                }}
+                onClose={() => setShowConfigPanelOpen(false)}
+            />
         </ThemeProvider>
     );
 };
