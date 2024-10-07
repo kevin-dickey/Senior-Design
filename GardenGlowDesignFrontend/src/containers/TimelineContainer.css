@@ -1,3 +1,13 @@
 .TimelineContainer > .timeline-editor {
     height: 10vh;
 }
+
+.timeline-editor-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-editor-action > div[class^="effect"], div[class*="-text"]{
+    text-align: center;
+}
