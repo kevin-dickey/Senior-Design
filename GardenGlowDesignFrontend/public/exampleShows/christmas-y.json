@@ -6,6 +6,7 @@
     {
       "id": 1,
       "name": "Orange Sweep",
+      "type": "RainbowEffect",
       "startTime": 0,
       "duration": 2000,
       "origin": {
@@ -22,6 +23,7 @@
     {
       "id": 2,
       "name": "Ghost",
+      "type": "RippleEffect",
       "startTime": 2000,
       "duration": 2000,
       "origin": {
@@ -41,6 +43,7 @@
     {
       "id": 3,
       "name": "Scary Pumpkin",
+      "type": "RippleEffect",
       "startTime": 4000,
       "duration": 1000,
       "origin": {
