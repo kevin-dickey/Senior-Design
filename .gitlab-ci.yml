@@ -5,7 +5,6 @@ cache:
 
 stages:
   - build
-  - embedded_build
   - deploy
 
 .assume_role: &assume_role
@@ -22,7 +21,7 @@ stages:
     - export AWS_SESSION_TOKEN="${STS[2]}"
 
 
-build artifact:
+webapp:build:
   stage: build
   image: node:latest
   before_script:
@@ -47,10 +46,10 @@ build artifact:
       changes:
         - GardenFlowDesignFrontend/**/*
 
-deploy s3:
+s3:deploy:
   stage: deploy
   needs:
-    - job: build artifact
+    - job: "webapp:build"
       artifacts: true
   image:
     name: amazon/aws-cli:latest
@@ -68,11 +67,9 @@ deploy s3:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - GardenGlowDesignFrontend/**/*
-  dependencies:
-    - build artifact
 
-PlatformIO-esp32-build:
-  stage: embedded_build
+PlatformIO-esp32:build:
+  stage: build
   needs: []
   image: python:3.11
   before_script:
