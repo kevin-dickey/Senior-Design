@@ -45,6 +45,8 @@ webapp:build:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - GardenGlowDesignFrontend/**/*
+    # If the pipeline is triggered manually and the branch is main, then build the webapp.
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "main"'
 
 s3:deploy:
   stage: deploy
@@ -67,6 +69,8 @@ s3:deploy:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - GardenGlowDesignFrontend/**/*
+    # Deploy if the pipeline is triggered manually and the webapp has changed.
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "main" && $DEPLOY_WEBAPP == "true"'
 
 PlatformIO-esp32:build:
   stage: build
