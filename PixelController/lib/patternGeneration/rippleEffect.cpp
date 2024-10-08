@@ -53,7 +53,7 @@ CRGB* rippleEffect(CRGB *leds, int *num_leds, int r, int g, int b, uint8_t cente
             // Create a CRGB object with the calculated color and brightness
             CRGB newColor = CRGB(r * brightness, g * brightness, b * brightness);
 
-            // Add the newColor to the existing LED color using blend function
+            // blend the newColor to the existing LED color
             temp[xy_val] += newColor;
         }
     }
