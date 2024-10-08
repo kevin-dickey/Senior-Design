@@ -1,5 +1,6 @@
 // Main configuration page for the application.
-// This page is where the user can create, edit, and delete effects, as well as save and load shows.
+// This page is where the user can create, edit, and delete effects, as well as
+// saving and loading shows.
 import React, {ChangeEvent, useEffect, useState} from 'react';
 import {useLocation, useNavigate} from "react-router-dom"
 
