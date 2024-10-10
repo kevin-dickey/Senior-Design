@@ -127,11 +127,11 @@ const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff
 int hue;
 int count;
 bool goUp;
-unsigned long lastIter;
 char set_sensors;
 
 std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
+
 
 void setup() {
     Serial.begin(115200);           // for setting up stuff to print to serial monitor
@@ -209,7 +209,6 @@ void loop() {
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
         loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
-        lastIter = millis();
 
         resetTriggerMarkers(1);
         count = 0;
@@ -249,18 +248,8 @@ void loop() {
     } else if (prev_sensor_triggered[1]) { // skull/crossbones
 
     /***** these are blocking! will have to figure out something else to go here *****/
-        // fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
-        // fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
-
-        if (current_millis - lastIter > 3000) { // ripple every 3s
-            Serial.println("starting ripple");
-            int rippleCounter = 0;
-            for (int i = 0; i < 13; i++) {
-                rippleEffect(leds, 255, 0, 0, 8, 8, rippleCounter, prevLeds1, 2, 6);
-                delay(33); // 30fps
-            }
-            lastIter = millis();
-        }
+        fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
+        fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
 
     } else if (prev_sensor_triggered[2]) { // ghost zigzagging
         // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
