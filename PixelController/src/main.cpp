@@ -256,8 +256,12 @@ void loop() {
             Serial.println("starting ripple");
             int rippleCounter = 0;
             for (int i = 0; i < 13; i++) {
+                Serial.println("Ripple frame generating...");
                 rippleEffect(leds, 255, 0, 0, 8, 8, rippleCounter, prevLeds1, 2, 6);
-                delay(33); // 30fps
+                delay(75); // 30fps
+            }
+            for (int i = 0; i < NUM_LEDS; i++) {
+                prevLeds1[i] = 0;
             }
             lastIter = millis();
         }
