@@ -12,7 +12,7 @@ using json = nlohmann::json;
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
 #define NUM_LEDS 256
-#define MAX_BRIGHTNESS 6  // maximum for FastLED is 255, but I would probably not go higher than 64 (ESPECIALLY if no power supply)
+#define MAX_BRIGHTNESS 64  // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
 
@@ -200,33 +200,41 @@ void loop() {
     // check the states of sensors, set the markers accordingly for which codeblock to execute
     if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
         fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.setBrightness(MAX_BRIGHTNESS);
         FastLED.show();
+        Serial.println("Sensor 0 triggered");
         
         resetTriggerMarkers(0);
         count = 0;
         goUp = true;
     } else if (sensor_states[1]) {  // sensor1 -- skull
         fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.setBrightness(MAX_BRIGHTNESS);
         FastLED.show();
         loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
+        Serial.println("Sensor 1 triggered");
 
         resetTriggerMarkers(1);
         count = 0;
         goUp = true;
     } else if (sensor_states[2]) {  // sensor2 -- ghost zig zagging
         fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.setBrightness(MAX_BRIGHTNESS);
         FastLED.show();
         loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        
+        Serial.println("Sensor 2 triggered");
+
         resetTriggerMarkers(2);
         count = 0;
         goUp = true;
     } else if (sensor_states[3]) {  // sensor3 -- pumpkin & ghost chasing each other
         fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.setBrightness(MAX_BRIGHTNESS);
         FastLED.show();
         loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
         loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
-        
+        Serial.println("Sensor 3 triggered");
+
         resetTriggerMarkers(3);
         count = 0;
         goUp = true;
@@ -248,8 +256,8 @@ void loop() {
     } else if (prev_sensor_triggered[1]) { // skull/crossbones
 
     /***** these are blocking! will have to figure out something else to go here *****/
-        fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
-        fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
+        fadeToBrightness(2, MAX_BRIGHTNESS / 4);
+        fadeToBrightness(2, MAX_BRIGHTNESS);
 
     } else if (prev_sensor_triggered[2]) { // ghost zigzagging
         // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
