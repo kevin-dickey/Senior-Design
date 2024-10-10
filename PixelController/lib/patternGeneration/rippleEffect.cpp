@@ -59,3 +59,41 @@ CRGB* rippleEffect(CRGB *leds, int *num_leds, int r, int g, int b, uint8_t cente
     }
     return temp;
 }
+
+void rippleEffect(CRGB leds[], int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width, int brightness) {
+  uint8_t maxDistance = 19;  // max(NUM_LEDS_X, NUM_LEDS_Y);
+
+  // Iterate through the LED matrix
+  for (uint8_t x = 0; x < 16; x++) {
+    for (uint8_t y = 0; y < 16; y++) {
+      // Calculate distance and ripple distance
+      uint8_t distance = calculateDistance(center_x, center_y, x, y);
+      uint8_t rippleDistance = (rippleCounter + (maxDistance - distance)) % (maxDistance);
+      uint8_t brightness;
+      uint16_t xy_val = XY(x, y);
+
+      if (prevLeds[xy_val] == 1) {
+        prevLeds[xy_val] = 0;
+        CRGB updatedColor = CRGB(leds[xy_val].r - (r * brightness), leds[xy_val].g - (g * brightness), leds[xy_val].b - (b * brightness));
+        leds[xy_val] = updatedColor;
+        continue;
+      }
+
+      // Determine brightness based on distance from center and rippleCounter
+      if (rippleDistance <= width) {
+        brightness = brightness;
+        prevLeds[xy_val] = 1;
+      } else {
+        brightness = 0;  // Dim brightness value outside the ripple's ring
+        prevLeds[xy_val] = 0;
+      }
+
+      // Create a CRGB object with the calculated color and brightness
+      CRGB newColor = CRGB(r * brightness, g * brightness, b * brightness);
+
+      // Add the newColor to the existing LED color using blend function
+      leds[xy_val] += newColor;
+    }
+  }
+}
+

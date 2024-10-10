@@ -127,6 +127,7 @@ const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff
 int hue;
 int count;
 bool goUp;
+unsigned long lastIter;
 char set_sensors;
 
 std::vector<Sensor *> a_sensors;
@@ -194,29 +195,31 @@ void resetTriggerMarkers(int exception) {
 void loop() {
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
+    auto current_millis = millis();
 
     // check the states of sensors, set the markers accordingly for which codeblock to execute
     if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
+        
         resetTriggerMarkers(0);
-
         count = 0;
         goUp = true;
     } else if (sensor_states[1]) {  // sensor1 -- skull
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
         loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
-        resetTriggerMarkers(1);
+        lastIter = millis();
 
+        resetTriggerMarkers(1);
         count = 0;
         goUp = true;
     } else if (sensor_states[2]) {  // sensor2 -- ghost zig zagging
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
         loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
+        
         resetTriggerMarkers(2);
-
         count = 0;
         goUp = true;
     } else if (sensor_states[3]) {  // sensor3 -- pumpkin & ghost chasing each other
@@ -224,20 +227,20 @@ void loop() {
         FastLED.show();
         loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
         loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
+        
         resetTriggerMarkers(3);
-
         count = 0;
         goUp = true;
     }
 
+    /************************************************************* */
 
     // check to see what was the last effect triggered, keep running it
-    if (prev_sensor_triggered[0]) { // rainbow
+    if (prev_sensor_triggered[0]) { // rainbow & pumpkin
         uint32_t ms = millis();
         int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
         int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
         DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
         
         // draw pumpkin on top
         loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
@@ -246,8 +249,18 @@ void loop() {
     } else if (prev_sensor_triggered[1]) { // skull/crossbones
 
     /***** these are blocking! will have to figure out something else to go here *****/
-        fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
-        fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
+        // fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
+        // fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
+
+        if (current_millis - lastIter > 3000) { // ripple every 3s
+            Serial.println("starting ripple");
+            int rippleCounter = 0;
+            for (int i = 0; i < 13; i++) {
+                rippleEffect(leds, 255, 0, 0, 8, 8, rippleCounter, prevLeds1, 2, 6);
+                delay(33); // 30fps
+            }
+            lastIter = millis();
+        }
 
     } else if (prev_sensor_triggered[2]) { // ghost zigzagging
         // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
@@ -274,7 +287,7 @@ void loop() {
         count++;
     }
 
-    delay(50);  // delay(33): approx 30fps (30.3)
+    delay(33);  // delay(33): approx 30fps (30.3)
 }
 
 // Function to load an 8x8 bitmap from a hex string
