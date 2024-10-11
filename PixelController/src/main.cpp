@@ -129,6 +129,9 @@ int count;
 bool goUp;
 char set_sensors;
 
+unsigned long lastIteration = 0;
+int effect = -1;
+
 std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
 
@@ -193,87 +196,86 @@ void resetTriggerMarkers(int exception) {
  * MARK: Looping
  */
 void loop() {
-    // gets the current state of every sensor, the state automatically resets after it's viewed
-    auto sensor_states = sensorManager->getSensorStates(true);
-    auto current_millis = millis();
 
-    // check the states of sensors, set the markers accordingly for which codeblock to execute
-    if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-        
-        resetTriggerMarkers(0);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[1]) {  // sensor1 -- skull
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-        loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
+    auto current_time_millis = millis();
 
-        resetTriggerMarkers(1);
+    // change effect being displayed every 15s
+    if (current_time_millis - lastIteration > 15000) { 
+        effect++;
+
+        // reset these for other effects to run properly
         count = 0;
         goUp = true;
-    } else if (sensor_states[2]) {  // sensor2 -- ghost zig zagging
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        
-        resetTriggerMarkers(2);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[3]) {  // sensor3 -- pumpkin & ghost chasing each other
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
-        
-        resetTriggerMarkers(3);
-        count = 0;
-        goUp = true;
+
+        if (effect >= 4) { // make it loop
+            effect = 0;
+        }
+
+        // setup the stuff for whatever effect will be displayed
+        switch (effect) {
+           case 0: // rainbow + still pumpkin
+                fill_solid(leds, NUM_LEDS, CRGB::Black);
+                FastLED.setBrightness(MAX_BRIGHTNESS);
+                FastLED.show();
+                break;
+            case 1: // skull
+                fill_solid(leds, NUM_LEDS, CRGB::Black);
+                FastLED.setBrightness(MAX_BRIGHTNESS);
+                loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
+                break;
+            case 2: // ghost zigzagging
+                fill_solid(leds, NUM_LEDS, CRGB::Black);
+                FastLED.setBrightness(MAX_BRIGHTNESS);
+                loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
+                break;
+            case 3: // ghost & pumpkin
+                fill_solid(leds, NUM_LEDS, CRGB::Black);
+                FastLED.setBrightness(MAX_BRIGHTNESS);
+                loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8); 
+                loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
+                break;
+        }
+
+        lastIteration = millis();
     }
 
-    /************************************************************* */
-
-    // check to see what was the last effect triggered, keep running it
-    if (prev_sensor_triggered[0]) { // rainbow & pumpkin
-        uint32_t ms = millis();
-        int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
-        int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
-        DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+    // display the current effect in the loop
+    switch (effect) {
+        case 0: // rainbow + still pumpkin
+            uint32_t ms = millis();
+            int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
+            int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
+            DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
         
-        // draw pumpkin on top
-        loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-        // FastLED.show(); // commented out b/c loadHexBitmap already calls it, but here for clarity
-
-    } else if (prev_sensor_triggered[1]) { // skull/crossbones
-
-    /***** these are blocking! will have to figure out something else to go here *****/
-        fadeToBrightness(2, 2); // fade to 2 brightness over 2 seconds
-        fadeToBrightness(2, 6); // fade to 6 brightness over 2 seconds
-
-    } else if (prev_sensor_triggered[2]) { // ghost zigzagging
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
+            // draw pumpkin on top
+            loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
+            break;
+        case 1: // skull
+            fadeToBrightness(2, MAX_BRIGHTNESS / 4);
+            fadeToBrightness(2, MAX_BRIGHTNESS);
+            break;
+        case 2: // ghost zigzagging
+            shiftLeds(leds, RIGHT);
+            if (count % 2 == 0) {
+                shiftLeds(leds, goUp ? UP : DOWN);
+            }
         
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
-
-    } else if (prev_sensor_triggered[3]) { // pumpkin & ghost chasing each other
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
+            if (count % 4 == 0) {
+                goUp = !goUp;
+            }
+            count++;
+            break;
+        case 3: // ghost & pumpkin
+            shiftLeds(leds, RIGHT);
+            if (count % 2 == 0) {
+                shiftLeds(leds, goUp ? UP : DOWN);
+            }
         
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
+            if (count % 4 == 0) {
+                goUp = !goUp;
+            }
+            count++;
+            break;
     }
 
     delay(33);  // delay(33): approx 30fps (30.3)
