@@ -241,7 +241,7 @@ void loop() {
 
     // display the current effect in the loop
     switch (effect) {
-        case 0: // rainbow + still pumpkin
+        case 0: { // rainbow + still pumpkin
             uint32_t ms = millis();
             int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
             int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
@@ -250,11 +250,13 @@ void loop() {
             // draw pumpkin on top
             loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
             break;
-        case 1: // skull
+        }
+        case 1: { // skull
             fadeToBrightness(2, MAX_BRIGHTNESS / 4);
             fadeToBrightness(2, MAX_BRIGHTNESS);
             break;
-        case 2: // ghost zigzagging
+        }
+        case 2: { // ghost zigzagging
             shiftLeds(leds, RIGHT);
             if (count % 2 == 0) {
                 shiftLeds(leds, goUp ? UP : DOWN);
@@ -265,7 +267,8 @@ void loop() {
             }
             count++;
             break;
-        case 3: // ghost & pumpkin
+        }
+        case 3: { // ghost & pumpkin
             shiftLeds(leds, RIGHT);
             if (count % 2 == 0) {
                 shiftLeds(leds, goUp ? UP : DOWN);
@@ -276,6 +279,7 @@ void loop() {
             }
             count++;
             break;
+        }
     }
 
     delay(33);  // delay(33): approx 30fps (30.3)
