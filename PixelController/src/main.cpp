@@ -1,10 +1,8 @@
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
 #include <iostream>
 
-#include "../include/json.hpp"
-#include "../lib/configuration/Configuration.h"
+#include "json.hpp"
+#include "configuration/Configuration.h"
+#include "imageProcessing/ImageProcessing.h"
 
 using json = nlohmann::json;
 
@@ -47,11 +45,40 @@ int main() {
     sensorManager = new SensorManager();
 
     std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
-    Show show = loadShow(filePath);
+    std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
+    std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
 
+    // Load the show file
+    Show show = loadShow(filePath);
     auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
     std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
     std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+
+    auto imagePaths = {risingSunFilePath, djiboutiFilepath};
+
+    for (const auto &imagePath : imagePaths) {
+        // Load the imagePath
+        int ok, width, height, channels;
+        ok = ImageProcessing::get_image_dimensions(imagePath.c_str(), &width, &height, &channels);
+        if (!ok) {
+            std::cerr << "Error getting imagePath dimensions" << std::endl;
+            return 1;
+        }
+
+        unsigned char *data = ImageProcessing::load_image(imagePath.c_str(), &width, &height, &channels);
+        if (data == nullptr) {
+            std::cerr << "Error loading imagePath" << std::endl;
+            return 1;
+        }
+
+        std::cout << "Image Filename: " << imagePath << std::endl;
+        std::cout << "Image Width: " << width << std::endl;
+        std::cout << "Image Height: " << height << std::endl;
+        std::cout << "Image Channels: " << channels << std::endl;
+
+        // Free the imagePath data
+        ImageProcessing::free_image(data);
+    }
 
     return 0;
 }
