@@ -13,7 +13,7 @@
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
-#define SENSOR_DEBOUNCE_MS 5000
+#define SENSOR_DEBOUNCE_MS 100 // originally 5000
 
 enum SensorType {
     S_BINARY = 1,
