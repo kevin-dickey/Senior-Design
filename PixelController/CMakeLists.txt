@@ -13,6 +13,7 @@ option(USE_IMGUI "Include ImGUI Packages in the build" OFF)
 
 # Add the include directory to the project.
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/lib)
 
 # Included from: https://github.com/ocornut/imgui/wiki/Getting-Started
 if (USE_IMGUI)
@@ -33,8 +34,6 @@ add_library(ConfigurationLib
 add_library(ImageProcessingLib
         lib/imageProcessing/ImageProcessing.h
         lib/imageProcessing/ImageProcessing.cpp
-        lib/imageProcessing/ImageProcessing.cpp
-        lib/imageProcessing/ImageProcessing.h
 )
 
 # TODO: Make this into a library and link library to executable.
