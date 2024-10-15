@@ -11,6 +11,9 @@ add_compile_definitions("SOURCE_ROOT=\"${CMAKE_SOURCE_DIR}\"")
 # Add an option to enable or disable the ImGUI emulator.
 option(USE_IMGUI "Include ImGUI Packages in the build" OFF)
 
+# Add the include directory to the project.
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
 # Included from: https://github.com/ocornut/imgui/wiki/Getting-Started
 if (USE_IMGUI)
     add_compile_definitions(USE_IMGUI)
@@ -27,6 +30,13 @@ add_library(ConfigurationLib
         lib/configuration/Configuration.cpp
 )
 
+add_library(ImageProcessingLib
+        lib/imageProcessing/ImageProcessing.h
+        lib/imageProcessing/ImageProcessing.cpp
+        lib/imageProcessing/ImageProcessing.cpp
+        lib/imageProcessing/ImageProcessing.h
+)
+
 # TODO: Make this into a library and link library to executable.
 #   Then, the library can be linked to the embedded build through platform.
 add_executable(PixelController src/main.cpp)
@@ -39,6 +49,7 @@ endif ()
 target_link_libraries(
         PixelController PRIVATE
         ConfigurationLib
+        ImageProcessingLib
 )
 
 if (USE_IMGUI)

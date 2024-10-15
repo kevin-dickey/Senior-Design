@@ -2,8 +2,9 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+#include <fstream>
 #include <string>
-#include "../../include/json.hpp"
+#include "json.hpp"
 #include "Spatials.h"
 #include "Effect.h"
 #include "Layout.h"
