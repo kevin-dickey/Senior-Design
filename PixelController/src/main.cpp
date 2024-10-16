@@ -1,8 +1,6 @@
 #include <iostream>
 
 #include "json.hpp"
-#include "configuration/Configuration.h"
-#include "imageProcessing/ImageProcessing.h"
 
 using json = nlohmann::json;
 
@@ -13,18 +11,21 @@ using json = nlohmann::json;
 #define MAX_BRIGHTNESS 64  // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
-
 #define PROJECT_DIR SOURCE_ROOT
 
-#else
-#define PROJECT_DIR PROJECT_DIR
+// TODO: Gotta do this for anything in lib while using CMake. PlatformIO automatically adds the include path for lib
+//  so that we can include the headers directly (<Configuration.h>). This is a workaround for CMake.
+#include "configuration/Configuration.h"
+#include "imageProcessing/ImageProcessing.h"
 
+#else
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
 
-#include "../lib/configuration/Sensor.h"
+#include <Configuration.h>
+#include <ImageProcessing.h>
 #include "../lib/patternGeneration/rippleEffect.h"
 #include "../lib/patternGeneration/utils.h"
 
@@ -36,12 +37,6 @@ enum ShiftDirection {
     UP,
     DOWN
 };
-
-std::string showFilePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
-std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
-std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
-// Array of image paths
-auto imagePaths = std::vector<std::string *>{&risingSunFilePath, &djiboutiFilepath};
 
 SensorManager *sensorManager;
 Show show;
@@ -57,13 +52,17 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
 #if USE_EMULATOR
 
 int main() {
+    std::string showFilePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
+    std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
+    std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
+    // Array of image paths
+    auto imagePaths = std::vector<std::string *>{&risingSunFilePath, &djiboutiFilepath};
+
     auto loadedImages = std::vector<ImageProcessing::ImageData_t>();
     auto resizedImages = std::vector<ImageProcessing::ImageData_t>();
 
     show = loadShow(showFilePath);
     loadExampleImages(imagePaths, loadedImages);
-
-    GridLayout layout = {0, 16, 16};
     resizeImages(loadedImages, dynamic_cast<GridLayout *>(show.layouts[0].get()), resizedImages);
 
     // Print info about the loaded images
