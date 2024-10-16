@@ -26,7 +26,8 @@ public:
     static void free_image(unsigned char *data);
 
     static unsigned char *
-    resize_image(const unsigned char *image, int width, int height, int channels, int new_width, int new_height);
+    resize_image(const unsigned char *image, int width, int height, int channels,
+                 int &new_width, int &new_height, bool preserve_ratio = true);
 };
 
 

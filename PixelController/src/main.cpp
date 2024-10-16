@@ -579,14 +579,17 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
                   std::vector<ImageProcessing::ImageData_t> &resizedImages) {
     // Resize the loaded images to the grid layout size
     for (auto &i: loadedImages) {
+        int resize_width = gridLayout->width;
+        int resize_height = gridLayout->height;
+
         unsigned char *resizedImage = ImageProcessing::resize_image(i.data, i.width, i.height, i.channels,
-                                                                    gridLayout->width, gridLayout->height);
+                                                                    resize_width, resize_height);
         if (resizedImage == nullptr) {
             std::cerr << "Error resizing image" << std::endl;
             return;
         }
 
         // Store the resized image
-        resizedImages.push_back({resizedImage, gridLayout->width, gridLayout->height, i.channels});
+        resizedImages.push_back({resizedImage, resize_width, resize_height, i.channels});
     }
 }

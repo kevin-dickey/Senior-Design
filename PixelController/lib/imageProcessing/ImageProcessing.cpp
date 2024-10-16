@@ -33,7 +33,16 @@ void ImageProcessing::free_image(unsigned char *data) {
     stbi_image_free(data);
 }
 
-unsigned char *ImageProcessing::resize_image(const unsigned char *image, int width, int height, int channels, int new_width, int new_height) {
+unsigned char *ImageProcessing::resize_image(const unsigned char *image, int width, int height, int channels, int &new_width, int &new_height, bool preserve_ratio) {
+    if (preserve_ratio) {
+        float aspect_ratio = static_cast<float>(width) / height;
+        if (new_width / aspect_ratio <= new_height) {
+            new_height = static_cast<int>(new_width / aspect_ratio);
+        } else {
+            new_width = static_cast<int>(new_height * aspect_ratio);
+        }
+    }
+
     auto *resized_image = (unsigned char *) malloc(new_width * new_height * channels);
     stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGBA);
     return resized_image;
