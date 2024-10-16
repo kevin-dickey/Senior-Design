@@ -1,3 +1,4 @@
+const char *show_json = R"(
 {
   "name": "Basic Show File",
   "duration": 10000,
@@ -54,8 +55,8 @@
   "layouts": [
     {
       "shape": 1,
-      "width": 10,
-      "height": 10
+      "width": 16,
+      "height": 16
     }
   ],
   "sensors": [
@@ -96,4 +97,4 @@
       "pin": 33
     }
   ]
-}
+})";

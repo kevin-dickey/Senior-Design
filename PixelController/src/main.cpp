@@ -19,13 +19,12 @@ using json = nlohmann::json;
 #define PROJECT_DIR SOURCE_ROOT
 
 #else
-#define PROJECT_DIR PROJECT_DIR
-
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
 
+#include "Basic_Show_File.h"
 #include "../lib/configuration/Sensor.h"
 #include "../lib/patternGeneration/rippleEffect.h"
 #include "../lib/patternGeneration/utils.h"
@@ -127,38 +126,37 @@ const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff
 int hue;
 int count;
 bool goUp;
-char set_sensors;
 
-std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
-
 
 void setup() {
     Serial.begin(115200);           // for setting up stuff to print to serial monitor
     delay(3000);                    // delay for 3 seconds to give time to open the serial monitor
     Serial.println("Starting...");  // print to the serial monitor that the program is starting
 
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
-    FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
-    pinMode(LED_BUILTIN, OUTPUT);                                                                  // setup the built-in LED for the esp32
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-    FastLED.show();
-    Serial.println("Initialized FastLED...");
+    // Load Show and print out some of the show's properties
+    nlohmann::json data3 = nlohmann::json::parse(show_json);
+    Show show = Show::from_json(data3);
 
-    Pair_t sensor_pos = {x : 0, y : 0};
-    // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
-    sensor0 = new Sensor(0, 34, S_BINARY, sensor_pos);  // ne
-    sensor1 = new Sensor(1, 35, S_BINARY, sensor_pos);  // nw
-    sensor2 = new Sensor(2, 32, S_BINARY, sensor_pos);  // sw
-    sensor3 = new Sensor(3, 33, S_BINARY, sensor_pos);  // se
-    
-    a_sensors = std::vector<Sensor *>{sensor0, sensor1, sensor2, sensor3};
-    prev_sensor_triggered = std::vector<bool>(a_sensors.size());
+    std::cout << "Show Name: " << show.name << std::endl;
+    std::cout << "Show Duration: " << show.duration << std::endl;
 
     sensorManager = new SensorManager();
-    sensorManager->setSensors(a_sensors);
-    set_sensors = 'a';
-    Serial.println("Initialized Sensors...");
+    sensorManager->setSensors(show.sensors);
+    prev_sensor_triggered = std::vector<bool>(show.sensors.size(), false);
+    std::cout << "Initialized Sensors..." << std::endl;
+
+    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
+    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+    // --------------------------------------------
+
+    // Initialize FastLED
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    std::cout << "Initialized FastLED..." << std::endl;
 
     hue = 30;
     count = 0;
@@ -174,6 +172,7 @@ void setup() {
     // loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
 
     // loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
+    std::cout << "Setup Complete..." << std::endl;
 }
 
 /**
