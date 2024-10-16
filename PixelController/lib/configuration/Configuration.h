@@ -14,9 +14,9 @@
 typedef struct Show {
     std::string name;
     double duration;
-    std::vector<Layout*> layouts;
-    std::vector<Effect*> effects;
-    std::vector<Sensor*> sensors;
+    std::vector<std::unique_ptr<Layout>> layouts;
+    std::vector<std::unique_ptr<Effect>> effects;
+    std::vector<std::unique_ptr<Sensor>> sensors;
 
     static Show from_json(const nlohmann::json& j) {
         Show show;
@@ -25,26 +25,20 @@ typedef struct Show {
         for (const auto& layout : j["layouts"]) {
             switch (layout["shape"].get<LayoutType>()) {
                 case LayoutType::GRID:
-                    show.layouts.push_back(GridLayout::from_json(layout));
+                    show.layouts.push_back(std::unique_ptr<GridLayout>(GridLayout::from_json(layout)));
                     break;
                 default:
-                    show.layouts.push_back(Layout::from_json(layout));
+                    show.layouts.push_back(std::unique_ptr<Layout>(Layout::from_json(layout)));
                     break;
             }
         }
         for (const auto& effect : j["effects"]) {
-            show.effects.push_back(Effect::from_json(effect));
+            show.effects.push_back(std::unique_ptr<Effect>(Effect::from_json(effect)));
         }
         for (const auto& sensor : j["sensors"]) {
-            show.sensors.push_back(Sensor::from_json(sensor));
+            show.sensors.push_back(std::unique_ptr<Sensor>(Sensor::from_json(sensor)));
         }
         return show;
-    }
-
-    ~Show() {
-        for (auto layout : layouts) { delete layout; }
-        for (auto effect : effects) { delete effect; }
-        for (auto sensor : sensors) { delete sensor; }
     }
 } Show_t;
 
