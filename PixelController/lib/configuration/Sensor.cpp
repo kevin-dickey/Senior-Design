@@ -44,7 +44,7 @@ void SensorManager::addSensorInterrupts(std::vector<Sensor *> sensors)
 {
     for (auto &sensor : sensors)
     {
-        pinMode(sensor->pin, INPUT_PULLUP);
+        pinMode(sensor->pin, INPUT);
         auto sensor_id = sensor->id;
         Serial.println("Attaching interrupt for sensor " + String(sensor_id) + " on pin " + String(sensor->pin));
         attachInterruptArg(digitalPinToInterrupt(sensor->pin), onSensorTriggered, reinterpret_cast<void *>(sensor->id), FALLING);
