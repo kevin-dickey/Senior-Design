@@ -37,47 +37,48 @@ enum ShiftDirection {
     DOWN
 };
 
+std::string showFilePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
+std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
+std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
+// Array of image paths
+auto imagePaths = std::vector<std::string *>{&risingSunFilePath, &djiboutiFilepath};
+
 SensorManager *sensorManager;
+Show show;
+
+// Function prototypes
+void loadExampleImages(const std::vector<std::string *> &image_paths,
+                       std::vector<ImageProcessing::ImageData_t> &out_loadedImages);
+
+void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages, GridLayout *gridLayout,
+                  std::vector<ImageProcessing::ImageData_t> &resizedImages);
+
 
 #if USE_EMULATOR
 
 int main() {
-    sensorManager = new SensorManager();
+    auto loadedImages = std::vector<ImageProcessing::ImageData_t>();
+    auto resizedImages = std::vector<ImageProcessing::ImageData_t>();
 
-    std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
-    std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
-    std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
+    show = loadShow(showFilePath);
+    loadExampleImages(imagePaths, loadedImages);
 
-    // Load the show file
-    Show show = loadShow(filePath);
-    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
-    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
-    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+    GridLayout layout = {0, 16, 16};
+    resizeImages(loadedImages, dynamic_cast<GridLayout *>(show.layouts[0].get()), resizedImages);
 
-    auto imagePaths = {risingSunFilePath, djiboutiFilepath};
+    // Print info about the loaded images
+    for (auto &i: resizedImages) {
+        std::cout << "Resized image: " << i.width << "x" << i.height << "x" << i.channels << std::endl;
+    }
 
-    for (const auto &imagePath : imagePaths) {
-        // Load the imagePath
-        int ok, width, height, channels;
-        ok = ImageProcessing::get_image_dimensions(imagePath.c_str(), &width, &height, &channels);
-        if (!ok) {
-            std::cerr << "Error getting imagePath dimensions" << std::endl;
-            return 1;
-        }
+    // Free the loaded images
+    for (auto &i: loadedImages) {
+        ImageProcessing::free_image(i.data);
+    }
 
-        unsigned char *data = ImageProcessing::load_image(imagePath.c_str(), &width, &height, &channels);
-        if (data == nullptr) {
-            std::cerr << "Error loading imagePath" << std::endl;
-            return 1;
-        }
-
-        std::cout << "Image Filename: " << imagePath << std::endl;
-        std::cout << "Image Width: " << width << std::endl;
-        std::cout << "Image Height: " << height << std::endl;
-        std::cout << "Image Channels: " << channels << std::endl;
-
-        // Free the imagePath data
-        ImageProcessing::free_image(data);
+    // Free the resized images
+    for (auto &i: resizedImages) {
+        ImageProcessing::free_image(i.data);
     }
 
     return 0;
@@ -540,3 +541,53 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
 }
 
 #endif
+
+void loadExampleImages(const std::vector<std::string *> &image_paths,
+                       std::vector<ImageProcessing::ImageData_t> &out_loadedImages) {
+    // Clear the loaded images
+    out_loadedImages.clear();
+
+    for (const auto &i: image_paths) {
+        // Load the imagePath
+        std::string imagePath = *i;
+
+        int ok, width, height, channels;
+        ok = ImageProcessing::get_image_dimensions(imagePath.c_str(), &width, &height, &channels);
+        if (!ok) {
+            std::cerr << "Error getting imagePath dimensions" << std::endl;
+            return;
+        }
+
+        unsigned char *data = ImageProcessing::load_image(imagePath.c_str(), &width, &height, &channels);
+        if (data == nullptr) {
+            std::cerr << "Error loading imagePath: " << imagePath << std::endl;
+            return;
+        }
+
+        std::cout << "Image Filename: " << imagePath << std::endl;
+        std::cout << "Image Width: " << width << std::endl;
+        std::cout << "Image Height: " << height << std::endl;
+        std::cout << "Image Channels: " << channels << std::endl;
+
+        // Store the loaded image
+        out_loadedImages.push_back({data, width, height, channels});
+    }
+
+    std::cout << "Loaded " << out_loadedImages.size() << " images" << std::endl;
+}
+
+void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages, GridLayout *gridLayout,
+                  std::vector<ImageProcessing::ImageData_t> &resizedImages) {
+    // Resize the loaded images to the grid layout size
+    for (auto &i: loadedImages) {
+        unsigned char *resizedImage = ImageProcessing::resize_image(i.data, i.width, i.height, i.channels,
+                                                                    gridLayout->width, gridLayout->height);
+        if (resizedImage == nullptr) {
+            std::cerr << "Error resizing image" << std::endl;
+            return;
+        }
+
+        // Store the resized image
+        resizedImages.push_back({resizedImage, gridLayout->width, gridLayout->height, i.channels});
+    }
+}

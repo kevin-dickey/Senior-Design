@@ -6,17 +6,27 @@
 #define PIXELCONTROLLER_IMAGEPROCESSING_H
 
 
-
-
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
 
 class ImageProcessing {
 
 public:
+    typedef struct ImageData {
+        unsigned char *data;
+        int width;
+        int height;
+        int channels;
+    } ImageData_t;
+
     static int get_image_dimensions(const char *filename, int *width, int *height, int *channels);
+
     static unsigned char *load_image(const char *filename, int *width, int *height, int *channels);
+
     static void free_image(unsigned char *data);
+
+    static unsigned char *
+    resize_image(const unsigned char *image, int width, int height, int channels, int new_width, int new_height);
 };
 
 
