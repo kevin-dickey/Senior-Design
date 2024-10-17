@@ -74,8 +74,8 @@ int main()
     printf("SPI slave example\n");
     printf("Setting up SPI slave on pins:\n");
     printf("SCK: %d\n", PICO_DEFAULT_SPI_SCK_PIN);
-    printf("MISO: %d\n", PICO_DEFAULT_SPI_RX_PIN);
-    printf("MOSI: %d\n", PICO_DEFAULT_SPI_TX_PIN);
+    printf("MOSI: %d\n", PICO_DEFAULT_SPI_RX_PIN);
+    printf("MISO: %d\n", PICO_DEFAULT_SPI_TX_PIN);
     printf("CSN: %d\n", PICO_DEFAULT_SPI_CSN_PIN);
 
     // Enable SPI 0 at 1 MHz and connect to GPIOs
@@ -85,6 +85,12 @@ int main()
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI);
+
+    // THIS LINE IS ABSOLUTELY KEY. Enables multi-byte transfers with one CS assert
+    // Page 537 of the RP2040 Datasheet.
+    spi_set_format(spi_default, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST); 
+    gpio_set_dir(PICO_DEFAULT_SPI_TX_PIN, GPIO_OUT);
+
     // Make the SPI pins available to picotool
     bi_decl(bi_4pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI));
 
@@ -100,6 +106,8 @@ int main()
     printbuf(out_buf, BUF_LEN);
     
     for (size_t i = 0; ; ++i) {
+        printf("SPI slave says: Waiting for a page to be read from the MOSI line...\n");
+
         // Write the output buffer to MISO, and at the same time read from MOSI.
         spi_write_read_blocking(spi_default, out_buf, in_buf, BUF_LEN);
 
