@@ -39,6 +39,11 @@ enum ShiftDirection {
     DOWN
 };
 
+enum RotationDirection {
+    Clockwise,
+    CounterClockwise
+};
+
 SensorManager *sensorManager;
 
 #if USE_EMULATOR
@@ -144,7 +149,7 @@ void setup() {
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);                                                                  // setup the built-in LED for the esp32
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);    // LEDs off to start
     FastLED.show();
     Serial.println("Initialized FastLED...");
 

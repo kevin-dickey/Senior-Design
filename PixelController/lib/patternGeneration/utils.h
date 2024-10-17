@@ -9,13 +9,16 @@ uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 
 
-/* Variables for XY() and XYsafe() */
+/* Variables for XY() and XYsafe(), WILL NEED TO BE PASSED IN AS PART OF THE RUNNER IN FINAL PRODUCT */
 // Params for width and height
 const uint8_t kMatrixWidth = 16;
 const uint8_t kMatrixHeight = 16;
 // Param for different pixel layouts
 const bool kMatrixSerpentineLayout = true;
 const bool kMatrixVertical = false;
+
+
+
 /***********************************************************************************************************/
 
 // #define NUM_LEDS (kMatrixWidth * kMatrixHeight)

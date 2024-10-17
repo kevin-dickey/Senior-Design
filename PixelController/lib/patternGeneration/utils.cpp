@@ -1,6 +1,13 @@
 #include <cmath>
 
+#include "FastLED.h"
 #include "utils.h"
+
+enum RotationDirection {
+    Clockwise,
+    CounterClockwise
+};
+
 
 /**
  * MARK: Distance calculation
@@ -82,4 +89,108 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
     if (y >= kMatrixHeight)
         return -1;
     return XY(x, y);
+}
+
+/**
+ * Introduces variability/noise to the provided LEDs by a specified amount.
+ * Needs testing to find a good value for the noiseLevel.
+ */
+void addNoise(CRGB leds[], int numLeds, uint8_t noiseLevel) {
+    for (int i = 0; i < numLeds; i++) {
+        int noiseR = random8(-noiseLevel, noiseLevel + 1);
+        int noiseG = random8(-noiseLevel, noiseLevel + 1);
+        int noiseB = random8(-noiseLevel, noiseLevel + 1);
+
+        leds[i].r = constrain(leds[i].r + noiseR, 0, 255);
+        leds[i].g = constrain(leds[i].r + noiseR, 0, 255);
+        leds[i].b = constrain(leds[i].r + noiseR, 0, 255);
+    }
+    FastLED.show();
+}
+
+/**
+ * Rotates the given array of LEDs either clockwise or counter clockwise
+ * in iterations of 90 degrees.
+ */
+void rotateLeds(CRGB leds[], RotationDirection dir, int degrees, int ledsHeight, int ledsWidth) {
+    if (degrees % 90 != 0) {
+        Serial.println("Can only rotate the degrees in increments of 90 degrees.");
+        return;
+    }
+
+    // minimize the number of rotations
+    degrees = degrees % 360;
+    while (degrees < 0) {
+        degrees += 360;
+    }
+
+    // further minimize the number of rotations
+    if (dir == Clockwise && degrees == 270) {
+        dir = CounterClockwise;
+        degrees = 90;
+    } else if (dir == CounterClockwise && degrees == 270) {
+        dir = Clockwise;
+        degrees = 90;
+    }
+
+    int increments = degrees / 90;
+
+    // dummy check
+    if (degrees == 360) {
+        return;
+    } else if (degrees == 180) {
+        rotate180(leds, ledsHeight, ledsWidth);
+    }
+
+    // rotate time
+    for (int i = 0; i < increments; i++) {
+        if (dir == Clockwise) {
+            rotate90Clockwise(leds, ledsHeight, ledsWidth);
+        } else if (dir == CounterClockwise) {  
+            rotate90CounterClockwise(leds, ledsHeight, ledsWidth);
+        } else {
+            Serial.println("Unrecognized rotation direction (i.e. not clockwise or counterclockwise)");
+        }
+    }
+
+    FastLED.show();
+}
+
+void rotate90Clockwise(CRGB leds[], uint16_t height, uint16_t width) {
+    CRGB temp[width * height];
+    for (uint8_t y = 0; y < height; y++) {
+        for (uint8_t x = 0; x < width; x++) {
+            uint16_t newIndex = XY(height - 1 - y, x);
+            uint16_t oldIndex = XY(x, y);
+            temp[newIndex] = leds[oldIndex];
+        }
+    }
+    // Copy back the rotated values to the original leds array
+    memcpy(leds, temp, sizeof(temp));
+}
+
+void rotate90CounterClockwise(CRGB leds[],  uint16_t height, uint16_t width) {
+    CRGB temp[width * height];
+    for (uint8_t y = 0; y < height; y++) {
+        for (uint8_t x = 0; x < width; x++) {
+            uint16_t newIndex = XY(y, width - 1 - x);
+            uint16_t oldIndex = XY(x, y);
+            temp[newIndex] = leds[oldIndex];
+        }
+    }
+    // Copy back the rotated values to the original leds array
+    memcpy(leds, temp, sizeof(temp));
+}
+
+void rotate180(CRGB leds[], uint16_t height, uint16_t width) {
+    CRGB temp[width * height];
+    for (uint8_t y = 0; y < height; y++) {
+        for (uint8_t x = 0; x < width; x++) {
+            uint16_t newIndex = XY(width - 1 - x, height - 1 - y);
+            uint16_t oldIndex = XY(x, y);
+            temp[newIndex] = leds[oldIndex];
+        }
+    }
+    // Copy back the rotated values to the original leds array
+    memcpy(leds, temp, sizeof(temp));
 }
