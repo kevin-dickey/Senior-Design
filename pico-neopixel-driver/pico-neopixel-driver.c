@@ -13,24 +13,23 @@
 #define PIN_CS   17
 #define PIN_SCK  18
 #define PIN_MOSI 19
-#define BUF_LEN         0x100
+#define BUF_LEN  40 * 60 * 3
 
 #include "blink.pio.h"
 
 
 void printbuf(uint8_t buf[], size_t len) {
-    size_t i;
-    for (i = 0; i < len; ++i) {
-        if (i % 16 == 15)
-            printf("%02x\n", buf[i]);
-        else
-            printf("%02x ", buf[i]);
-    }
+    printf("Data received:\n");
+    for (size_t i = 0; i < len; i += 3) {
+        uint32_t color = (buf[i] << 16) | (buf[i + 1] << 8) | buf[i + 2];
+        printf("0x%06x ", color);
 
-    // append trailing newline if there isn't one
-    if (i % 16) {
-        putchar('\n');
+        // Print a newline every 16 colors
+        if ((i / 3 + 1) % 16 == 0) {
+            printf("\n");
+        }
     }
+    printf("\n");
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
@@ -78,8 +77,8 @@ int main()
     printf("MISO: %d\n", PICO_DEFAULT_SPI_TX_PIN);
     printf("CSN: %d\n", PICO_DEFAULT_SPI_CSN_PIN);
 
-    // Enable SPI 0 at 1 MHz and connect to GPIOs
-    spi_init(spi_default, 1000 * 1000);
+    // Enable SPI 0 at 10 MHz and connect to GPIOs
+    spi_init(spi_default, 20 * 1000 * 1000);
     spi_set_slave(spi_default, true);
     gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
@@ -94,22 +93,13 @@ int main()
     // Make the SPI pins available to picotool
     bi_decl(bi_4pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI));
 
-    uint8_t out_buf[BUF_LEN], in_buf[BUF_LEN];
+    uint8_t in_buf[BUF_LEN];
 
-    // Initialize output buffer
-    for (size_t i = 0; i < BUF_LEN; ++i) {
-        // bit-inverted from i. The values should be: {0xff, 0xfe, 0xfd...}
-        out_buf[i] = ~i;
-    }
-
-    printf("SPI slave says: When reading from MOSI, the following buffer will be written to MISO:\n");
-    printbuf(out_buf, BUF_LEN);
-    
     for (size_t i = 0; ; ++i) {
         printf("SPI slave says: Waiting for a page to be read from the MOSI line...\n");
 
         // Write the output buffer to MISO, and at the same time read from MOSI.
-        spi_write_read_blocking(spi_default, out_buf, in_buf, BUF_LEN);
+        spi_read_blocking(spi_default, 0, in_buf, BUF_LEN);
 
         // Write to stdio whatever came in on the MOSI line.
         printf("SPI slave says: read page %d from the MOSI line:\n", i);
