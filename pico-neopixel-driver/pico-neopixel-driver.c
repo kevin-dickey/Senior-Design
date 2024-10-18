@@ -65,7 +65,7 @@ int main()
     // For more pio examples see https://github.com/raspberrypi/pico-examples/tree/master/pio
 
     // SPI Slave ===============================================================
-#if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
+#if !defined(SPI_PORT) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
 #warning spi/spi_slave example requires a board with SPI pins
     puts("Default SPI pins were not defined");
 #else
@@ -78,8 +78,8 @@ int main()
     printf("CSN: %d\n", PICO_DEFAULT_SPI_CSN_PIN);
 
     // Enable SPI 0 at 10 MHz and connect to GPIOs
-    spi_init(spi_default, 20 * 1000 * 1000);
-    spi_set_slave(spi_default, true);
+    spi_init(SPI_PORT, 20 * 1000 * 1000);
+    spi_set_slave(SPI_PORT, true);
     gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
@@ -87,7 +87,7 @@ int main()
 
     // THIS LINE IS ABSOLUTELY KEY. Enables multi-byte transfers with one CS assert
     // Page 537 of the RP2040 Datasheet.
-    spi_set_format(spi_default, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST); 
+    spi_set_format(SPI_PORT, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST); 
     gpio_set_dir(PICO_DEFAULT_SPI_TX_PIN, GPIO_OUT);
 
     // Make the SPI pins available to picotool
@@ -99,7 +99,7 @@ int main()
         printf("SPI slave says: Waiting for a page to be read from the MOSI line...\n");
 
         // Write the output buffer to MISO, and at the same time read from MOSI.
-        spi_read_blocking(spi_default, 0, in_buf, BUF_LEN);
+        spi_read_blocking(SPI_PORT, 0, in_buf, BUF_LEN);
 
         // Write to stdio whatever came in on the MOSI line.
         printf("SPI slave says: read page %d from the MOSI line:\n", i);
