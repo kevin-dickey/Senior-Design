@@ -11,8 +11,9 @@
 using json = nlohmann::json;
 
 #define LED_PIN 13
+#define SWITCH_BUF_PIN 2
 #define NUM_LEDS_X 60
-#define NUM_LEDS_Y 40
+#define NUM_LEDS_Y 1
 #define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
@@ -76,7 +77,7 @@ SPIClass *vspi = NULL;
 CRGB leds[NUM_LEDS_X * NUM_LEDS_Y];
 uint8_t out_buf[NUM_LEDS_X * NUM_LEDS_Y * 3];
 
-const uint32_t SPI_SPEED_HZ = 20000000; // 20 MHz
+const uint32_t SPI_SPEED_HZ = 1000000; // 1 MHz
 
 void setup()
 {
@@ -95,6 +96,7 @@ void setup()
     vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, VSPI_SS);
 
     pinMode(VSPI_SS, OUTPUT); // VSPI SS
+    pinMode(SWITCH_BUF_PIN, INPUT_PULLDOWN);
 
     std::cout << "Setup Complete..." << std::endl;
 
@@ -108,26 +110,11 @@ void loop()
     // Make random output buffer
     for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
     {
-        out_buf[i] = rand();
+        out_buf[i] = rand() & 0x7F;
     }
 
 #ifdef SPI_HAS_TRANSACTION
     std::cout << "Using new SPI library syntax" << std::endl;
-
-    // Print the data to send
-    // std::cout << "Data to send: " << std::endl;
-    // for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; i += 3)
-    // {
-    //     uint32_t color = out_buf[i] << 16 | out_buf[i + 1] << 8 | out_buf[i + 2];
-    //     std::cout << "0x" << std::hex << std::setw(6) << std::setfill('0') << color << " ";
-
-    //     // Print a newline every 16 colors
-    //     if ((i + 3) % 16 * 3== 0)
-    //     {
-    //         std::cout << std::endl;
-    //     }
-    // }
-    // std::cout << std::endl;
 
     long start = millis();
 
@@ -158,9 +145,8 @@ void loop()
     std::cout << "Please use the new SPI library syntax" << std::endl;
     exit(1);
 #endif
-
     std::cout << "Looping..." << std::endl;
-    delay(2000);
+    delay(100);
 }
 
 #endif
