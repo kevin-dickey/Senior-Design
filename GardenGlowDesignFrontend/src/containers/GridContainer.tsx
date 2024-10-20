@@ -21,7 +21,7 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
         maxScale={5}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
-          <TransformComponent wrapperStyle={{ flex: 1 }}>
+          <TransformComponent wrapperClass="react-transform-wrapper">
             <Box flexDirection="column">
               {Array.from({ length: grid.height }).map((_, rowIndex) => (
                 <Box key={rowIndex} display="flex" gap={0.3}>
