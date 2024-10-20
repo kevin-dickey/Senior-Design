@@ -5,7 +5,6 @@ import { RainbowEffectFormPresentational } from './RainbowEffectFormPresentation
 
 interface RainbowEffectFormContainerProps {
   onSubmit: (effect: Effect) => void;
-  onClose?: () => void;
 }
 
 export const CreateRainbowEffectFormContainer:

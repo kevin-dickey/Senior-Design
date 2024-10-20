@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 import {Effect} from '../serialization/Effect';
 
 import {Box, Button} from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
 import Grid from "@mui/material/Grid";
 
 import {Delete, Save} from '@mui/icons-material';
@@ -15,7 +14,6 @@ interface EffectFormProps {
     effect: Effect;
     onSubmit: (effect: Effect) => void;
     onDelete?: (effectId: number) => void;
-    onClose?: () => void;
     children?: React.ReactNode;
 }
 
@@ -41,7 +39,7 @@ export const labelColumns = 7;
 export const fieldColumns = 12 - labelColumns;
 
 export const EffectForm: React.FC<EffectFormProps> = (
-    {effect, onSubmit, onDelete, onClose, children}
+    {effect, onSubmit, onDelete, children}
 ) => {
 
 
@@ -67,13 +65,8 @@ export const EffectForm: React.FC<EffectFormProps> = (
                 {({values, errors, touched}) => (
                     <Form>
                         <Grid container spacing={2}>
-                            <Grid item xs={11}>
+                            <Grid item xs={12}>
                                 <h3>Effect - {values.name}</h3>
-                            </Grid>
-                            <Grid>
-                                <CloseIcon
-                                    onClick={onClose}
-                                />
                             </Grid>
                             <Grid item xs={labelColumns}>
                                 <label htmlFor="name">Name</label>

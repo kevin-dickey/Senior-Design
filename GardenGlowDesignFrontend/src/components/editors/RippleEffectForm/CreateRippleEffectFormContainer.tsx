@@ -4,11 +4,10 @@ import {RippleEffectFormPresentational} from './RippleEffectFormPresentational';
 
 interface RippleEffectFormContainerProps {
     onSubmit: (effect: Effect) => void;
-    onClose?: () => void;
 }
 
 export const CreateRippleEffectFormContainer:
-    React.FC<RippleEffectFormContainerProps> = ({onSubmit, onClose}) => {
+    React.FC<RippleEffectFormContainerProps> = ({onSubmit}) => {
     const handleSubmit = (values: Effect) => {
         // Handle form submission logic here
         onSubmit(values);
@@ -18,6 +17,5 @@ export const CreateRippleEffectFormContainer:
     return <RippleEffectFormPresentational
         effect={effect}
         onSubmit={handleSubmit}
-        onClose={onClose}
     />;
 };
