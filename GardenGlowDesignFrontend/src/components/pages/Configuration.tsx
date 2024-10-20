@@ -28,269 +28,266 @@ import {GridLayout} from "../serialization/Layout";
 
 
 const Configuration: React.FC = () => {
-        const location = useLocation();
-        const navigate = useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
 
-        const [loadingShow, setLoadingShow] = useState(true);
-        const [showPath, setShowPath] = useState<string | null>(null);
-        const [show, setShow] = useState<Show | null>(null);
-        const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
-        const [creatingEffectType, setCreatingEffectType] = useState<string>('');
-        const [creatingNewEffect, setCreatingNewEffect] = useState(false);
-        const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
+    const [loadingShow, setLoadingShow] = useState(true);
+    const [showPath, setShowPath] = useState<string | null>(null);
+    const [show, setShow] = useState<Show | null>(null);
+    const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
+    const [creatingEffectType, setCreatingEffectType] = useState<string>('');
+    const [creatingNewEffect, setCreatingNewEffect] = useState(false);
+    const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
 
-        useEffect(() => {
-            if (location.state) {
-                if (location.state.show) {
-                    console.log("Loading show:" + location.state.show);
-                    setShow(location.state.show);
+    useEffect(() => {
+        if (location.state) {
+            if (location.state.show) {
+                console.log("Loading show:" + location.state.show);
+                setShow(location.state.show);
 
-                    if (location.state.path) {
-                        setShowPath(location.state.path);
-                    } else {
-                        console.warn('Path not set in location state. Must prompt user for save location.');
-                    }
-                } else if (location.state.path) {
-                    console.log("Loading show from path: " + location.state.path);
-                    storageManager.loadShow(location.state.path).then(loadedShow => setShow(loadedShow));
+                if (location.state.path) {
                     setShowPath(location.state.path);
+                } else {
+                    console.warn('Path not set in location state. Must prompt user for save location.');
                 }
-            } else {
-                console.warn('No location state found. Creating a new show.');
-                setShow(makeShow());
+            } else if (location.state.path) {
+                console.log("Loading show from path: " + location.state.path);
+                storageManager.loadShow(location.state.path).then(loadedShow => setShow(loadedShow));
+                setShowPath(location.state.path);
             }
-            setLoadingShow(false);
-        }, [location.state]);
-        const nodeRef = React.useRef(null);
+        } else {
+            console.warn('No location state found. Creating a new show.');
+            setShow(makeShow());
+        }
+        setLoadingShow(false);
+    }, [location.state]);
+    const nodeRef = React.useRef(null);
 
-        const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
-            if (show == null) {
-                throw Error("Show must not be null!");
+    const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
+        if (show == null) {
+            throw Error("Show must not be null!");
+        }
+        const updatedShow = new Show(show.name, show.duration);
+        updatedShow.setEffects(show.effects.map(effect => {
+            if (effect.id === effectToUpdateId) {
+                return submittedEffect;
             }
-            const updatedShow = new Show(show.name, show.duration);
-            updatedShow.setEffects(show.effects.map(effect => {
-                if (effect.id === effectToUpdateId) {
-                    return submittedEffect;
-                }
-                return effect;
-            }));
-            setShow(updatedShow);
-        };
+            return effect;
+        }));
+        setShow(updatedShow);
+    };
 
-        const deleteEffect = (effectId: number) => {
-            if (show == null) {
-                throw Error("Show must not be null!");
-            }
-
-            const updatedShow = new Show(show.name, show.duration);
-            updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
-            setShow(updatedShow);
+    const deleteEffect = (effectId: number) => {
+        if (show == null) {
+            throw Error("Show must not be null!");
         }
 
-        // TODO: Save As
-        const saveShow = async (show: Show) => {
-            console.log('Saving show: ' + show.name);
-            console.log(show);
+        const updatedShow = new Show(show.name, show.duration);
+        updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
+        setShow(updatedShow);
+    }
 
-            const errors = await validateEffects(show.effects);
-            if (errors.length > 0) {
-                console.log(`Errors found: ${errors.map((e: any) => e.message).join(', ')}`);
-                console.log('Show not saved. Please fix errors and try again.');
-                return;
-            }
-            // FIXME: For now this is fine, but once we open configuration without a file, we need to
-            //  prompt the user for a folder & file name to save under.
-            if (showPath == null) {
-                console.error('No show path set. Prompt the user for a path!');
-                return;
-            }
-            storageManager.saveShow(showPath, show);
-            console.log('Show saved successfully');
+    // TODO: Save As
+    const saveShow = async (show: Show) => {
+        console.log('Saving show: ' + show.name);
+        console.log(show);
+
+        const errors = await validateEffects(show.effects);
+        if (errors.length > 0) {
+            console.log(`Errors found: ${errors.map((e: any) => e.message).join(', ')}`);
+            console.log('Show not saved. Please fix errors and try again.');
+            return;
         }
-
-        const closeEffectPane = () => {
-            // TODO: Add a confirmation dialog if the user has unsaved changes
-            setSelectedEffectId(null);
-            setCreatingNewEffect(false);
+        // FIXME: For now this is fine, but once we open configuration without a file, we need to
+        //  prompt the user for a folder & file name to save under.
+        if (showPath == null) {
+            console.error('No show path set. Prompt the user for a path!');
+            return;
         }
+        storageManager.saveShow(showPath, show);
+        console.log('Show saved successfully');
+    }
 
-        function startEffect(): void {
-            throw new Error('Function not implemented.');
-        }
+    const closeEffectPane = () => {
+        // TODO: Add a confirmation dialog if the user has unsaved changes
+        setSelectedEffectId(null);
+        setCreatingNewEffect(false);
+    }
 
-        // noinspection JSUnusedLocalSymbols
-        function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
-            throw new Error('Function not implemented.');
-        }
+    function startEffect(): void {
+        throw new Error('Function not implemented.');
+    }
 
-        // noinspection JSUnusedLocalSymbols
-        function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
-            throw new Error('Function not implemented.');
-        }
+    // noinspection JSUnusedLocalSymbols
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+        throw new Error('Function not implemented.');
+    }
 
-        return (
-            <ThemeProvider theme={darkTheme}>
-                <CssBaseline/>
-                {loadingShow && <div>Loading...</div>}
-                {!loadingShow && show && (
-                    <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
-                        <NavBar
-                            showName={show.name}
-                            onClickSettings={() => {
-                                console.log("Settings clicked")
-                                setShowConfigPanelOpen(true)
-                            }}
-                            onClickAccount={() => console.log("Account clicked")}
-                            onClickHome={() => navigate('/shows')}
-                            onClickSave={() => saveShow(show)}
-                            onClickExport={() => {
-                                console.log("Export Show")
-                                show.exportToFile();
-                            }}
+    // noinspection JSUnusedLocalSymbols
+    function handleEffectChange(event: ChangeEvent<HTMLSelectElement>): void {
+        throw new Error('Function not implemented.');
+    }
+
+    return (
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
+            {loadingShow && <div>Loading...</div>}
+            {!loadingShow && show && (
+                <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <NavBar
+                        showName={show.name}
+                        onClickSettings={() => {
+                            console.log("Settings clicked")
+                            setShowConfigPanelOpen(true)
+                        }}
+                        onClickAccount={() => console.log("Account clicked")}
+                        onClickHome={() => navigate('/shows')}
+                        onClickSave={() => saveShow(show)}
+                        onClickExport={() => {
+                            console.log("Export Show")
+                            show.exportToFile();
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexGrow: 1,
+                            bgcolor: '#181818',
+                            color: '#ffffff',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Sidebar */}
+                        <EntityPalette
+                            show={show}
+                            saveShow={saveShow}
+                            selectedEffectId={selectedEffectId}
+                            setSelectedEffectId={setSelectedEffectId}
+                            createEffectType={creatingEffectType}
+                            setCreateEffectType={setCreatingEffectType}
+                            creatingNewEffect={creatingNewEffect}
+                            setCreatingNewEffect={setCreatingNewEffect}
+                            startEffect={startEffect}
+                            handleInputChange={handleInputChange}
+                            handleEffectChange={handleEffectChange}
                         />
+
                         <Box
                             sx={{
+                                width: '100%',
+                                height: '100%',
                                 display: 'flex',
-                                flexGrow: 1,
-                                bgcolor: '#181818',
-                                color: '#ffffff',
-                                overflow: 'hidden'
+                                flexDirection: 'column',
+                                overflow: 'hidden',
                             }}
                         >
-                            {/* Sidebar */}
-                            <EntityPalette
-                                show={show}
-                                saveShow={saveShow}
-                                selectedEffectId={selectedEffectId}
-                                setSelectedEffectId={setSelectedEffectId}
-                                createEffectType={creatingEffectType}
-                                setCreateEffectType={setCreatingEffectType}
-                                creatingNewEffect={creatingNewEffect}
-                                setCreatingNewEffect={setCreatingNewEffect}
-                                startEffect={startEffect}
-                                handleInputChange={handleInputChange}
-                                handleEffectChange={handleEffectChange}
-                            />
-
+                            {/* Grid Container */}
                             <Box
+                                id="grid-container"
                                 sx={{
-                                    width: '100%',
-                                    height: '100%',
+                                    flexGrow: 1,
+                                    overflow: 'hidden',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    overflow: 'hidden',
                                 }}
                             >
-                                {/* Grid Container */}
-                                <Box
-                                    id="grid-container"
-                                    sx={{
-                                        flexGrow: 1,
-                                        overflow: 'hidden',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                    }}
-                                >
-                                    {creatingNewEffect &&
-                                        <Draggable nodeRef={nodeRef}>
-                                            <Box
-                                                sx={{
-                                                    bgcolor: '#3a3a3a',
-                                                    p: 2,
-                                                    width: '40vw'
+                                {creatingNewEffect &&
+                                    <Draggable nodeRef={nodeRef}>
+                                        <Box
+                                            sx={{
+                                                bgcolor: '#3a3a3a',
+                                                p: 2,
+                                                width: '40vw'
+                                            }}
+                                            ref={nodeRef}
+                                        >
+                                            <CreateEffectFormContainer
+                                                effectType={creatingEffectType}
+                                                onSubmit={(values) => {
+                                                    show.addEffect(values);
+                                                    setCreatingNewEffect(false);
                                                 }}
-                                                ref={nodeRef}
-                                            >
-                                                <CreateEffectFormContainer
-                                                    effectType={creatingEffectType}
-                                                    onSubmit={(values) => {
-                                                        show.addEffect(values);
-                                                        setCreatingNewEffect(false);
-                                                    }}
-                                                    onClose={() => closeEffectPane()}
-                                                />
-                                            </Box>
-                                        </Draggable>
-                                    }
-                                    {selectedEffectId != null &&
-                                        <Draggable nodeRef={nodeRef}>
-                                            <Box
-                                                sx={{
-                                                    bgcolor: '#3a3a3a',
-                                                    p: 2,
-                                                    width: '40vw'
+                                                onClose={() => closeEffectPane()}
+                                            />
+                                        </Box>
+                                    </Draggable>
+                                }
+                                {selectedEffectId != null &&
+                                    <Draggable nodeRef={nodeRef}>
+                                        <Box
+                                            sx={{
+                                                bgcolor: '#3a3a3a',
+                                                p: 2,
+                                                width: '40vw'
+                                            }}
+                                            ref={nodeRef}
+                                        >
+                                            <EditEffectFormContainer
+                                                key={selectedEffectId}
+                                                // TODO: This will error if selectedEffectId isn't present in .effects
+                                                effect={show.getEffectById(selectedEffectId)!}
+                                                onSubmit={(effect: any) => {
+                                                    console.log("Saving effect: " + effect);
+                                                    updateEffect(effect, selectedEffectId);
                                                 }}
-                                                ref={nodeRef}
-                                            >
-                                                <EditEffectFormContainer
-                                                    key={selectedEffectId}
-                                                    // TODO: This will error if selectedEffectId isn't present in .effects
-                                                    effect={show.getEffectById(selectedEffectId)!}
-                                                    onSubmit={(effect: any) => {
-                                                        console.log("Saving effect: " + effect);
-                                                        updateEffect(effect, selectedEffectId);
-                                                    }}
-                                                    onDelete={(effectId: number) => {
-                                                        console.log("Deleting effect: " + effectId);
-                                                        deleteEffect(effectId);
-                                                        setSelectedEffectId(null);
-                                                    }}
-                                                    onClose={() => closeEffectPane()}
-                                                />
-                                            </Box>
-                                        </Draggable>
-                                    }
-                                    <GridContainer show={show}/>
-                                </Box>
+                                                onDelete={(effectId: number) => {
+                                                    console.log("Deleting effect: " + effectId);
+                                                    deleteEffect(effectId);
+                                                    setSelectedEffectId(null);
+                                                }}
+                                                onClose={() => closeEffectPane()}
+                                            />
+                                        </Box>
+                                    </Draggable>
+                                }
+                                <GridContainer show={show}/>
+                            </Box>
 
-                                {/* Timeline Container */}
-                                <Box
-                                    bgcolor="#2a2a2a"
-                                    paddingTop={1}
-                                    zIndex={1}
-                                >
-                                    {/**add better time indicator */}
-                                    <TimelineContainer
-                                        effects={show.effects}
-                                        onChangeEffects={(effects: Effect[]) => console.log(effects)}
-                                        onChangeSelectedEffectId={(effectId: number) => {
-                                            effectId === selectedEffectId ?
-                                                setSelectedEffectId(null) :
-                                                setSelectedEffectId(effectId);
-                                        }}
-                                    />
-                                </Box>
+                            {/* Timeline Container */}
+                            <Box
+                                bgcolor="#2a2a2a"
+                                paddingTop={1}
+                                zIndex={1}
+                            >
+                                {/**add better time indicator */}
+                                <TimelineContainer
+                                    effects={show.effects}
+                                    onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                                    onChangeSelectedEffectId={(effectId: number) => {
+                                        effectId === selectedEffectId ?
+                                            setSelectedEffectId(null) :
+                                            setSelectedEffectId(effectId);
+                                    }}
+                                />
                             </Box>
                         </Box>
                     </Box>
-                )}
+                </Box>
+            )}
 
-                {/* Show Settings Pane */
-                }
-                <DialogContainer
-                    show={show}
-                    open={showConfigPanelOpen}
-                    onSubmit={(formValues) => {
-                        console.log("Saving show settings");
-                        console.log(formValues);
-                        const newShow = new Show(formValues.showName, formValues.durationSeconds * 1000);
-                        newShow.addLayout(new GridLayout(formValues.width, formValues.height));
+            {/* Show Settings Pane */}
+            <DialogContainer
+                show={show}
+                open={showConfigPanelOpen}
+                onSubmit={(formValues) => {
+                    console.log("Saving show settings");
+                    console.log(formValues);
+                    const newShow = new Show(formValues.showName, formValues.durationSeconds * 1000);
+                    newShow.addLayout(new GridLayout(formValues.width, formValues.height));
 
-                        if (show) {
-                            for (const effect of show.effects) {
-                                newShow.addEffect(effect);
-                            }
+                    if (show) {
+                        for (const effect of show.effects) {
+                            newShow.addEffect(effect);
                         }
+                    }
 
-                        setShow(newShow);
-                        setShowConfigPanelOpen(false);
-                    }}
-                    onClose={() => setShowConfigPanelOpen(false)}
-                />
-            </ThemeProvider>
-        )
-            ;
-    }
-;
+                    setShow(newShow);
+                    setShowConfigPanelOpen(false);
+                }}
+                onClose={() => setShowConfigPanelOpen(false)}
+            />
+        </ThemeProvider>
+    );
+};
 
 export default Configuration;
