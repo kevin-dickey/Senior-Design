@@ -3,13 +3,13 @@ import {Layout} from "./Layout";
 
 export class Show {
     name: string;
-    duration: number;
+    durationMs: number;
     layouts: Layout[];
     effects: Effect[];
 
     constructor(name: string, duration: number) {
         this.name = name;
-        this.duration = duration;
+        this.durationMs = duration;
         this.effects = [];
         this.layouts = [];
     }
@@ -58,7 +58,7 @@ export class Show {
     toJSON() {
         return {
             name: this.name,
-            duration: this.duration,
+            duration: this.durationMs,
             effects: this.effects.map(effect => effect.toJSON()),
             layouts: this.layouts.map(layout => layout.toJSON())
         };
