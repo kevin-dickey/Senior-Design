@@ -12,7 +12,6 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
   const grid = show.layouts[0] as GridLayout;
 
   return (
-
       <TransformWrapper
         initialScale={1}
         wheel={{ step: 0.5 }}

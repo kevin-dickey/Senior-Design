@@ -17,13 +17,14 @@ import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
 import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
 import {validateEffects} from "../editors/EffectList";
 import {EntityPalette} from "../../containers/EntityPalette";
-import GridContainer from '../../containers/GridContainer';
 import {TimelineContainer} from "../../containers/TimelineContainer";
 
 import darkTheme from "../../utils/Theming";
 import "./Configuration.css";
-import {DialogContainer} from "../../containers/DialogContainer";
 import {GridLayout} from "../serialization/Layout";
+import {ConfigPanel} from "../../containers/ConfigPanel";
+import {DialogContainer} from "../../containers/DialogContainer";
+import GridContainer from "../../containers/GridContainer";
 
 
 const Configuration: React.FC = () => {
@@ -86,6 +87,25 @@ const Configuration: React.FC = () => {
         setShow(updatedShow);
     }
 
+    const updateShowSettings = (show: Show,
+                                name: string,
+                                durationSeconds: number,
+                                gridHeight: number,
+                                gridWidth: number) => {
+        console.log("Saving show settings");
+        const newShow = new Show(name, durationSeconds * 1000);
+        newShow.addLayout(new GridLayout(gridWidth, gridHeight));
+
+        if (show) {
+            for (const effect of show.effects) {
+                newShow.addEffect(effect);
+            }
+        }
+
+        setShow(newShow);
+        setShowConfigPanelOpen(false);
+    }
+
     // TODO: Save As
     const saveShow = async (show: Show) => {
         console.log('Saving show: ' + show.name);
@@ -107,6 +127,12 @@ const Configuration: React.FC = () => {
         console.log('Show saved successfully');
     }
 
+    const closeEffectPane = () => {
+        // TODO: Add a confirmation dialog if the user has unsaved changes
+        setSelectedEffectId(null);
+        setCreatingNewEffect(false);
+    }
+
     function startEffect(): void {
         throw new Error('Function not implemented.');
     }
@@ -121,145 +147,147 @@ const Configuration: React.FC = () => {
         throw new Error('Function not implemented.');
     }
 
+    if (creatingNewEffect && selectedEffectId != null) {
+        throw new Error('Cannot create a new effect and edit an existing effect at the same time.');
+    }
+
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline/>
             {loadingShow && <div>Loading...</div>}
             {!loadingShow && show && (
-                <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
-                    <NavBar
-                        showName={show.name}
-                        onClickSettings={() => {
-                            console.log("Settings clicked")
-                            setShowConfigPanelOpen(true)
-                        }}
-                        onClickAccount={() => console.log("Account clicked")}
-                        onClickHome={() => navigate('/shows')}
-                        onClickSave={() => saveShow(show)}
-                        onClickExport={() => {
-                            console.log("Export Show")
-                            show.exportToFile();
-                        }}
-                    />
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexGrow: 1,
-                            bgcolor: '#181818',
-                            color: '#ffffff',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        {/* Sidebar */}
-                        <EntityPalette
-                            show={show}
-                            saveShow={saveShow}
-                            selectedEffectId={selectedEffectId}
-                            setSelectedEffectId={setSelectedEffectId}
-                            createEffectType={creatingEffectType}
-                            setCreateEffectType={setCreatingEffectType}
-                            creatingNewEffect={creatingNewEffect}
-                            setCreatingNewEffect={setCreatingNewEffect}
-                            startEffect={startEffect}
-                            handleInputChange={handleInputChange}
-                            handleEffectChange={handleEffectChange}
+                <>
+                    <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                        <NavBar
+                            showName={show.name}
+                            onClickSettings={() => {
+                                console.log("Settings clicked")
+                                setShowConfigPanelOpen(true)
+                            }}
+                            onClickAccount={() => console.log("Account clicked")}
+                            onClickHome={() => navigate('/shows')}
+                            onClickSave={() => saveShow(show)}
+                            onClickExport={() => {
+                                console.log("Export Show")
+                                show.exportToFile();
+                            }}
                         />
-
                         <Box
                             sx={{
-                                width: '100%',
-                                height: '100%',
                                 display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'hidden',
+                                flexGrow: 1,
+                                bgcolor: '#181818',
+                                color: '#ffffff',
+                                overflow: 'hidden'
                             }}
                         >
-                            {/* Grid Container */}
+                            {/* Sidebar */}
+                            <EntityPalette
+                                show={show}
+                                saveShow={saveShow}
+                                selectedEffectId={selectedEffectId}
+                                setSelectedEffectId={setSelectedEffectId}
+                                createEffectType={creatingEffectType}
+                                setCreateEffectType={setCreatingEffectType}
+                                creatingNewEffect={creatingNewEffect}
+                                setCreatingNewEffect={setCreatingNewEffect}
+                                startEffect={startEffect}
+                                handleInputChange={handleInputChange}
+                                handleEffectChange={handleEffectChange}
+                            />
+
                             <Box
-                                id="grid-container"
                                 sx={{
-                                    flexGrow: 1,
-                                    overflow: 'hidden',
+                                    width: '100%',
+                                    height: '100%',
                                     display: 'flex',
                                     flexDirection: 'column',
+                                    overflow: 'hidden',
                                 }}
                             >
-                                {creatingNewEffect &&
-                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                        <CreateEffectFormContainer
-                                            effectType={creatingEffectType}
-                                            onSubmit={(values) => {
-                                                show.addEffect(values);
-                                                setCreatingNewEffect(false);
-                                            }}
-                                        />
-                                    </Box>
-                                }
-                                {selectedEffectId != null &&
-                                    <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                                        <EditEffectFormContainer
-                                            key={selectedEffectId}
-                                            // TODO: This will error if selectedEffectId isn't present in .effects
-                                            effect={show.getEffectById(selectedEffectId)!}
-                                            onSubmit={(effect: any) => {
-                                                console.log("Saving effect: " + effect);
-                                                updateEffect(effect, selectedEffectId);
-                                            }}
-                                            onDelete={(effectId: number) => {
-                                                console.log("Deleting effect: " + effectId);
-                                                deleteEffect(effectId);
-                                                setSelectedEffectId(null);
-                                            }}
-                                        />
-                                    </Box>
-                                }
-
-                                <GridContainer show={show}/>
-                            </Box>
-
-                            {/* Timeline Container */}
-                            <Box
-                                bgcolor="#2a2a2a"
-                                paddingTop={1}
-                                zIndex={1}
-                            >
-                                {/**add better time indicator */}
-                                <TimelineContainer
-                                    effects={show.effects}
-                                    onChangeEffects={(effects: Effect[]) => console.log(effects)}
-                                    onChangeSelectedEffectId={(effectId: number) => {
-                                        effectId === selectedEffectId ?
-                                            setSelectedEffectId(null) :
-                                            setSelectedEffectId(effectId);
+                                {/* Grid Container */}
+                                <Box
+                                    id="grid-container"
+                                    sx={{
+                                        flexGrow: 1,
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        flexDirection: 'column',
                                     }}
-                                />
+                                >
+                                    {/* Selected Effect Modal */}
+                                    <ConfigPanel
+                                        title={(creatingNewEffect ? "Create" : "Edit") + " Effect"}
+                                        open={selectedEffectId != null || creatingNewEffect}
+                                        handleClose={closeEffectPane}
+                                    >
+                                        {selectedEffectId != null && (
+                                            <EditEffectFormContainer
+                                                key={selectedEffectId}
+                                                // TODO: This will error if selectedEffectId isn't present in .effects
+                                                effect={show.getEffectById(selectedEffectId!)!}
+                                                onSubmit={(effect: any) => {
+                                                    console.log("Saving effect: " + effect);
+                                                    updateEffect(effect, selectedEffectId!);
+                                                    setSelectedEffectId(null);
+                                                }}
+                                                onDelete={(effectId: number) => {
+                                                    console.log("Deleting effect: " + effectId);
+                                                    deleteEffect(effectId);
+                                                    setSelectedEffectId(null);
+                                                }}
+                                            />
+                                        )}
+                                        {creatingNewEffect && (
+                                            <CreateEffectFormContainer
+                                                effectType={creatingEffectType}
+                                                onSubmit={(values) => {
+                                                    console.log("Creating new effect: " + values);
+                                                    // TODO: Handle if values cannot be cast
+                                                    //  to Effect
+                                                    show.addEffect(values);
+                                                    setCreatingNewEffect(false);
+                                                }}
+                                            />
+                                        )}
+                                    </ConfigPanel>
+                                    <GridContainer show={show}/>
+                                </Box>
+
+                                {/* Timeline Container */}
+                                <Box
+                                    bgcolor="#2a2a2a"
+                                    paddingTop={1}
+                                    zIndex={1}
+                                >
+                                    {/**add better time indicator */}
+                                    <TimelineContainer
+                                        effects={show.effects}
+                                        onChangeEffects={(effects: Effect[]) => console.log(effects)}
+                                        onChangeSelectedEffectId={(effectId: number) => {
+                                            effectId === selectedEffectId ?
+                                                setSelectedEffectId(null) :
+                                                setSelectedEffectId(effectId);
+                                        }}
+                                    />
+                                </Box>
                             </Box>
                         </Box>
                     </Box>
-                </Box>
+                    <DialogContainer
+                        show={show}
+                        open={showConfigPanelOpen}
+                        onSubmit={(formValues) => {
+                            updateShowSettings(show,
+                                formValues.showName,
+                                formValues.durationSeconds,
+                                formValues.height,
+                                formValues.width);
+                        }}
+                        onClose={() => setShowConfigPanelOpen(false)}
+                    />
+                </>
             )}
-
-            {/* Show Settings Pane */}
-            <DialogContainer
-                show={show}
-                open={showConfigPanelOpen}
-                onSubmit={(formValues) => {
-                    console.log("Saving show settings");
-                    console.log(formValues);
-                    const newShow = new Show(formValues.showName, formValues.durationSeconds * 1000);
-                    newShow.addLayout(new GridLayout(formValues.width, formValues.height));
-
-                    if (show) {
-                        for (const effect of show.effects) {
-                            newShow.addEffect(effect);
-                        }
-                    }
-
-                    setShow(newShow);
-                    setShowConfigPanelOpen(false);
-                }}
-                onClose={() => setShowConfigPanelOpen(false)}
-            />
         </ThemeProvider>
     );
 };
