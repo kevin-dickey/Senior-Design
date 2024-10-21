@@ -66,6 +66,7 @@ const Configuration: React.FC = () => {
             throw Error("Show must not be null!");
         }
         const updatedShow = new Show(show.name, show.duration);
+        updatedShow.setLayouts(show.layouts);
         updatedShow.setEffects(show.effects.map(effect => {
             if (effect.id === effectToUpdateId) {
                 return submittedEffect;

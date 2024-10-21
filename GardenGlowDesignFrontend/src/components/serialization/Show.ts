@@ -51,6 +51,10 @@ export class Show {
         this.layouts.push(layout);
     }
 
+    setLayouts(layouts: Layout[]) {
+        this.layouts = layouts;
+    }
+
     toJSON() {
         return {
             name: this.name,
