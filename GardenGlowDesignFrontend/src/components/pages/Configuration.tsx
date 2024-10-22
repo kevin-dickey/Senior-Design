@@ -182,6 +182,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                             onClickAccount={() => console.log("Account clicked")}
                             onClickHome={() => navigate('/shows')}
                             onClickSave={() => handleSaveShow(show)}
+                            onClickSaveAs={() => setSavingShowAs(true)}
                             onClickExport={() => {
                                 console.log("Export Show")
                                 show.exportToFile();
