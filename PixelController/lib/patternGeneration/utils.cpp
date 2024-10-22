@@ -3,12 +3,6 @@
 #include "FastLED.h"
 #include "utils.h"
 
-enum RotationDirection {
-    Clockwise,
-    CounterClockwise
-};
-
-
 /**
  * MARK: Distance calculation
  */
@@ -92,25 +86,56 @@ uint16_t XYsafe(uint8_t x, uint8_t y) {
 }
 
 /**
- * Introduces variability/noise to the provided LEDs by a specified amount.
+ * Introduces variability/noise to the provided LEDs by a specified amount (+- noiseLevel).
  * Needs testing to find a good value for the noiseLevel.
+ * 
+ * Skips adding noise to black pixels, skips updating the pixel if the result is white (doesn't actually for some reason).
+ * 
+ * Doesn't really work. (breaks when noiseLevel is >1..., not sure it even works with a value of 1 lol)
  */
 void addNoise(CRGB leds[], int numLeds, uint8_t noiseLevel) {
+    uint32_t currentTime = millis();
     for (int i = 0; i < numLeds; i++) {
-        int noiseR = random8(-noiseLevel, noiseLevel + 1);
-        int noiseG = random8(-noiseLevel, noiseLevel + 1);
-        int noiseB = random8(-noiseLevel, noiseLevel + 1);
+        if (leds[i].r == 0 && leds[i].g == 0 && leds[i].b == 0) {
+            continue; // skip if the pixel is off
+        }
 
-        leds[i].r = constrain(leds[i].r + noiseR, 0, 255);
-        leds[i].g = constrain(leds[i].r + noiseR, 0, 255);
-        leds[i].b = constrain(leds[i].r + noiseR, 0, 255);
+        // another approach... still doesn't work properly :(
+        uint16_t seed = (i * 37) + currentTime;
+        random16_set_seed(seed);
+        CHSV hsv = rgb2hsv_approximate(leds[i]);
+        hsv.hue = (hsv.hue + random8(-noiseLevel, noiseLevel)) % 256;
+        // hsv.value = (hsv.value + random(-noiseLevel, noiseLevel)) % 256;
+        leds[i] = hsv2rgb_spectrum(hsv);
+
+        
+
+
+        // trying different approach -- works "better", still doesn't really work though.
+        // CHSV hsv = rgb2hsv_approximate(leds[i]);
+        // int8_t newHue = hsv.hue + (int8_t)(sin16(currentTime + i + 100) / 32768.0 * noiseLevel);
+        // constrain(newHue, 0, 255);        
+        // leds[i] = hsv2rgb_spectrum(hsv);
+
+        // compiler optimizations should fix me calling the same thing multiple times (i'm lazy)
+        // int noise = random8(-noiseLevel, noiseLevel);
+        // if ((constrain(leds[i].r + noise, 0, 255) == 255 && constrain(leds[i].g + noise, 0, 255) == 255 && constrain(leds[i].b + noise, 0, 255) == 255) 
+        //  || (constrain(leds[i].r + noise, 0, 255) == constrain(leds[i].g + noise, 0, 255) == constrain(leds[i].b + noise, 0, 255))
+        //  || (std::abs(leds[i].r - leds[i].g) <= std::abs(noiseLevel) && std::abs(leds[i].g - leds[i].b) <= std::abs(noiseLevel) && (std::abs(leds[i].r - leds[i].b) <= std::abs(noiseLevel)))) {
+        //     continue; // skip if result is white (or very close to it)
+        // }
+
+        // leds[i].r = constrain(leds[i].r + noise, 0, 255);
+        // leds[i].g = constrain(leds[i].g + noise, 0, 255);
+        // leds[i].b = constrain(leds[i].b + noise, 0, 255);
     }
-    FastLED.show();
 }
 
 /**
  * Rotates the given array of LEDs either clockwise or counter clockwise
  * in iterations of 90 degrees.
+ * 
+ * Might be good to implement a function to change how XY() indexes (permanent rotation instead of singular frame-based rotation)
  */
 void rotateLeds(CRGB leds[], RotationDirection dir, int degrees, int ledsHeight, int ledsWidth) {
     if (degrees % 90 != 0) {

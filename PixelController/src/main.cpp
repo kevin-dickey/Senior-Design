@@ -39,10 +39,6 @@ enum ShiftDirection {
     DOWN
 };
 
-enum RotationDirection {
-    Clockwise,
-    CounterClockwise
-};
 
 SensorManager *sensorManager;
 
@@ -205,7 +201,7 @@ void loop() {
     auto current_time_millis = millis();
 
     // change effect being displayed every 15s
-    if (current_time_millis - lastIteration > 15000) { 
+    if (current_time_millis - lastIteration > 3000) { 
         effect++;
 
         // reset these for other effects to run properly
@@ -227,20 +223,25 @@ void loop() {
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.setBrightness(MAX_BRIGHTNESS);
                 loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
+                FastLED.show();
                 break;
             case 2: // ghost zigzagging
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.setBrightness(MAX_BRIGHTNESS);
                 loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
+                FastLED.show();
                 break;
             case 3: // ghost & pumpkin
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.setBrightness(MAX_BRIGHTNESS);
                 loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8); 
                 loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
+                FastLED.show();
                 break;
         }
 
+        // test rotating -- this will not effectively rotate the rainbow + still pumpkin effect
+        // rotateLeds(leds, Clockwise, 90, NUM_LEDS_Y, NUM_LEDS_X);
         lastIteration = millis();
     }
 
@@ -287,6 +288,9 @@ void loop() {
         }
     }
 
+    // testing noise effect
+    addNoise(leds, NUM_LEDS, 5);
+    FastLED.show();
     delay(33);  // delay(33): approx 30fps (30.3)
 }
 
@@ -312,7 +316,7 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
             }
         }
     }
-    FastLED.show();
+    // FastLED.show();
 }
 
 /**
@@ -340,7 +344,7 @@ void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uin
             }
         }
     }
-    FastLED.show();  // Display the updated LED matrix
+    // FastLED.show();  // Display the updated LED matrix
 }
 
 void shiftLeds(CRGB leds[], ShiftDirection direction) {
