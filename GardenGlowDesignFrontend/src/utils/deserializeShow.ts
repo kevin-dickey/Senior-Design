@@ -1,6 +1,7 @@
 import { Show } from "../components/serialization/Show";
 import {Effect, RainbowEffect, RippleEffect} from "../components/serialization/Effect";
 import { Layout } from "../components/serialization/Layout";
+import {Sensor} from "../components/serialization/Sensor";
 
 export const deserializeShow = (data: any): Show => {
     const show = new Show(data.name, data.durationMs);
@@ -22,5 +23,6 @@ export const deserializeShow = (data: any): Show => {
 
     show.setEffects(effects);
     show.layouts = data.layouts.map((layoutData: any) => Layout.fromJSON(layoutData));
+    show.sensors = data.sensors?.map((sensorData: any) => Sensor.fromJSON(sensorData));
     return show;
 };
