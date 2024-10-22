@@ -1,6 +1,6 @@
 // Draggable and closable component wrapper with a title.
 import * as React from 'react';
-import Draggable from 'react-draggable';
+import Draggable, {DraggableData, DraggableEvent} from 'react-draggable';
 
 import Dialog from '@mui/material/Dialog';
 import DialogActions from "@mui/material/DialogActions";
@@ -11,11 +11,17 @@ import Paper, {PaperProps} from '@mui/material/Paper';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import {IconButton} from "@mui/material";
 
-function PaperComponent(props: PaperProps) {
+function PaperComponent(props: PaperProps & {
+    x: number,
+    y: number,
+    handleStop: (event: DraggableEvent, dragElement: DraggableData) => void
+}) {
     return (
         <Draggable
             handle="#draggable-dialog-title"
             cancel={'[class*="MuiDialogContent-root"]'}
+            position={{x: props.x, y: props.y}}
+            onStop={props.handleStop}
         >
             <Paper {...props} />
         </Draggable>
@@ -31,11 +37,21 @@ export interface ConfigPanelProps {
 }
 
 export function ConfigPanel(props: ConfigPanelProps) {
+    const [x, setX] = React.useState<number>(0);
+    const [y, setY] = React.useState<number>(0);
+
+    const handleStop = (event: DraggableEvent,
+                        dragElement: DraggableData) => {
+        console.log('Draggable stopped at:', dragElement.x, dragElement.y);
+        setX(dragElement.x)
+        setY(dragElement.y)
+    };
+
     return (
         <Dialog
             open={props.open}
             onClose={props.handleClose}
-            PaperComponent={PaperComponent}
+            PaperComponent={(paperProps) => <PaperComponent {...paperProps} x={x} y={y} handleStop={handleStop}/>}
             slotProps={{
                 // Override the default MUI dialog background shading for transparency.
                 backdrop: {
