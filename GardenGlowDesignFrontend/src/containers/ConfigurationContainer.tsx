@@ -53,7 +53,7 @@ export const ConfigurationContainer: React.FC = () => {
     const loadFolders = async () => {
         let loadedFolders: Folder[] = [];
         loadedFolders = loadedFolders.concat(await storageManager.listShows());
-        loadedFolders = loadedFolders.concat(await storageManager.listExampleShows());
+        // Skip loading example files so the Example folder cannot be selected.
         return loadedFolders;
     };
 
@@ -95,7 +95,7 @@ export const ConfigurationContainer: React.FC = () => {
 
             savingShowAs={savingShowAs}
             setSavingShowAs={setSavingShowAs}
-            folders={folders!}
+            saveShowToFolders={folders!}
             onSaveShow={saveShow}
         />
     );

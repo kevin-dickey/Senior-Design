@@ -38,13 +38,13 @@ export interface ConfigurationProps {
     // Deals with saving the show as a new file
     savingShowAs: boolean;
     setSavingShowAs: (saving: boolean) => void;
-    folders: Folder[];
+    saveShowToFolders: Folder[];
 }
 
 const Configuration: React.FC<ConfigurationProps> = (
     {
         show, setShow, onSaveShow,
-        savingShowAs, setSavingShowAs, folders,
+        savingShowAs, setSavingShowAs, saveShowToFolders,
     }) => {
     const navigate = useNavigate();
 
@@ -158,7 +158,7 @@ const Configuration: React.FC<ConfigurationProps> = (
             <CssBaseline/>
             {show && (
                 <>
-                    {folders != null && (
+                    {saveShowToFolders != null && (
                         <Dialog
                             open={savingShowAs}
                             onClose={() => setSavingShowAs(false)}
@@ -166,7 +166,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                             <DialogTitle>Show: Save As</DialogTitle>
                             <DialogContent>
                                 <AddNewFile
-                                    folders={folders}
+                                    folders={saveShowToFolders}
                                     onAddFile={handleSubmitSaveAsPrompt}
                                 />
                             </DialogContent>
