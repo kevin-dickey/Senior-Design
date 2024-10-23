@@ -35,5 +35,10 @@
     "raspberry-pi-pico.cmakeAutoConfigure": true,
     "raspberry-pi-pico.useCmakeTools": false,
     "raspberry-pi-pico.cmakePath": "cmake",
-    "raspberry-pi-pico.ninjaPath": "ninja"
+    "raspberry-pi-pico.ninjaPath": "ninja",
+    "files.associations": {
+        "*.ejs": "html",
+        "ws2812.pio.h": "c",
+        "blink.pio.h": "c"
+    }
 }

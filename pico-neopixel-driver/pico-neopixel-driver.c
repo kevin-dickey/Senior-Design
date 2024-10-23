@@ -9,6 +9,7 @@
 #include "hardware/dma.h"
 
 #include "ws2812.pio.h"
+#include "blink.pio.h"
 
 // SPI Defines
 // We are going to use SPI 0, and allocate it to the following GPIO pins
@@ -24,6 +25,7 @@
 
 
 #define IS_RGBW false
+#define BUILTIN_LED 25
 #define LED_PIN 20
 #define NUM_LEDS_X 60
 #define NUM_LEDS_Y 1
@@ -67,6 +69,17 @@ void printbuf(uint8_t buf[], size_t len)
     printf("\n");
 }
 
+void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
+    blink_program_init(pio, sm, offset, pin);
+    pio_sm_set_enabled(pio, sm, true);
+
+    printf("Blinking pin %d at %d Hz\n", pin, freq);
+
+    // PIO counter program takes 3 more cycles in total than we pass as
+    // input (wait for n + 1; mov; jmp)
+    pio->txf[sm] = (125000000 / (2 * freq)) - 3;
+}
+
 int main()
 {
     stdio_init_all();
@@ -75,10 +88,16 @@ int main()
     sleep_ms(7000);
 
     // PIO Blinking ===========================================================
-    PIO pio = pio0;
-    int state_machine = 0;
-    uint offset = pio_add_program(pio, &ws2812_program);
-    printf("Loaded program at %d\n", offset);
+    PIO pio_1 = pio1;
+    int state_machine_1 = 0;
+    uint offset1 = pio_add_program(pio1, &blink_program);
+    printf("Loaded blink program at %d\n", offset1);
+
+    // PIO WS2812 ===========================================================
+    PIO pio_0 = pio0;
+    int state_machine_0 = 0;
+    uint offset0 = pio_add_program(pio0, &ws2812_program);
+    printf("Loaded ws2812 program at %d\n", offset0);
 
     // SPI Slave ===============================================================
 #if !defined(SPI_PORT) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
@@ -124,7 +143,13 @@ int main()
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
 
-    ws2812_program_init(pio, state_machine, offset, LED_PIN, 800000, IS_RGBW);
+    #ifdef PICO_DEFAULT_LED_PIN
+    blink_pin_forever(pio_1, state_machine_1, offset1, PICO_DEFAULT_LED_PIN, 2);
+    #else
+    blink_pin_forever(pio_1, state_machine_1, offset1, BUILTIN_LED, 3);
+    #endif
+
+    ws2812_program_init(pio_0, state_machine_0, offset0, LED_PIN, 800000, IS_RGBW);
 
     while (true)
     {
