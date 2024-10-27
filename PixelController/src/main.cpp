@@ -27,6 +27,7 @@ using json = nlohmann::json;
 #include <FastLED.h>
 
 #include "../lib/configuration/Sensor.h"
+#include "../lib/configuration/ControllerRunner.h"
 #include "../lib/patternGeneration/rippleEffect.h"
 #include "../lib/patternGeneration/utils.h"
 
@@ -40,6 +41,8 @@ enum ShiftDirection {
 };
 
 SensorManager *sensorManager;
+ControllerRunner* runner;
+unsigned long showStart = 0;
 
 #if USE_EMULATOR
 
@@ -53,6 +56,8 @@ int main() {
     std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
     std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
 
+    auto runner = new ControllerRunner(show);
+    showStart = millis();
     return 0;
 }
 
@@ -197,6 +202,18 @@ void loop() {
     auto sensor_states = sensorManager->getSensorStates(true);
     auto current_millis = millis();
 
+    // set the time lapsed since start time for the show
+    runner->setCursor(showStart - millis());
+    // set mode to 'effect' until sensor is checked and active
+    runner->setMode("effect");
+    // get showFrame
+    auto showFrame = runner->getNextShowFrame();
+    
+    // Eleen ToDo:
+    // set mode to 'sensor' if sensor is actice
+    // track sensor cursor/time independently of effect time. make sure time doesnt change if current mode is sensor and previous effect time is saved 
+    // figure out sensor tracker in controller runner, more details there
+
     // check the states of sensors, set the markers accordingly for which codeblock to execute
     if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
         fill_solid(leds, NUM_LEDS, CRGB::Black);
@@ -283,6 +300,11 @@ void loop() {
         }
         count++;
     }
+
+    // Eleen ToDo
+    //Kevins scoop??
+    // run(showFrame); and make sure curser tracker is updating correctly and independently for effects
+
 
     delay(33);  // delay(33): approx 30fps (30.3)
 }
