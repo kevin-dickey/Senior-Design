@@ -202,17 +202,22 @@ void loop() {
     auto sensor_states = sensorManager->getSensorStates(true);
     auto current_millis = millis();
 
-    // set the time lapsed since start time for the show
-    runner->setCursor(showStart - millis());
+    // set the time lapsed since start time for the show excluding sensors runtime
+    runner->setEffectCursor(showStart - current_millis - runner->getTotalSensorRuntime());
+    
+    // Eleen ToDo: 
+    //move setMode effect and showFrame = till after sensors are checked??
     // set mode to 'effect' until sensor is checked and active
     runner->setMode("effect");
     // get showFrame
     auto showFrame = runner->getNextShowFrame();
     
     // Eleen ToDo:
+    // while sensor mode
     // set mode to 'sensor' if sensor is actice
-    // track sensor cursor/time independently of effect time. make sure time doesnt change if current mode is sensor and previous effect time is saved 
-    // figure out sensor tracker in controller runner, more details there
+    // Set sensorStartTime to current time 
+    // Set activeSensorId to current sensor
+    // run Inner Sensor Loop. More details in ControllerRunner notes
 
     // check the states of sensors, set the markers accordingly for which codeblock to execute
     if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
@@ -302,9 +307,8 @@ void loop() {
     }
 
     // Eleen ToDo
-    //Kevins scoop??
-    // run(showFrame); and make sure curser tracker is updating correctly and independently for effects
-
+    //Kevins scoop?? :
+    // run(showFrame); 
 
     delay(33);  // delay(33): approx 30fps (30.3)
 }

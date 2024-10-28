@@ -10,7 +10,7 @@ public:
     struct ShowFrame
     {
         std::vector<Effect*> effects;
-        int frame;
+        unsigned long frame;
     };
 
     // Constructor taking a reference or pointer to a Show object
@@ -19,20 +19,27 @@ public:
     ~ControllerRunner();
 
     ShowFrame getNextShowFrame();
-    void setCursor(int newCursor);
-    int getCursor() const;
+    void setEffectCursor(unsigned long newCursor);
+    unsigned long getEffectCursor() const;
+    void setSensorCursor(unsigned long newCursor);
+    unsigned long getSensorCursor() const;
     void setMode(const std::string& newMode);
+    std::string getMode() const;
     void setActiveSensorId(int newActiveSensorId);
     int getActiveSensorId() const;
-    std::string getMode() const;
+    void setTotalSensorRuntime(unsigned long runtime);
+    unsigned long getTotalSensorRuntime() const;
 
 private:
-    int cursor;
+    unsigned long effectCursor;
+    unsigned long sensorCursor;
+    unsigned long totalSensorsRuntime;
     const Show& show;
     std::string mode;
     int activeSensorId;
     ShowFrame currentEffectShowFrame;
     ShowFrame currentSensorShowFrame;
+
 };
 
 #endif // PIXELCONTROLLER_CONTROLLERRUNNER_H
