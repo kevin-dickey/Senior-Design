@@ -18,26 +18,32 @@ typedef struct Show {
     std::vector<Sensor*> sensors;
 
     static Show from_json(const nlohmann::json& j) {
-        Show show;
-        show.name = j["name"];
-        show.duration = j["duration"];
-        for (const auto& layout : j["layouts"]) {
-            switch (layout["shape"].get<LayoutType>()) {
-                case LayoutType::GRID:
-                    show.layouts.push_back(GridLayout::from_json(layout));
-                    break;
-                default:
-                    show.layouts.push_back(Layout::from_json(layout));
-                    break;
+        try {
+            Show show;
+            show.name = j["name"];
+            show.duration = j["duration"];
+            for (const auto &layout: j["layouts"]) {
+                switch (layout["shape"].get<LayoutType>()) {
+                    case LayoutType::GRID:
+                        show.layouts.push_back(GridLayout::from_json(layout));
+                        break;
+                    default:
+                        show.layouts.push_back(Layout::from_json(layout));
+                        break;
+                }
             }
+            for (const auto &effect: j["effects"]) {
+                show.effects.push_back(Effect::from_json(effect));
+            }
+            for (const auto &sensor: j["sensors"]) {
+                show.sensors.push_back(Sensor::from_json(sensor));
+            }
+            return show;
         }
-        for (const auto& effect : j["effects"]) {
-            show.effects.push_back(Effect::from_json(effect));
+        catch (const std::exception& e) {
+            std::cerr << "Error parsing show: " << e.what() << std::endl;
+            throw e;
         }
-        for (const auto& sensor : j["sensors"]) {
-            show.sensors.push_back(Sensor::from_json(sensor));
-        }
-        return show;
     }
 
     ~Show() {
