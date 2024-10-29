@@ -9,10 +9,15 @@
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
-class Effect
-{
+enum EffectType : int {
+    E_RAINBOW = 1,
+    E_RIPPLE = 2
+};
+
+class Effect {
 public:
     int id;
+    EffectType effectType;
     std::string name;
     Pair_t origin{};
     Pair_t size{};
@@ -88,13 +93,17 @@ public:
     double speed;
 
     inline RainbowEffect(
-        int id, std::string name,
-        Pair_t origin, Pair_t size,
-        double startTimeMs, double durationMs,
-        std::unique_ptr<Translation_t> translation,
-        std::vector<std::string> colors,
-        double speed) : Effect(id, std::move(name), origin, size, startTimeMs, durationMs, std::move(translation)),
-                        colors(std::move(colors)), speed(speed) {}
+            int id, const std::string &name,
+            Pair_t origin, Pair_t size,
+            double startTimeMs, double durationMs,
+            std::unique_ptr<Translation_t> translation,
+            std::vector<std::string> colors,
+            double speed) : Effect(id, E_RAINBOW,
+                                   name,
+                                   origin, size,
+                                   startTimeMs, durationMs,
+                                   std::move(translation)),
+                            colors(std::move(colors)), speed(speed) {}
 
     RainbowEffect(const RainbowEffect &) = delete;
 
@@ -131,13 +140,17 @@ public:
     int speed;
 
     inline RippleEffect(
-        int id, std::string name,
-        Pair_t origin, Pair_t size,
-        double startTimeMs, double durationMs,
-        std::unique_ptr<Translation_t> translation,
-        Pair_t ripple_origin,
-        int speed) : Effect(id, std::move(name), origin, size, startTimeMs, durationMs, std::move(translation)),
-                     ripple_origin(ripple_origin), speed(speed) {}
+            int id, const std::string &name,
+            Pair_t origin, Pair_t size,
+            double startTimeMs, double durationMs,
+            std::unique_ptr<Translation_t> translation,
+            Pair_t ripple_origin,
+            int speed) : Effect(id, E_RIPPLE,
+                                name,
+                                origin, size,
+                                startTimeMs, durationMs,
+                                std::move(translation)),
+                         ripple_origin(ripple_origin), speed(speed) {}
 
     RippleEffect(const RippleEffect &) = delete;
 
