@@ -5,6 +5,7 @@
 #ifndef PIXELCONTROLLER_IMAGEPROCESSING_H
 #define PIXELCONTROLLER_IMAGEPROCESSING_H
 
+#include <FS.h>
 
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
@@ -19,9 +20,15 @@ public:
         int channels;
     } ImageData_t;
 
+    static unsigned char *convertFsFileToBuffer(fs::File *fsFile, size_t &fileSize);
+
     static int get_image_dimensions(const char *filename, int *width, int *height, int *channels);
 
+    static int get_image_dimensions_from_memory(unsigned char* buffer, size_t &len, int *outWidth, int *outHeight, int *outChannels);
+    
     static unsigned char *load_image(const char *filename, int *width, int *height, int *channels);
+
+    static unsigned char *load_image_from_memory(unsigned char *buffer, size_t &len, int *width, int *height, int *channels);
 
     static void free_image(unsigned char *data);
 
