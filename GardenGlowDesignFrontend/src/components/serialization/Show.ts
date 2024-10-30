@@ -1,17 +1,20 @@
 import {Effect} from "./Effect";
 import {Layout} from "./Layout";
+import {Sensor} from "./Sensor";
 
 export class Show {
     name: string;
-    duration: number;
+    durationMs: number;
     layouts: Layout[];
     effects: Effect[];
+    sensors: Sensor[];
 
     constructor(name: string, duration: number) {
         this.name = name;
-        this.duration = duration;
+        this.durationMs = duration;
         this.effects = [];
         this.layouts = [];
+        this.sensors = [];
     }
 
     private nextEffectId() {
@@ -55,10 +58,18 @@ export class Show {
         this.layouts = layouts;
     }
 
+    addSensor(sensor: Sensor) {
+        this.sensors.push(sensor);
+    }
+
+    setSensors(sensors: Sensor[]) {
+        this.sensors = sensors;
+    }
+
     toJSON() {
         return {
             name: this.name,
-            duration: this.duration,
+            duration: this.durationMs,
             effects: this.effects.map(effect => effect.toJSON()),
             layouts: this.layouts.map(layout => layout.toJSON())
         };

@@ -13,4 +13,8 @@ export class Pair {
             y: this.y,
         };
     }
+
+    static fromJSON(data: any): Pair {
+        return new Pair(data.x, data.y);
+    }
 }
