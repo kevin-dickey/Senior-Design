@@ -2,8 +2,9 @@
 // Created by Nick Vazquez on 10/15/24.
 //
 
-#include "memory.h"
 #include <FS.h>
+#include <iostream>
+#include "memory.h"
 #include "ImageProcessing.h"
 
 // Throw an error if STB_IMAGE_IMPLEMENTATION is already defined.
@@ -38,7 +39,7 @@ unsigned char *ImageProcessing::convertFsFileToBuffer(fs::File *fsFile, size_t& 
     }
 
     // Allocate a buffer to hold the file contents
-    uint8_t *buffer = (uint8_t *)malloc(fileSize * 2);
+    uint8_t *buffer = (uint8_t *)malloc(fileSize);
     if (!buffer)
     {
         return nullptr;
@@ -57,7 +58,13 @@ int ImageProcessing::get_image_dimensions(const char *filename, int *width, int 
 
 int ImageProcessing::get_image_dimensions_from_memory(unsigned char *buffer, size_t &len, int *outWidth, int *outHeight, int *outChannels)
 {
-    return stbi_info_from_memory(buffer, (int) len, outWidth, outHeight, outChannels);
+    int res = stbi_info_from_memory(buffer, (int) len, outWidth, outHeight, outChannels);
+    if (res == 0)
+    {
+        std::cerr << "Error getting image dimensions from memory" << std::endl;
+        std::cerr << "Error: " << stbi_failure_reason() << std::endl;
+    }
+    return res;
 }
 
 unsigned char *ImageProcessing::load_image(const char *filename, int *width, int *height, int *channels)
@@ -67,7 +74,13 @@ unsigned char *ImageProcessing::load_image(const char *filename, int *width, int
 
 unsigned char *ImageProcessing::load_image_from_memory(unsigned char *buffer, size_t &len, int *width, int *height, int *channels)
 {
-    return stbi_load_from_memory(buffer, len, width, height, channels, 0);
+    unsigned char *imgData = stbi_load_from_memory(buffer, len, width, height, channels, 0);
+    if (!imgData)
+    {
+        std::cerr << "Error loading image from memory" << std::endl;
+        std::cerr << "Error: " << stbi_failure_reason() << std::endl;
+    }
+    return imgData;
 }
 
 void ImageProcessing::free_image(unsigned char *data)
@@ -91,6 +104,12 @@ unsigned char *ImageProcessing::resize_image(const unsigned char *image, int wid
     }
 
     auto *resized_image = (unsigned char *)malloc(new_width * new_height * channels);
+    if (!resized_image)
+    {
+        std::cerr << "Error allocating memory for resized image" << std::endl;
+        std::cerr << "Error: " << stbi_failure_reason() << std::endl;
+        return nullptr;
+    }
     stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGBA);
     return resized_image;
 }

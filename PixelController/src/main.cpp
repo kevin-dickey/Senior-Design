@@ -147,29 +147,38 @@ void setup()
     }
 
     std::cout << "⏳ Loading Ghost..." << std::endl;
-    File ghostBmpFile = fm->getJsonFile("/ghost.bmp");
+    File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
     std::cout << "✅ Opened Ghost File!" << std::endl;
     std::cout << "Converting to FILE..." << std::endl;
     size_t fileSize;
-    unsigned char *ghostFile = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
+    unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
     std::cout << "✅ Converted to FILE!" << std::endl;
     std::cout << "  File Size: " << fileSize << std::endl;
-    std::cout << "  First 10 bytes: " << ghostFile[0] << ghostFile[1] << ghostFile[2] << ghostFile[3] << ghostFile[4] << ghostFile[5] << ghostFile[6] << ghostFile[7] << ghostFile[8] << ghostFile[9] << std::endl;
+    std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
 
     std::cout << "⏳ Getting Image Dimensions..." << std::endl;
     // Get the dimensions of the image and load it
-    ImageProcessing::get_image_dimensions_from_memory(ghostFile, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+    ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
 
     std::cout << "Image Width: " << loadedImageWidth << std::dec << std::endl;
     std::cout << "Image Height: " << loadedImageHeight << std::dec << std::endl;
     std::cout << "Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
-    ImageProcessing::load_image_from_memory(ghostFile, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+    unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
 
     std::cout << "✅ Loaded Image!" << std::endl;
 
-    std::cout << "🕊️ Freeing Image..." << std::endl;
+    std::cout << "🕊️ Freeing Image Buffer..." << std::endl;
+    free(ghostFileBuf);
+    
+    std::cout << "↔️ Resizing Image..." << std::endl;
+    int newWidth = NUM_LEDS_X;
+    int newHeight = NUM_LEDS_Y;
+    unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
     ImageProcessing::free_image(ghostFile);
+
+    std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
+    ImageProcessing::free_image(resizedGhost);
     ghostBmpFile.close();
     std::cout << "🥹 Freed Image!" << std::endl;
 
