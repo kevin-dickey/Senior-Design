@@ -43,13 +43,19 @@ public:
 
     virtual ~Sensor() = default;
 
-    static Sensor* from_json(const nlohmann::json& j) {
-        return new Sensor{
-                j["id"],
-                j["pin"],
-                j["type"],
-                Pair_t::from_json(j["location"])
-        };
+    static Sensor *from_json(const nlohmann::json &j) {
+        try {
+            return new Sensor{
+                    j["id"],
+                    j["pin"],
+                    j["type"],
+                    Pair_t::from_json(j["location"])
+            };
+        }
+        catch (const std::exception &e) {
+            std::cerr << "Error parsing sensor: " << e.what() << std::endl;
+            throw e;
+        }
     }
 };
 
@@ -57,17 +63,20 @@ public:
 class SensorManager {
 public:
     SensorManager() = default;
+
     ~SensorManager() = default;
 
     void setSensors(std::vector<Sensor *> sensors);
 
     std::vector<Sensor *> getSensors();
+
     std::vector<bool> getSensorStates(bool reset = false);
 
 private:
     std::vector<Sensor *> sensors;
 
     void removeSensorInterrupts(std::vector<Sensor *> sensors);
+
     void addSensorInterrupts(std::vector<Sensor *> sensors);
 };
 
