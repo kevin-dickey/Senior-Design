@@ -82,7 +82,6 @@ const uint32_t SPI_SPEED_HZ = 1000000; // 1 MHz
 void setup()
 {
     Serial.begin(115200);                    // for setting up stuff to print to serial monitor
-    delay(7000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
     Serial.print("MOSI Pin: ");
@@ -100,6 +99,7 @@ void setup()
 
     std::cout << "Setup Complete..." << std::endl;
 
+    delay(7000);                             // delay for 3 seconds to give time to open the serial monitor
 }
 
 /**
@@ -119,6 +119,21 @@ void loop()
     long start = millis();
     // Number of attempts needed to wait until pico was ready to receive data
     uint8_t unsuccessful_attempts = 0;  
+
+    // Print the data to send to the pico
+    std::cout << "Data to send: ";
+    for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
+    {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(out_buf[i]) << " ";
+        if (i % 16 == 15)
+        {
+            std::cout << std::endl;
+        }
+        else if (i % 3 == 2)
+        {
+            std::cout << " ";
+        }
+    }
 
     vspi->beginTransaction(SPISettings(SPI_SPEED_HZ, MSBFIRST, SPI_MODE0));
     // Send a header of 0xF0 to indicate frame data in this transaction.
