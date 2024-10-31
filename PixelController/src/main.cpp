@@ -27,6 +27,7 @@ using json = nlohmann::json;
 #define VSPI_MOSI 23
 #define VSPI_SCK 18
 #define VSPI_SS 5
+#define VSPI_SD_SS 17
 
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
@@ -90,12 +91,24 @@ void setup()
     Serial.println(VSPI_MISO);
     Serial.print("SCK Pin: ");
     Serial.println(VSPI_SCK);
+    Serial.print("Pi Pico SS Pin: ");
+    Serial.println(VSPI_SS);
+    Serial.print("SD Card SS Pin: ");
+    Serial.println(VSPI_SD_SS);
+
 
     vspi = new SPIClass(VSPI);
+    // Set the pins for SPI, Automatically pull Pi SS high.
     vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, VSPI_SS);
 
     pinMode(VSPI_SS, OUTPUT); // VSPI SS
+    pinMode(VSPI_SD_SS, OUTPUT); // SD Card SS
     pinMode(SWITCH_BUF_PIN, INPUT_PULLDOWN);
+
+    // Set the device SS pins to high to set them to not be selected. 
+    // This is redundant on the VSPI_SS pin due to the declaration in the vspi->begin() statement above
+    digitalWrite(VSPI_SS, HIGH);
+    digitalWrite(VSPI_SD_SS, HIGH);
 
     std::cout << "Setup Complete..." << std::endl;
 
@@ -135,6 +148,8 @@ void loop()
         }
     }
 
+    digitalWrite(VSPI_SS, LOW); // Select the pico for data transfer
+
     vspi->beginTransaction(SPISettings(SPI_SPEED_HZ, MSBFIRST, SPI_MODE0));
     // Send a header of 0xF0 to indicate frame data in this transaction.
     uint8_t status = vspi->transfer(0xF0);
@@ -149,6 +164,8 @@ void loop()
     delay(100);
 
     vspi->endTransaction();
+
+    digitalWrite(VSPI_SS, HIGH); // Deselect the pico for data transfer
 
     long elapsed = millis() - start;
 
