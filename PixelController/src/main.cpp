@@ -82,7 +82,7 @@ const uint32_t SPI_SPEED_HZ = 1000000; // 1 MHz
 void setup()
 {
     Serial.begin(115200);                    // for setting up stuff to print to serial monitor
-    delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
+    delay(7000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
     Serial.print("MOSI Pin: ");
@@ -110,20 +110,29 @@ void loop()
     // Make random output buffer
     for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
     {
-        out_buf[i] = rand() & 0x7F;
+        out_buf[i] = rand() & 0x33;
     }
 
 #ifdef SPI_HAS_TRANSACTION
     std::cout << "Using new SPI library syntax" << std::endl;
 
     long start = millis();
+    // Number of attempts needed to wait until pico was ready to receive data
+    uint8_t unsuccessful_attempts = 0;  
 
     vspi->beginTransaction(SPISettings(SPI_SPEED_HZ, MSBFIRST, SPI_MODE0));
-    // Send data
-    for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
-    {
-        vspi->write(out_buf[i]);
-    }
+    // Send a header of 0xF0 to indicate frame data in this transaction.
+    uint8_t status = vspi->transfer(0xF0);
+
+    std::cout << "Received control header status: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(status) << std::endl;
+
+    delay(100);
+
+    // Send data - DO NOT INCREMENT i IN THE FOR LOOP INITIALIZATION
+    vspi->writeBytes(out_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
+
+    delay(100);
+
     vspi->endTransaction();
 
     long elapsed = millis() - start;
@@ -146,7 +155,7 @@ void loop()
     exit(1);
 #endif
     std::cout << "Looping..." << std::endl;
-    delay(100);
+    delay(10000);
 }
 
 #endif
