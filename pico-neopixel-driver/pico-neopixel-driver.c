@@ -18,16 +18,11 @@
 #define SPI_PORT spi0
 #endif
 
-#define PIN_MISO 16
-#define PIN_CS 17
-#define PIN_SCK 18
-#define PIN_MOSI 19
-
 #define IS_RGBW false
 #define BUILTIN_LED 25
-#define LED_PIN 20
-#define NUM_LEDS_X 60
-#define NUM_LEDS_Y 1
+#define LED_PIN 2
+#define NUM_LEDS_X 8
+#define NUM_LEDS_Y 2
 #define LED_BYTES 3
 
 #define BUF_LEN NUM_LEDS_X * NUM_LEDS_Y * LED_BYTES
@@ -126,7 +121,7 @@ int main()
 
     // THIS LINE IS ABSOLUTELY KEY FOR SPI. Enables multi-byte transfers with one CS assert
     // Page 537 of the RP2040 Datasheet. Specific mode of the Motorola-esque SPI controller
-    spi_set_format(SPI_PORT, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+    spi_set_format(SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     gpio_set_dir(PICO_DEFAULT_SPI_TX_PIN, GPIO_OUT);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
