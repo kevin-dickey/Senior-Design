@@ -173,14 +173,14 @@ int main()
         memset(&in_buf, 0, sizeof(in_buf));
 
         // Configure SPI DMA to send status messages to the SPI master
-        // dma_channel_configure(
-        //     spi_dma_channel_tx,
-        //     &c_tx,
-        //     &spi_out_byte,              // Source
-        //     &spi_get_hw(SPI_PORT)->dr,  // Destination
-        //     BUF_LEN + 1,                // Number of transfers
-        //     false                       // Wait to start
-        // );
+        dma_channel_configure(
+            spi_dma_channel_tx,
+            &c_tx,
+            &spi_get_hw(SPI_PORT)->dr,  // Destination
+            &spi_out_byte,              // Source
+            BUF_LEN + 1,                // Number of transfers
+            false                       // Wait to start
+        );
 
         // Start the DMA channel to receive the 1 control byte from SPI
         dma_channel_configure(spi_dma_channel_rx,
@@ -194,8 +194,8 @@ int main()
 
         // Start the DMA channel and wait for it to finish
         printf("Starting RX DMA channel %d and TX DMA channel %d\n", spi_dma_channel_rx, spi_dma_channel_tx);
-        // dma_start_channel_mask((1u << spi_dma_channel_tx) | (1u << spi_dma_channel_rx));
-        dma_start_channel_mask((1u << spi_dma_channel_rx));
+        dma_start_channel_mask((1u << spi_dma_channel_tx) | (1u << spi_dma_channel_rx));
+        // dma_start_channel_mask((1u << spi_dma_channel_rx));
 
         printf("Waiting for data from SPI...\n");
         dma_channel_wait_for_finish_blocking(spi_dma_channel_rx);

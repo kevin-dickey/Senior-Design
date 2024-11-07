@@ -158,12 +158,12 @@ void loop()
 
     std::cout << "Received control header status: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(status) << std::endl;
 
-    delay(20);
+    delay(5);
 
     // Send data - DO NOT INCREMENT i IN THE FOR LOOP INITIALIZATION
     vspi->transferBytes(out_buf, in_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
 
-    // delay(100);
+    delay(10);
 
     vspi->endTransaction();
 
