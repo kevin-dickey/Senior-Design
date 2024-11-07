@@ -10,10 +10,12 @@
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
 
-class ImageProcessing {
+class ImageProcessing
+{
 
 public:
-    typedef struct ImageData {
+    typedef struct ImageData
+    {
         unsigned char *data;
         int width;
         int height;
@@ -24,8 +26,8 @@ public:
 
     static int get_image_dimensions(const char *filename, int *width, int *height, int *channels);
 
-    static int get_image_dimensions_from_memory(unsigned char* buffer, size_t &len, int *outWidth, int *outHeight, int *outChannels);
-    
+    static int get_image_dimensions_from_memory(unsigned char *buffer, size_t &len, int *outWidth, int *outHeight, int *outChannels);
+
     static unsigned char *load_image(const char *filename, int *width, int *height, int *channels);
 
     static unsigned char *load_image_from_memory(unsigned char *buffer, size_t &len, int *width, int *height, int *channels);
@@ -35,7 +37,13 @@ public:
     static unsigned char *
     resize_image(const unsigned char *image, int width, int height, int channels,
                  int &new_width, int &new_height, bool preserve_ratio = true);
+
+    static void printImageHex(unsigned char *imageData,
+                              uint8_t width,
+                              uint8_t height,
+                              uint8_t channels,
+                              uint8_t bytesPerRow = 16,
+                              uint8_t byte_separation = 1);
 };
 
-
-#endif //PIXELCONTROLLER_IMAGEPROCESSING_H
+#endif // PIXELCONTROLLER_IMAGEPROCESSING_H

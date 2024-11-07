@@ -5,11 +5,11 @@ using json = nlohmann::json;
 
 #include <FileManager.h>
 
-#define LED_PIN 13
+#define LED_PIN 0 
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
-#define NUM_LEDS 256
-#define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define NUM_LEDS NUM_LEDS_X * NUM_LEDS_Y 
+#define MAX_BRIGHTNESS 8 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
 #define PROJECT_DIR SOURCE_ROOT
@@ -41,7 +41,6 @@ enum ShiftDirection
     DOWN
 };
 
-SensorManager *sensorManager;
 FileManager *fileManager;
 Show_t show;
 
@@ -102,6 +101,9 @@ void fadeToBrightness(int duration, int targetBrightness);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);              // draws rainbow frame
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ half brightness
 
+void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight);
+void fillRemainingPixels(CRGB* leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
+
 void parseBitmapData(const char *hexData);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
@@ -119,22 +121,13 @@ int prevLeds4[NUM_LEDS] = {0};
 
 const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
 
-Sensor * sensor0, *sensor1, *sensor2, *sensor3; 
-int hue; 
-int count;
-bool goUp;
-char set_sensors;
-
 int loadedImageHeight, loadedImageWidth, loadedImageChannels;
 unsigned char *loadedImage;
-
-std::vector<Sensor *> a_sensors;
-std::vector<bool> prev_sensor_triggered;
 
 void setup()
 {
     Serial.begin(115200);                    // for setting up stuff to print to serial monitor
-    delay(7000);                             // delay for 3 seconds to give time to open the serial monitor
+    delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
     // SD Card Setup
@@ -145,6 +138,29 @@ void setup()
         while (true)
             ;
     }
+
+    // FastLED Initialization
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
+    pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    Serial.println("Initialized FastLED...");
+    
+    // Flash a red, green, blue pattern to the LEDs each for a second.
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show();
+    delay(1000);
+    fill_solid(leds, NUM_LEDS, CRGB::Green);
+    FastLED.show();
+    delay(1000);
+    fill_solid(leds, NUM_LEDS, CRGB::Blue);
+    FastLED.show();
+    delay(1000);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+
+    long start_loading_ghost = millis();
 
     std::cout << "⏳ Loading Ghost..." << std::endl;
     File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
@@ -160,27 +176,20 @@ void setup()
     // Get the dimensions of the image and load it
     ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
 
-    std::cout << "Image Width: " << loadedImageWidth << std::dec << std::endl;
-    std::cout << "Image Height: " << loadedImageHeight << std::dec << std::endl;
-    std::cout << "Image Channels: " << loadedImageChannels << std::dec << std::endl;
+    std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
+    std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
+    std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
     unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
-
     std::cout << "✅ Loaded Image!" << std::endl;
 
-    std::cout << "🕊️ Freeing Image Buffer..." << std::endl;
-    free(ghostFileBuf);
-    
     std::cout << "↔️ Resizing Image..." << std::endl;
     int newWidth = NUM_LEDS_X;
     int newHeight = NUM_LEDS_Y;
     unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+    std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
     ImageProcessing::free_image(ghostFile);
-
-    std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
-    ImageProcessing::free_image(resizedGhost);
-    ghostBmpFile.close();
-    std::cout << "🥹 Freed Image!" << std::endl;
+    free(ghostFileBuf);
 
     // std::cout << "⏳ Loading Show..." << std::endl;
     // File showFile = fm->getJsonFile("/show.json");
@@ -189,60 +198,34 @@ void setup()
     // std::cout << "➡️ Show Name: " << show.name << std::endl;
     // showFile.close();
 
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
-    FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
-    pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    // DEBUG: Display the loaded image data
+    std::cout << "🖼️ Displaying Image Data..." << std::endl;
+    std::cout << "  New Width: " << newWidth << std::endl;
+    std::cout << "  New Height: " << newHeight << std::endl;
+    ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels);
+
+    // Load the resized image into the LED matrix
+    std::cout << "🚦 Loading Image into LED Array..." << std::endl;
+    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y);
+    // fillRemainingPixels(leds, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+
+    // Log the time taken to load the ghost
+    long end_loading_ghost = millis();
+    std::cout << "⏲️ Time taken to load ghost: " << end_loading_ghost - start_loading_ghost << "ms" << std::endl;
+
     FastLED.show();
-    Serial.println("Initialized FastLED...");
 
-    Pair_t sensor_pos = {x : 0, y : 0};
-    // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
-    sensor0 = new Sensor(0, 34, S_BINARY, sensor_pos); // ne
-    sensor1 = new Sensor(1, 35, S_BINARY, sensor_pos); // nw
-    sensor2 = new Sensor(2, 32, S_BINARY, sensor_pos); // sw
-    sensor3 = new Sensor(3, 33, S_BINARY, sensor_pos); // se
+    // TODO: `free` or free_image causes a kernel panic, possibly due to a double free, the large size, or something else.
+    //  Not freeing will cause a memory leak, but it's better than a kernel panic for now.
+    // std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+    // std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
+    // free(resizedGhost);
+    // std::cout << "✅ Freed Image!" << std::endl;
 
-    a_sensors = std::vector<Sensor *>{sensor0, sensor1, sensor2, sensor3};
-    prev_sensor_triggered = std::vector<bool>(a_sensors.size());
-
-    sensorManager = new SensorManager();
-    sensorManager->setSensors(a_sensors);
-    set_sensors = 'a';
-    Serial.println("Initialized Sensors...");
-
-    hue = 30;
-    count = 0;
-    goUp = true;
-    srand(static_cast<unsigned int>(time(0)));
-
-    /* Testing Stuff */
-    // these don't work
-    // loadByteBitmap(leds, pumptest, 4, 4, 8, 8);
-    // loadByteBitmap(leds, ghost8bit, 4, 4, 8, 8);
-
-    // if this doesn't work, something is seriously messed up
-    // loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-
-    // loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
-}
-
-/**
- * Resets every index in prev_sensor_triggered to false except for the specified index, which is set to true.
- */
-void resetTriggerMarkers(int exception)
-{
-    for (int i = 0; i < prev_sensor_triggered.size(); i++)
-    {
-        if (i == exception)
-        {
-            prev_sensor_triggered[i] = true;
-        }
-        else
-        {
-            prev_sensor_triggered[i] = false;
-        }
-    }
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+    std::cout << "🛑 Closing ghost from file manager..." << std::endl;
+    ghostBmpFile.close();
+    std::cout << "✅ Closed ghost from file manager!" << std::endl;
 }
 
 /**
@@ -251,7 +234,6 @@ void resetTriggerMarkers(int exception)
 void loop()
 {
     // gets the current state of every sensor, the state automatically resets after it's viewed
-    auto sensor_states = sensorManager->getSensorStates(true);
     auto current_millis = millis();
 }
 
@@ -523,6 +505,34 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
     }
 }
 
+void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight) {
+    int startX = (matrixWidth - imgWidth) / 2;
+    int startY = (matrixHeight - imgHeight) / 2;
+
+    for (int y = 0; y < imgHeight; ++y) {
+        for (int x = 0; x < imgWidth; ++x) {
+            int bufferIndex = (y * imgWidth + x) * imgChannels;
+            int matrixIndex = (startY + y) * matrixWidth + (startX + x);
+
+            if (imgChannels == 3) { // RGB
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+            } else if (imgChannels == 4) { // RGBA
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+            }
+        }
+    }
+}
+
+void fillRemainingPixels(CRGB* leds, int matrixWidth, int matrixHeight, CRGB backgroundColor) {
+    for (int y = 0; y < matrixHeight; ++y) {
+        for (int x = 0; x < matrixWidth; ++x) {
+            int index = y * matrixWidth + x;
+            if (leds[index] == CRGB::Black) {
+                leds[index] = backgroundColor;
+            }
+        }
+    }
+}
 #endif
 
 void loadExampleImages(const std::vector<std::string *> &image_paths,
@@ -584,3 +594,4 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
         resizedImages.push_back({resizedImage, resize_width, resize_height, i.channels});
     }
 }
+
