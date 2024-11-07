@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 #define LED_PIN 13
 #define SWITCH_BUF_PIN 2
-#define NUM_LEDS_X 60
+#define NUM_LEDS_X 5 
 #define NUM_LEDS_Y 1
 #define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
@@ -77,6 +77,7 @@ int main()
 SPIClass *vspi = NULL;
 CRGB leds[NUM_LEDS_X * NUM_LEDS_Y];
 uint8_t out_buf[NUM_LEDS_X * NUM_LEDS_Y * 3];
+uint8_t in_buf[NUM_LEDS_X * NUM_LEDS_Y * 3];
 
 const uint32_t SPI_SPEED_HZ = 1000000; // 1 MHz
 
@@ -112,7 +113,7 @@ void setup()
 
     std::cout << "Setup Complete..." << std::endl;
 
-    delay(7000);                             // delay for 3 seconds to give time to open the serial monitor
+    delay(2000);                             // delay for 3 seconds to give time to open the serial monitor
 }
 
 /**
@@ -123,7 +124,7 @@ void loop()
     // Make random output buffer
     for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
     {
-        out_buf[i] = rand() & 0x33;
+        out_buf[i] = i % 256;
     }
 
 #ifdef SPI_HAS_TRANSACTION
@@ -147,6 +148,7 @@ void loop()
             std::cout << " ";
         }
     }
+    std::cout << std::endl;
 
     digitalWrite(VSPI_SS, LOW); // Select the pico for data transfer
 
@@ -156,12 +158,12 @@ void loop()
 
     std::cout << "Received control header status: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(status) << std::endl;
 
-    delay(100);
+    delay(20);
 
     // Send data - DO NOT INCREMENT i IN THE FOR LOOP INITIALIZATION
-    vspi->writeBytes(out_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
+    vspi->transferBytes(out_buf, in_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
 
-    delay(100);
+    // delay(100);
 
     vspi->endTransaction();
 
@@ -180,6 +182,22 @@ void loop()
     } else {
         std::cout << "Elapsed time is too short to calculate KB per second" << std::endl;
     }
+
+    // Print the data received from the pico
+    std::cout << "Data received: ";
+    for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
+    {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(in_buf[i]) << " ";
+        if (i % 16 == 15)
+        {
+            std::cout << std::endl;
+        }
+        else if (i % 3 == 2)
+        {
+            std::cout << " ";
+        }
+    }
+    std::cout << std::endl;
 #else
     // Error cause this isn't supported
     std::cout << "Using old SPI library syntax" << std::endl;
@@ -187,7 +205,10 @@ void loop()
     exit(1);
 #endif
     std::cout << "Looping..." << std::endl;
-    delay(10000);
+    while (true)
+    {
+        // Do nothing
+    }
 }
 
 #endif

@@ -21,8 +21,8 @@
 #define IS_RGBW false
 #define BUILTIN_LED 25
 #define LED_PIN 2
-#define NUM_LEDS_X 8
-#define NUM_LEDS_Y 2
+#define NUM_LEDS_X 5 
+#define NUM_LEDS_Y 1
 #define LED_BYTES 3
 
 #define BUF_LEN NUM_LEDS_X * NUM_LEDS_Y * LED_BYTES
@@ -122,7 +122,6 @@ int main()
     // THIS LINE IS ABSOLUTELY KEY FOR SPI. Enables multi-byte transfers with one CS assert
     // Page 537 of the RP2040 Datasheet. Specific mode of the Motorola-esque SPI controller
     spi_set_format(SPI_PORT, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
-    gpio_set_dir(PICO_DEFAULT_SPI_TX_PIN, GPIO_OUT);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     // Make the SPI pins available to picotool
@@ -147,14 +146,14 @@ int main()
     dma_channel_config c_tx = dma_channel_get_default_config(spi_dma_channel_tx);
     channel_config_set_transfer_data_size(&c_tx, DMA_SIZE_8);
     // This might be wrong
-    channel_config_set_dreq(&c_tx, spi_get_dreq(spi_default, false));
-    // channel_config_set_read_increment(&c_tx, false);
-    // channel_config_set_write_increment(&c_tx, false);
+    channel_config_set_dreq(&c_tx, spi_get_dreq(spi_default, true));
+    channel_config_set_read_increment(&c_tx, false);
+    channel_config_set_write_increment(&c_tx, false);
 
     // Program State ===============================================================
     uint8_t header_buf;
     uint8_t in_buf[BUF_LEN];
-    uint8_t spi_out_byte = 0x01;
+    uint8_t spi_out_byte = 0xFF;
 
 #ifdef PICO_DEFAULT_LED_PIN
     blink_pin_forever(pio_1, state_machine_1, offset1, PICO_DEFAULT_LED_PIN, 2);
@@ -174,14 +173,14 @@ int main()
         memset(&in_buf, 0, sizeof(in_buf));
 
         // Configure SPI DMA to send status messages to the SPI master
-        dma_channel_configure(
-            spi_dma_channel_tx,
-            &c_tx,
-            &spi_out_byte,              // Source
-            &spi_get_hw(SPI_PORT)->dr,  // Destination
-            BUF_LEN + 1,                // Number of transfers
-            false                       // Wait to start
-        );
+        // dma_channel_configure(
+        //     spi_dma_channel_tx,
+        //     &c_tx,
+        //     &spi_out_byte,              // Source
+        //     &spi_get_hw(SPI_PORT)->dr,  // Destination
+        //     BUF_LEN + 1,                // Number of transfers
+        //     false                       // Wait to start
+        // );
 
         // Start the DMA channel to receive the 1 control byte from SPI
         dma_channel_configure(spi_dma_channel_rx,
@@ -194,10 +193,11 @@ int main()
         uint32_t wait_start = to_ms_since_boot(get_absolute_time());
 
         // Start the DMA channel and wait for it to finish
-        printf("Starting DMA channel %d\n", spi_dma_channel_rx);
-        dma_start_channel_mask((1u << spi_dma_channel_tx) | (1u << spi_dma_channel_rx));
+        printf("Starting RX DMA channel %d and TX DMA channel %d\n", spi_dma_channel_rx, spi_dma_channel_tx);
+        // dma_start_channel_mask((1u << spi_dma_channel_tx) | (1u << spi_dma_channel_rx));
+        dma_start_channel_mask((1u << spi_dma_channel_rx));
 
-        printf("Waiting for header from SPI...\n");
+        printf("Waiting for data from SPI...\n");
         dma_channel_wait_for_finish_blocking(spi_dma_channel_rx);
 
         // Read the control byte
@@ -222,7 +222,7 @@ int main()
             dma_channel_configure(
                 spi_dma_channel_rx,
                 &c,
-                in_buf,                    // Destination
+                &in_buf,                   // Destination
                 &spi_get_hw(SPI_PORT)->dr, // Source
                 BUF_LEN,                   // Number of transfers
                 true                       // Don't start immediately
@@ -231,8 +231,10 @@ int main()
 
         // Wait for the DMA channel to finish
         dma_channel_wait_for_finish_blocking(spi_dma_channel_rx);
-
         printf("DMA channel %d finished in %ld ms\n", spi_dma_channel_rx, to_ms_since_boot(get_absolute_time()) - wait_start);
+
+        dma_channel_wait_for_finish_blocking(spi_dma_channel_tx);
+        printf("DMA channel %d finished in %ld ms\n", spi_dma_channel_tx, to_ms_since_boot(get_absolute_time()) - wait_start);
 
         printf("Done reading from SPI.\n");
         printbuf(in_buf, BUF_LEN);
