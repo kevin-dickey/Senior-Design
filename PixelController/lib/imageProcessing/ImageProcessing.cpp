@@ -109,8 +109,20 @@ unsigned char *ImageProcessing::resize_image(const unsigned char *image, int wid
         std::cerr << "Error allocating memory for resized image" << std::endl;
         return nullptr;
     }
-    // TODO: Check if the resize is successful, then determine whether to use STBIR_RGB or STBIR_RGBA based on the channels.
-    stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGB);
+
+    switch (channels)
+    {
+    case 4:
+        stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGBA);
+        break;
+    case 3:
+        stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGB);
+        break;
+    default:
+        std::cerr << "Error resizing image: Unsupported number of channels" << std::endl;
+        return nullptr;
+    }
+
     return resized_image;
 }
 
