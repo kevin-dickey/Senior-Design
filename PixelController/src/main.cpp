@@ -5,7 +5,7 @@ using json = nlohmann::json;
 
 #include <FileManager.h>
 
-#define LED_PIN 0 
+#define LED_PIN 13 
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
 #define NUM_LEDS NUM_LEDS_X * NUM_LEDS_Y 
@@ -146,19 +146,6 @@ void setup()
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
     Serial.println("Initialized FastLED...");
-    
-    // Flash a red, green, blue pattern to the LEDs each for a second.
-    fill_solid(leds, NUM_LEDS, CRGB::Red);
-    FastLED.show();
-    delay(1000);
-    fill_solid(leds, NUM_LEDS, CRGB::Green);
-    FastLED.show();
-    delay(1000);
-    fill_solid(leds, NUM_LEDS, CRGB::Blue);
-    FastLED.show();
-    delay(1000);
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-    FastLED.show();
 
     long start_loading_ghost = millis();
 
@@ -206,8 +193,11 @@ void setup()
 
     // Load the resized image into the LED matrix
     std::cout << "🚦 Loading Image into LED Array..." << std::endl;
-    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y);
-    // fillRemainingPixels(leds, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+    CRGB *serpentineArray = (CRGB*)calloc(NUM_LEDS, sizeof(CRGB));
+    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
+    fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+
+    rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
 
     // Log the time taken to load the ghost
     long end_loading_ghost = millis();

@@ -109,7 +109,8 @@ unsigned char *ImageProcessing::resize_image(const unsigned char *image, int wid
         std::cerr << "Error allocating memory for resized image" << std::endl;
         return nullptr;
     }
-    stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGBA);
+    // TODO: Check if the resize is successful, then determine whether to use STBIR_RGB or STBIR_RGBA based on the channels.
+    stbir_resize_uint8_srgb(image, width, height, 0, resized_image, new_width, new_height, 0, STBIR_RGB);
     return resized_image;
 }
 
@@ -122,7 +123,7 @@ void ImageProcessing::printImageHex(unsigned char *imageData, uint8_t width, uin
             for (int c = 0; c < channels; c++)
             {
                 printf("%02x", imageData[(y * width + x) * channels + c]);
-                if (c < channels - 1)
+                if (c == channels - 1)
                 {
                     printf(" ");
                 }
