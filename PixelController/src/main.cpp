@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 #define LED_PIN 13
 #define SWITCH_BUF_PIN 2
-#define NUM_LEDS_X 5 
+#define NUM_LEDS_X 5
 #define NUM_LEDS_Y 1
 #define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
@@ -97,23 +97,22 @@ void setup()
     Serial.print("SD Card SS Pin: ");
     Serial.println(VSPI_SD_SS);
 
-
     vspi = new SPIClass(VSPI);
     // Set the pins for SPI, Automatically pull Pi SS high.
     vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, VSPI_SS);
 
-    pinMode(VSPI_SS, OUTPUT); // VSPI SS
+    pinMode(VSPI_SS, OUTPUT);    // VSPI SS
     pinMode(VSPI_SD_SS, OUTPUT); // SD Card SS
     pinMode(SWITCH_BUF_PIN, INPUT_PULLDOWN);
 
-    // Set the device SS pins to high to set them to not be selected. 
+    // Set the device SS pins to high to set them to not be selected.
     // This is redundant on the VSPI_SS pin due to the declaration in the vspi->begin() statement above
     digitalWrite(VSPI_SS, HIGH);
     digitalWrite(VSPI_SD_SS, HIGH);
 
     std::cout << "Setup Complete..." << std::endl;
 
-    delay(2000);                             // delay for 3 seconds to give time to open the serial monitor
+    delay(2000); // delay for 3 seconds to give time to open the serial monitor
 }
 
 /**
@@ -132,7 +131,7 @@ void loop()
 
     long start = millis();
     // Number of attempts needed to wait until pico was ready to receive data
-    uint8_t unsuccessful_attempts = 0;  
+    uint8_t unsuccessful_attempts = 0;
 
     // Print the data to send to the pico
     std::cout << "Data to send: ";
@@ -150,61 +149,49 @@ void loop()
     }
     std::cout << std::endl;
 
-    digitalWrite(VSPI_SS, LOW); // Select the pico for data transfer
-
-    vspi->beginTransaction(SPISettings(SPI_SPEED_HZ, MSBFIRST, SPI_MODE0));
-    // Send a header of 0xF0 to indicate frame data in this transaction.
-    uint8_t status = vspi->transfer(0xF0);
-
-    std::cout << "Received control header status: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(status) << std::endl;
-
-    delay(5);
-
-    // Send data - DO NOT INCREMENT i IN THE FOR LOOP INITIALIZATION
-    vspi->transferBytes(out_buf, in_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
-
-    delay(10);
-
-    vspi->endTransaction();
-
-    digitalWrite(VSPI_SS, HIGH); // Deselect the pico for data transfer
-
-    long elapsed = millis() - start;
-
-    std::cout << "Bytes: " << std::dec << (NUM_LEDS_X * NUM_LEDS_Y * 3) << std::endl;
-    std::cout << "Elapsed time: " << std::dec << elapsed << " ms" << std::endl;
-    
-    if (elapsed > 0)
+    for (uint8_t delayMs = 0; delayMs < 10; delayMs++)
     {
-        // KiloBytes per second
-        double kb_per_second = (NUM_LEDS_X * NUM_LEDS_Y * 3) / (elapsed / 1000.0) / 1024;
-        std::cout << "KB per second: " << std::dec << kb_per_second << std::endl;
-    } else {
-        std::cout << "Elapsed time is too short to calculate KB per second" << std::endl;
-    }
+        digitalWrite(VSPI_SS, LOW); // Select the pico for data transfer
 
-    // Print the data received from the pico
-    std::cout << "Data received: ";
-    for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
-    {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(in_buf[i]) << " ";
-        if (i % 16 == 15)
+        vspi->beginTransaction(SPISettings(SPI_SPEED_HZ, MSBFIRST, SPI_MODE0));
+        // Send a header of 0xF0 to indicate frame data in this transaction.
+        uint8_t status = vspi->transfer(0xF0);
+
+        delay(5);
+
+        // Send data - DO NOT INCREMENT i IN THE FOR LOOP INITIALIZATION
+        vspi->transferBytes(out_buf, in_buf, NUM_LEDS_X * NUM_LEDS_Y * 3);
+
+        vspi->endTransaction();
+
+        digitalWrite(VSPI_SS, HIGH); // Deselect the pico for data transfer
+
+        std::cout << "Received control header status: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(status) << std::endl;
+
+        // Print the data received from the pico
+        std::cout << "Data received: ";
+        for (size_t i = 0; i < NUM_LEDS_X * NUM_LEDS_Y * 3; ++i)
         {
-            std::cout << std::endl;
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(in_buf[i]) << " ";
+            if (i % 16 == 15)
+            {
+                std::cout << std::endl;
+            }
+            else if (i % 3 == 2)
+            {
+                std::cout << " ";
+            }
         }
-        else if (i % 3 == 2)
-        {
-            std::cout << " ";
-        }
-    }
-    std::cout << std::endl;
+        std::cout << std::endl;
 #else
     // Error cause this isn't supported
     std::cout << "Using old SPI library syntax" << std::endl;
     std::cout << "Please use the new SPI library syntax" << std::endl;
     exit(1);
 #endif
-    std::cout << "Looping..." << std::endl;
+        std::cout << "Looping..." << std::endl;
+        delay(1000);
+    }
     while (true)
     {
         // Do nothing

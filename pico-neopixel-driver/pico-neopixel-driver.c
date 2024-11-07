@@ -132,6 +132,13 @@ int main()
     int spi_dma_channel_rx = dma_claim_unused_channel(true);
     int spi_dma_channel_tx = dma_claim_unused_channel(true);
 
+    // Sends status bytes from the spi_out_byte, doesn't write to memory. Just sends it out
+    printf("Setting up DMA channel %d to send data to SPI\n", spi_dma_channel_tx);
+    dma_channel_config c_tx = dma_channel_get_default_config(spi_dma_channel_tx);
+    channel_config_set_transfer_data_size(&c_tx, DMA_SIZE_8);
+    channel_config_set_dreq(&c_tx, spi_get_dreq(spi_default, true));
+    // This might be wrong
+
     // Set up the DMA to receive data into in_buf as it comes in on the SPI line
     // https://github.com/raspberrypi/pico-examples/blob/7e77a0c381863be0c49086567e7f1934d78ac591/spi/spi_dma/spi_dma.c#L68-L80
     printf("Setting up DMA channel %d to receive data from SPI\n", spi_dma_channel_rx);
@@ -141,19 +148,17 @@ int main()
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
 
-    // Sends status bytes from the spi_out_byte, doesn't write to memory. Just sends it out
-    printf("Setting up DMA channel %d to send data to SPI\n", spi_dma_channel_tx);
-    dma_channel_config c_tx = dma_channel_get_default_config(spi_dma_channel_tx);
-    channel_config_set_transfer_data_size(&c_tx, DMA_SIZE_8);
-    // This might be wrong
-    channel_config_set_dreq(&c_tx, spi_get_dreq(spi_default, true));
-    channel_config_set_read_increment(&c_tx, false);
-    channel_config_set_write_increment(&c_tx, false);
-
+    
     // Program State ===============================================================
     uint8_t header_buf;
     uint8_t in_buf[BUF_LEN];
-    uint8_t spi_out_byte = 0xFF;
+    uint8_t out_buf[BUF_LEN + 1];
+
+    // Fill the out_buf with 0xFF downto 0xFF-(BUF_LEN + 1)
+    for (size_t i = 0; i < BUF_LEN + 1; i++)
+    {
+        out_buf[i] = 0xFF - i;
+    }
 
 #ifdef PICO_DEFAULT_LED_PIN
     blink_pin_forever(pio_1, state_machine_1, offset1, PICO_DEFAULT_LED_PIN, 2);
@@ -177,7 +182,7 @@ int main()
             spi_dma_channel_tx,
             &c_tx,
             &spi_get_hw(SPI_PORT)->dr,  // Destination
-            &spi_out_byte,              // Source
+            &out_buf,                   // Source
             BUF_LEN + 1,                // Number of transfers
             false                       // Wait to start
         );
@@ -238,6 +243,8 @@ int main()
 
         printf("Done reading from SPI.\n");
         printbuf(in_buf, BUF_LEN);
+
+
 
         // Send the data to the PIO state machine
         for (size_t i = 0; i < BUF_LEN; i += 3)
