@@ -27,18 +27,24 @@ extern std::vector<long> sensorLastTriggeredMillis;
 void IRAM_ATTR onSensorTriggered(void *arg);
 #endif
 
+// Eleen ToDo:
+// Add effect object and serialize it 
 class Sensor {
 public:
     int id;
     int pin;
+    unsigned long duration;
     SensorType type;
     Pair location;
+    Effect* effect;
 
-    inline Sensor(int id, int pin, SensorType type, Pair location) {
+    inline Sensor(int id, int pin, unsigned long duration, SensorType type, Pair location, Effect* effect) {
         this->id = id;
         this->pin = pin;
+        this->duration = duration;
         this->type = type;
         this->location = location;
+        this->effect = effect;
     }
 
     virtual ~Sensor() = default;
@@ -48,7 +54,9 @@ public:
                 j["id"],
                 j["pin"],
                 j["type"],
-                Pair_t::from_json(j["location"])
+                j["duration"],
+                Pair_t::from_json(j["location"]),
+                Effect::from_json(j["effects"])
         };
     }
 };

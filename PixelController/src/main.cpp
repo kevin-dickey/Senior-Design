@@ -56,8 +56,9 @@ int main() {
     std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
     std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
 
-    auto runner = new ControllerRunner(show);
     showStart = millis();
+    auto runner = new ControllerRunner(show, showStart);
+
     return 0;
 }
 
@@ -150,12 +151,15 @@ void setup() {
     FastLED.show();
     Serial.println("Initialized FastLED...");
 
-    Pair_t sensor_pos = {x : 0, y : 0};
+    Pair_t sensor_pos{0, 0};
+    Pair_t size = {10, 10};
+    Effect* sensorEffect = new Effect(1, "BasicEffect", sensor_pos, size, 0.0, 5000.0, nullptr);
+
     // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
-    sensor0 = new Sensor(0, 34, S_BINARY, sensor_pos);  // ne
-    sensor1 = new Sensor(1, 35, S_BINARY, sensor_pos);  // nw
-    sensor2 = new Sensor(2, 32, S_BINARY, sensor_pos);  // sw
-    sensor3 = new Sensor(3, 33, S_BINARY, sensor_pos);  // se
+    sensor0 = new Sensor(0, 34, 1000, S_BINARY, sensor_pos, sensorEffect);  // ne
+    sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
+    sensor2 = new Sensor(2, 32, 1000, S_BINARY, sensor_pos, sensorEffect);  // sw
+    sensor3 = new Sensor(3, 33, 1000, S_BINARY, sensor_pos, sensorEffect);  // se
     
     a_sensors = std::vector<Sensor *>{sensor0, sensor1, sensor2, sensor3};
     prev_sensor_triggered = std::vector<bool>(a_sensors.size());
@@ -164,6 +168,12 @@ void setup() {
     sensorManager->setSensors(a_sensors);
     set_sensors = 'a';
     Serial.println("Initialized Sensors...");
+
+    // Setup Runner
+    //std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
+    std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
+    Show show = loadShow(filePath);
+    runner = new ControllerRunner(show, millis());
 
     hue = 30;
     count = 0;
@@ -201,113 +211,91 @@ void loop() {
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
     auto current_millis = millis();
+   
+    // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
+    runner->setSensors(sensor_states);
 
-    // set the time lapsed since start time for the show excluding sensors runtime
-    runner->setEffectCursor(showStart - current_millis - runner->getTotalSensorRuntime());
-    
-    // Eleen ToDo: 
-    //move setMode effect and showFrame = till after sensors are checked??
-    // set mode to 'effect' until sensor is checked and active
-    runner->setMode("effect");
     // get showFrame
     auto showFrame = runner->getNextShowFrame();
     
-    // Eleen ToDo:
-    // while sensor mode
-    // set mode to 'sensor' if sensor is actice
-    // Set sensorStartTime to current time 
-    // Set activeSensorId to current sensor
-    // run Inner Sensor Loop. More details in ControllerRunner notes
 
-    // check the states of sensors, set the markers accordingly for which codeblock to execute
-    if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        Serial.println("Sensor 0 triggered");
+    //ToDo
+    // leaving this code here for reference. Needs to be removed
+    // // check the states of sensors, set the markers accordingly for which codeblock to execute
+    // if (effects includes rainbow + still pumpkin) {         // sensor0 -- rainbow + still pumpkin
+    //     runRainbowAndSkull(frame)
+    // } else if (effect = skull effect) {  // sensor1 -- skull
+    //     runSkull(frame)
+    //     for effect in effects:
+    //         runEffect("skull", effect.frame)
+    // } else if (effect = ghost effect) {  // sensor2 -- ghost zig zagging
+    //     fill_solid(leds, NUM_LEDS, CRGB::Black);
+    //     FastLED.setBrightness(MAX_BRIGHTNESS);
+    //     FastLED.show();
+    //     loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
+    //     Serial.println("Sensor 2 triggered");
+
+    //     resetTriggerMarkers(2);
+    //     count = 0;
+    //     goUp = true;
+    // } else if (effect = ghost and pumpkin effect) {  // sensor3 -- pumpkin & ghost chasing each other
+    //     fill_solid(leds, NUM_LEDS, CRGB::Black);
+    //     FastLED.setBrightness(MAX_BRIGHTNESS);
+    //     FastLED.show();
+    //     loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
+    //     loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
+    //     Serial.println("Sensor 3 triggered");
+
+    //     resetTriggerMarkers(3);
+    //     count = 0;
+    //     goUp = true;
+    // }
+
+    // /************************************************************* */
+
+    // // check to see what was the last effect triggered, keep running it
+    // if (prev_sensor_triggered[0]) { // rainbow & pumpkin
+    //     uint32_t ms = millis();
+    //     int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
+    //     int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
+    //     DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
         
-        resetTriggerMarkers(0);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[1]) {  // sensor1 -- skull
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
-        Serial.println("Sensor 1 triggered");
+    //     // draw pumpkin on top
+    //     loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
+    //     // FastLED.show(); // commented out b/c loadHexBitmap already calls it, but here for clarity
 
-        resetTriggerMarkers(1);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[2]) {  // sensor2 -- ghost zig zagging
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        Serial.println("Sensor 2 triggered");
+    // } else if (prev_sensor_triggered[1]) { // skull/crossbones
 
-        resetTriggerMarkers(2);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[3]) {  // sensor3 -- pumpkin & ghost chasing each other
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
-        Serial.println("Sensor 3 triggered");
+    // /***** these are blocking! will have to figure out something else to go here *****/
+    //     fadeToBrightness(2, MAX_BRIGHTNESS / 4);
+    //     fadeToBrightness(2, MAX_BRIGHTNESS);
 
-        resetTriggerMarkers(3);
-        count = 0;
-        goUp = true;
-    }
-
-    /************************************************************* */
-
-    // check to see what was the last effect triggered, keep running it
-    if (prev_sensor_triggered[0]) { // rainbow & pumpkin
-        uint32_t ms = millis();
-        int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
-        int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
-        DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+    // } else if (prev_sensor_triggered[2]) { // ghost zigzagging
+    //     // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
+    //     shiftLeds(leds, RIGHT);
+    //     if (count % 2 == 0) {
+    //         shiftLeds(leds, goUp ? UP : DOWN);
+    //     }
         
-        // draw pumpkin on top
-        loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-        // FastLED.show(); // commented out b/c loadHexBitmap already calls it, but here for clarity
+    //     if (count % 4 == 0) {
+    //         goUp = !goUp;
+    //     }
+    //     count++;
 
-    } else if (prev_sensor_triggered[1]) { // skull/crossbones
-
-    /***** these are blocking! will have to figure out something else to go here *****/
-        fadeToBrightness(2, MAX_BRIGHTNESS / 4);
-        fadeToBrightness(2, MAX_BRIGHTNESS);
-
-    } else if (prev_sensor_triggered[2]) { // ghost zigzagging
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
+    // } else if (prev_sensor_triggered[3]) { // pumpkin & ghost chasing each other
+    //     // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
+    //     shiftLeds(leds, RIGHT);
+    //     if (count % 2 == 0) {
+    //         shiftLeds(leds, goUp ? UP : DOWN);
+    //     }
         
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
+    //     if (count % 4 == 0) {
+    //         goUp = !goUp;
+    //     }
+    //     count++;
+    // }
 
-    } else if (prev_sensor_triggered[3]) { // pumpkin & ghost chasing each other
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
-        
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
-    }
-
-    // Eleen ToDo
-    //Kevins scoop?? :
+    //Kevins scoop:
     // run(showFrame); 
 
     delay(33);  // delay(33): approx 30fps (30.3)

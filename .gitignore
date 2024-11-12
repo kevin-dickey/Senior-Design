@@ -4,3 +4,14 @@
 
 /PixelController/ImGUI_Emulator/.idea/**
 /PixelController/ImGUI_Emulator/cmake-build-*/**
+PixelController/build/**
+PixelController/.idea/**
+PixelController/.vscode/**
+PixelController/cmake-build-debug/**
+ImGUI_Emulator/cmake-build-debug/CMakeFiles/clion-Debug-log.txt
+ImGUI_Emulator/.idea/vcs.xml
+ImGUI_Emulator/.idea/modules.xml
+ImGUI_Emulator/.idea/misc.xml
+ImGUI_Emulator/.idea/ImGUI_Emulator.iml
+ImGUI_Emulator/.idea/.gitignore
+PixelController/.vscode/extensions.json

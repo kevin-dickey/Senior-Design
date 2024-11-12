@@ -25,11 +25,15 @@ add_library(ConfigurationLib
         lib/configuration/Sensor.h
         lib/configuration/Configuration.h
         lib/configuration/Configuration.cpp
+        lib/configuration/ControllerRunner.h
+        lib/configuration/ControllerRunner.cpp
 )
 
 # TODO: Make this into a library and link library to executable.
 #   Then, the library can be linked to the embedded build through platform.
-add_executable(PixelController src/main.cpp)
+add_executable(PixelController src/main.cpp
+        lib/configuration/ControllerRunner.h
+        lib/configuration/ControllerRunner.cpp)
 
 if (USE_IMGUI)
     target_compile_definitions(PixelController PRIVATE USE_IMGUI)

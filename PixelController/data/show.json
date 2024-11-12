@@ -1,0 +1,90 @@
+{
+    "name": "Jingle Bell Rock",
+    "duration": 45,
+    "endless": true,
+    "effects": [
+        {
+            "id": 1,
+            "name": "First e for ten",
+            "startTime": 0,
+            "duration": 10,
+            "origin": {
+                "x": 0,
+                "y": 0
+            },
+            "size": {
+                "x": 20,
+                "y": 20
+            },
+            "colors": [],
+            "speed": 10
+        },
+        {
+            "id": 2,
+            "name": "Second e for ten",
+            "startTime": 10,
+            "duration": 10,
+            "origin": {
+                "x": 10,
+                "y": 10
+            },
+            "size": {
+                "x": 30,
+                "y": 30
+            },
+            "colors": [],
+            "speed": 40
+        },
+        {
+            "id": 3,
+            "name": "third e for ten",
+            "startTime": 20,
+            "duration": 10,
+            "origin": {
+                "x": 40,
+                "y": 40
+            },
+            "size": {
+                "x": 50,
+                "y": 50
+            },
+            "colors": [],
+            "speed": 1
+        }
+    ],
+    "layouts": [
+        {
+            "shape": "grid",
+            "width": 20,
+            "height": 20
+        }
+    ],
+    "sensors": [
+        {
+            "id": 1,
+            "type": "S_BINARY",
+            "location": {
+                "x": 10,
+                "y": 0
+            },
+            "pin": 12,
+            "duration": 5,
+            "effects": {
+                "id": 4,
+                "name": "Sensor Effect for five",
+                "startTime": 0,
+                "duration": 5,
+                "origin": {
+                    "x": 0,
+                    "y": 0
+                },
+                "size": {
+                    "x": 20,
+                    "y": 20
+                },
+                "colors": [],
+                "speed": 10
+            }
+        }
+    ]
+}
