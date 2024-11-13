@@ -1,11 +1,15 @@
-import React, {useState} from 'react';
-import './LEDGrid.css'; // Include your CSS styles here
+import React, { useState } from 'react';
+import './LEDGrid.css';
+
+import { updateRainbow, updateRipple ,updateGhostRainbow,updateGhostRipple,updatePumpkinRainbow,updatePumpkinRipple,updatePumpkinGhostRainbow,updatePumpkinGhostRipple } from '../../utils/effects';
+import { pumpkinShape, ghostShape } from '../../utils/shapes';
+import { EffectType } from '../../types/index';
+
 
 const LEDGrid: React.FC = () => {
   const numRows = 10;
   const numCols = 20;
 
-  // Create the initial state for the grid
   const [ledGrid, setLedGrid] = useState<number[][]>(
     Array(numRows)
       .fill(0)
@@ -13,84 +17,74 @@ const LEDGrid: React.FC = () => {
   );
 
   const colors = [
-    '#FF0000', // Red
-    '#FF7F00', // Orange
-    '#FFFF00', // Yellow
-    '#00FF00', // Green
-    '#0000FF', // Blue
-    '#4B0082', // Indigo
-    '#9400D3', // Violet
+    '#e81416', // Red
+    '#e88000', // Orange
+    '#faeb36', // Yellow
+    '#79c314', // Green
+    '#487de7', // Blue
+    '#4b369d', // Indigo
+    '#70369d', // Violet
   ];
 
+  //should this move
   const [, setColorOffset] = useState(0);
-  const [isRunning, setIsRunning] = useState(false); // Track if the animation is running
-  const [duration, setDuration] = useState(0); // User-defined duration
-  const [effectType, setEffectType] = useState<'rainbow' | 'ripple'>('rainbow'); // Store the chosen effect
+  
+  const [isRunning, setIsRunning] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [effectType, setEffectType] = useState<EffectType>('rainbow');
+  const [pumpkinPosition, setPumpkinPosition] = useState(-1);
+  const [ghostPosition, setGhostPosition] = useState(-1);
 
-  // Update the grid for the rainbow effect
-  const updateRainbow = (offset: number) => {
-    setLedGrid(() => {
-      return Array(numRows)
-        .fill(0)
-        .map((_, rowIndex) =>
-          Array(numCols)
-            .fill(0)
-            .map((_, colIndex) => (rowIndex + colIndex + offset) % colors.length)
-        );
-    });
-  };
 
-  // Update the grid for the ripple effect
-  const updateRipple = (offset: number) => {
-    setLedGrid(() => {
-      return Array(numRows)
-        .fill(0)
-        .map((_, rowIndex) =>
-          Array(numCols)
-            .fill(0)
-            .map((_, colIndex) => {
-              const distance = Math.sqrt(
-                Math.pow(rowIndex - numRows / 2, 2) +
-                  Math.pow(colIndex - numCols / 2, 2)
-              );
-              return Math.floor((distance + offset) % colors.length);
-            })
-        );
-    });
-  };
-
-  // Start the selected effect
   const startEffect = () => {
     let offset = 0;
-    setIsRunning(true); // Start the animation
+    setIsRunning(true);
+    if(effectType ==='pumpkin-ghost-rainbow' || effectType === 'pumpkin-ghost-ripple'){
+      setPumpkinPosition(-5);
+      setGhostPosition(5);
+    }else{
+      setPumpkinPosition(0);
+      setGhostPosition(0);
+    }
+    
 
     const interval = setInterval(() => {
       offset += 1;
       setColorOffset(offset);
 
-      // Run the selected effect
       if (effectType === 'rainbow') {
-        updateRainbow(offset);
-      } else {
-        updateRipple(offset);
+        updateRainbow(offset, numRows, numCols, colors, setLedGrid);
+      } else if (effectType === 'ripple') {
+        updateRipple(offset, numRows, numCols, colors, setLedGrid);
+      } else if (effectType === 'pumpkin-rainbow') {
+        updatePumpkinRainbow(offset, numRows, numCols, colors, setLedGrid,setPumpkinPosition);
+      } else if (effectType === 'pumpkin-ripple') {
+        updatePumpkinRipple(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition);
+      } else if (effectType === 'ghost-rainbow') {
+        updateGhostRainbow(offset, numRows, numCols, colors, setLedGrid, setGhostPosition);
+      } else if (effectType === 'ghost-ripple') {
+        updateGhostRipple(offset, numRows, numCols, colors, setLedGrid, setGhostPosition);
+      }else if (effectType === 'pumpkin-ghost-rainbow') {
+        updatePumpkinGhostRainbow(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition, setGhostPosition);
+      }else if (effectType === 'pumpkin-ghost-ripple') {
+        updatePumpkinGhostRipple(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition, setGhostPosition);
       }
-    }, 200); // Update every 200ms for smooth transition
+    }, 200);
 
-    // Stop the animation after user-specified duration
     setTimeout(() => {
       clearInterval(interval);
-      setIsRunning(false); // Reset the animation state
-    }, duration * 1000); // Convert duration from seconds to milliseconds
+      setIsRunning(false);
+      // setPumpkinPosition(-1);
+      // setGhostPosition(-1);
+    }, duration * 1000);
   };
 
-  // Handle input change for duration
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDuration(Number(event.target.value));
   };
 
-  // Handle effect selection
   const handleEffectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setEffectType(event.target.value as 'rainbow' | 'ripple');
+    setEffectType(event.target.value as EffectType);
   };
 
   return (
@@ -100,6 +94,12 @@ const LEDGrid: React.FC = () => {
         <select id="effect-select" value={effectType} onChange={handleEffectChange}>
           <option value="rainbow">Rainbow</option>
           <option value="ripple">Ripple</option>
+          <option value="pumpkin-rainbow">Pumpkin on a Rainbow</option>
+          <option value="pumpkin-ripple">Pumpkin on a Ripple</option>
+          <option value="ghost-rainbow">Ghost on a Rainbow</option>
+          <option value="ghost-ripple">Ghost on a Ripple</option>
+          <option value="pumpkin-ghost-rainbow">Pumpkin/Ghost on a Rainbow</option>
+          <option value="pumpkin-ghost-ripple">Pumpkin/Ghost on a Ripple</option>
         </select>
 
         <br />
@@ -109,7 +109,7 @@ const LEDGrid: React.FC = () => {
           id="duration-input"
           value={duration}
           onChange={handleInputChange}
-          disabled={isRunning} // Disable input while the animation is running
+          disabled={isRunning}
         />
         <button onClick={startEffect} disabled={isRunning || duration <= 0}>
           Start {effectType.charAt(0).toUpperCase() + effectType.slice(1)}
@@ -118,16 +118,48 @@ const LEDGrid: React.FC = () => {
       <div className="led-grid">
         {ledGrid.map((row, rowIndex) => (
           <div key={rowIndex} className="led-row">
-            {row.map((colorIndex, colIndex) => (
-              <div
-                key={colIndex}
-                className="led-circle"
-                style={{ backgroundColor: colors[colorIndex] }}
-              ></div>
-            ))}
+            {row.map((colorIndex, colIndex) => {
+              // Check for pumpkin or ghost part
+              const pumpkinPart = pumpkinShape.find(
+                (part) => rowIndex === part.row && colIndex === (pumpkinPosition + part.col) % numCols
+              );
+
+              const ghostPart = ghostShape.find(
+                (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % numCols
+              );
+
+              let backgroundColor: string;
+
+              // Handle pumpkin or ghost effect
+              if (effectType === 'pumpkin-rainbow' || effectType === 'pumpkin-ripple') {
+                // If pumpkin effect is active and this is a part of the pumpkin, apply pumpkin color
+                backgroundColor = pumpkinPart ? pumpkinPart.color : colors[colorIndex];
+              } else if (effectType === 'ghost-rainbow' || effectType === 'ghost-ripple') {
+                // If ghost effect is active and this is a part of the ghost, apply ghost color
+                backgroundColor = ghostPart ? ghostPart.color : colors[colorIndex];
+              } else if (effectType === 'pumpkin-ghost-rainbow'|| effectType === 'pumpkin-ghost-ripple') {
+                // If it's the "Pumpkin/Ghost on a Rainbow" effect, combine both
+                backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : colors[colorIndex]);
+              }else {
+                // Default rainbow or ripple
+                backgroundColor = colors[colorIndex];
+              }
+
+              return (
+                <div
+                  key={colIndex}
+                  className={`led-circle ${pumpkinPart ? 'pumpkin-cell' : ''} ${ghostPart ? 'ghost-cell' : ''}`}
+                  style={{
+                    backgroundColor,
+                    borderColor: pumpkinPart || ghostPart ? '#8a3900' : 'transparent',
+                  }}
+                ></div>
+              );
+            })}
           </div>
         ))}
       </div>
+
     </div>
   );
 };
