@@ -1,0 +1,37 @@
+{
+    "effects": [
+      {
+        "effect": "rainbow",
+        "duration": 5
+      },
+      {
+        "effect": "ripple",
+        "duration": 5
+      },
+      {
+        "effect": "pumpkin-rainbow",
+        "duration": 5
+      },
+      {
+        "effect": "pumpkin-ripple",
+        "duration": 5
+      },
+      {
+        "effect": "ghost-rainbow",
+        "duration": 5
+      },
+      {
+        "effect": "ghost-ripple",
+        "duration": 5
+      },
+      {
+        "effect": "pumpkin-ghost-rainbow",
+        "duration": 5
+      },
+      {
+        "effect": "pumpkin-ghost-ripple",
+        "duration": 5
+      }
+    ]
+  }
+  

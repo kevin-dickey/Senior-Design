@@ -116,6 +116,6 @@ export const updateRainbow = (
   setGhostPosition: React.Dispatch<React.SetStateAction<number>>
 ) => {
     updateRipple(offset, numRows, numCols, colors, setLedGrid);  // Apply rainbow effect
-    setPumpkinPosition((prev: number) => (prev + 1) % numCols); // Move pumpkin horizontally
+    setPumpkinPosition((prev: number) => (prev + 1) % numCols ); // Move pumpkin horizontally
     setGhostPosition((prev: number) => (prev + 1) % numCols);   // Move ghost horizontally
   };
