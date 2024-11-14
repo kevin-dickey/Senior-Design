@@ -8,6 +8,7 @@
 #include "Effect.h"
 #include "Layout.h"
 #include "Sensor.h"
+#include <fstream>
 
 
 typedef struct Show {
@@ -47,7 +48,7 @@ typedef struct Show {
     }
 } Show_t;
 
-Show_t loadShow(const std::string& filename) {
+inline Show_t loadShow(const std::string& filename) {
     std::ifstream f3(filename);
     nlohmann::json data3 = nlohmann::json::parse(f3);
     Show show = Show::from_json(data3);

@@ -2,9 +2,10 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
-
+#include <chrono>
 #include "../include/json.hpp"
 #include "../lib/configuration/Configuration.h"
+#include "../lib/configuration/ControllerRunner.h"
 
 using json = nlohmann::json;
 
@@ -43,22 +44,41 @@ enum ShiftDirection {
 SensorManager *sensorManager;
 ControllerRunner* runner;
 unsigned long showStart = 0;
+std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1,1000000000>>>epoch;
+
+unsigned long getMillis(){
+#if USE_EMULATOR
+    auto now = std::chrono::high_resolution_clock ::now();
+    auto mseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - epoch).count();
+    return mseconds;
+#else
+
+    return millis();
+#endif
+}
 
 #if USE_EMULATOR
 
 int main() {
+
+    epoch = std::chrono::high_resolution_clock::from_time_t(0);
     sensorManager = new SensorManager();
 
     std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
     Show show = loadShow(filePath);
 
-    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
-    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
-    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+//    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+//    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
+//    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
 
-    showStart = millis();
-    auto runner = new ControllerRunner(show, showStart);
+    showStart = getMillis();
+    runner = new ControllerRunner(show, showStart, epoch);
 
+    for(int i = 0 ; i < 20 ; i++) {
+        auto showFrame = runner->getNextShowFrame();
+        std::cout << "Effect: " << showFrame.effect->name << std::endl;
+        std::cout << "Frame: " << showFrame.frame << std::endl;
+    }
     return 0;
 }
 
@@ -173,7 +193,7 @@ void setup() {
     //std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
     std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
     Show show = loadShow(filePath);
-    runner = new ControllerRunner(show, millis());
+    runner = new ControllerRunner(show, millis(), epoch);
 
     hue = 30;
     count = 0;
