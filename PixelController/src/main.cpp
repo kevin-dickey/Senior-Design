@@ -101,7 +101,7 @@ void fadeToBrightness(int duration, int targetBrightness);
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);              // draws rainbow frame
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ half brightness
 
-void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight);
+uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY);
 void fillRemainingPixels(CRGB* leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 
 void parseBitmapData(const char *hexData);
@@ -194,7 +194,7 @@ void setup()
     // Load the resized image into the LED matrix
     std::cout << "🚦 Loading Image into LED Array..." << std::endl;
     CRGB *serpentineArray = (CRGB*)calloc(NUM_LEDS, sizeof(CRGB));
-    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
+    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
     fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
 
     rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
@@ -496,7 +496,7 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
     }
 }
 
-void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY) {
+uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY) {
     // int startX = (matrixWidth - imgWidth) / 2;
     // int startY = (matrixHeight - imgHeight) / 2;
     if (startX < 0 || startX >= matrixWidth) {
@@ -519,6 +519,7 @@ void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int i
             }
         }
     }
+    return 0;
 }
 
 void fillRemainingPixels(CRGB* leds, int matrixWidth, int matrixHeight, CRGB backgroundColor) {
