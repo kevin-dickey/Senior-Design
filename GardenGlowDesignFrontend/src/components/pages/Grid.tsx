@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './LEDGrid.css';
 
-import { updateRainbow, updateRipple, updateGhostRainbow, updateGhostRipple, updatePumpkinRainbow, updatePumpkinRipple, updatePumpkinGhostRainbow, updatePumpkinGhostRipple } from '../../utils/effects';
-import { pumpkinShape, ghostShape } from '../../utils/shapes';
+import { updateRainbow, updateRipple, updateGhostRainbow, updateGhostRipple, updatePumpkinRainbow, updatePumpkinRipple, updatePumpkinGhostRainbow, updatePumpkinGhostRipple, updateSnowflake, updateSnowman, updateChristmasTree, updateCandyCane } from '../../utils/effects';
+import { pumpkinShape, ghostShape,snowflakeShape, christmasColors,christmasColors2, snowmanShape, christmasTreeShape, candyCaneShape} from '../../utils/shapes';
 import { EffectType } from '../../types/index';
 
 const LEDGrid: React.FC = () => {
-  const numRows = 10;
-  const numCols = 20;
+  const numRows = 26/2; 
+  const numCols = 116/2;
 
   const [ledGrid, setLedGrid] = useState<number[][]>(
     Array(numRows)
@@ -15,7 +15,7 @@ const LEDGrid: React.FC = () => {
       .map(() => Array(numCols).fill(0))
   );
 
-  const colors = [
+  const rainbowColors = [
     '#e81416', // Red
     '#e88000', // Orange
     '#faeb36', // Yellow
@@ -25,18 +25,22 @@ const LEDGrid: React.FC = () => {
     '#70369d', // Violet
   ];
 
-  const [effectData, setEffectData] = useState<any[]>([]); 
+  const [effectData, setEffectData] = useState<any[]>([]);
   const [, setColorOffset] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [effectType, setEffectType] = useState<EffectType>('rainbow');
   const [pumpkinPosition, setPumpkinPosition] = useState(-1);
   const [ghostPosition, setGhostPosition] = useState(-1);
+  const [snowflakePositions, setSnowflakePositions] = useState([{col:-1, row: -1},{col: -1, row: -1},{col:-1, row: -1},{col:-1, row: -1},{col:-1, row: -1},{col:-1, row: -1}]);
+  const [snowmanPosition, setSnowmanPosition] = useState(-1);
+  const [christmasTreePosition, setChristmasTreePosition] = useState(-1);
+  const [candyCanePositions, setCandyCanePositions] = useState([{col:-1, row: -1},{col: -1, row: -1},{col:-1, row: -1},{col:-1, row: -1},{col:-1, row: -1},{col:-1, row: -1}]);
 
   // Fetch the effects data from JSON file
   useEffect(() => {
     const fetchEffectData = async () => {
       try {
-        const response = await fetch('/effects.json'); // Make sure the file is in the public folder
+        const response = await fetch('/exampleShows/christmas-y.json'); // Make sure the file is in the public folder
         if (!response.ok) {
           throw new Error('Failed to fetch effects.json');
         }
@@ -47,7 +51,7 @@ const LEDGrid: React.FC = () => {
       }
     };
     fetchEffectData();
-  }, []); 
+  }, []);
 
   const startEffect = async () => {
     if (effectData.length === 0) {
@@ -59,59 +63,75 @@ const LEDGrid: React.FC = () => {
 
     // Loop through each effect and run it for its duration
     for (const effect of effectData) {
-      const { effect: effectName, duration } = effect;
+      const { effect: type, durationMs } = effect;
       let offset = 0;
-      setEffectType(effectName);
+      setEffectType(effect.type);
       // Set the correct pumpkin/ghost positions based on effect
-      if (effectName === 'pumpkin-ghost-rainbow' || effectName === 'pumpkin-ghost-ripple') {
+      if (effect.type === 'pumpkin-ghost-rainbow' || effect.type === 'pumpkin-ghost-ripple') {
         setPumpkinPosition(-5);
         setGhostPosition(5);
       } else {
         setPumpkinPosition(0);
         setGhostPosition(0);
+        setSnowflakePositions([{col:0, row: 0}, {col:10, row: 0}, {col:20, row: 0}, {col:30, row: 0}, {col:40, row: 0},{col:50, row: 0}]);
+        setSnowmanPosition(0);
+        setChristmasTreePosition(0);
+        setCandyCanePositions([{col:0, row: 0}, {col:10, row: 0}, {col:20, row: 0}, {col:30, row: 0}, {col:40, row: 0},{col:50, row: 0}]);
       }
-
+      console.log(effect);
       // Start the interval for this effect
       const interval = setInterval(() => {
         offset += 1;
         setColorOffset(offset);
         // Call the appropriate effect update function
-        switch (effectName) {
+        switch (effect.type) {
           case 'rainbow':
-            updateRainbow(offset, numRows, numCols, colors, setLedGrid);
+            updateRainbow(offset, numRows, numCols, rainbowColors, setLedGrid);
             break;
           case 'ripple':
-            updateRipple(offset, numRows, numCols, colors, setLedGrid);
+            updateRipple(offset, numRows, numCols, rainbowColors, setLedGrid);
             break;
           case 'pumpkin-rainbow':
-            updatePumpkinRainbow(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition);
+            updatePumpkinRainbow(offset, numRows, numCols, rainbowColors, setLedGrid, setPumpkinPosition);
             break;
           case 'pumpkin-ripple':
-            updatePumpkinRipple(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition);
+            updatePumpkinRipple(offset, numRows, numCols, rainbowColors, setLedGrid, setPumpkinPosition);
             break;
           case 'ghost-rainbow':
-            updateGhostRainbow(offset, numRows, numCols, colors, setLedGrid, setGhostPosition);
+            updateGhostRainbow(offset, numRows, numCols, rainbowColors, setLedGrid, setGhostPosition);
             break;
           case 'ghost-ripple':
-            updateGhostRipple(offset, numRows, numCols, colors, setLedGrid, setGhostPosition);
+            updateGhostRipple(offset, numRows, numCols, rainbowColors, setLedGrid, setGhostPosition);
             break;
           case 'pumpkin-ghost-rainbow':
-            updatePumpkinGhostRainbow(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition, setGhostPosition);
+            updatePumpkinGhostRainbow(offset, numRows, numCols, rainbowColors, setLedGrid, setPumpkinPosition, setGhostPosition);
             break;
           case 'pumpkin-ghost-ripple':
-            updatePumpkinGhostRipple(offset, numRows, numCols, colors, setLedGrid, setPumpkinPosition, setGhostPosition);
+            updatePumpkinGhostRipple(offset, numRows, numCols, rainbowColors, setLedGrid, setPumpkinPosition, setGhostPosition);
             break;
+          case 'snowflake':
+            updateSnowflake(offset, numRows, numCols, christmasColors, setLedGrid, setSnowflakePositions);
+            break;
+          case 'snowman':
+            updateSnowman(offset, numRows, numCols, christmasColors, setLedGrid, setSnowmanPosition);
+            break;
+          case 'christmas-tree':
+            updateChristmasTree(offset, numRows, numCols, christmasColors2, setLedGrid, setChristmasTreePosition);
+            break;
+            case 'candy-cane':
+              updateCandyCane(offset, numRows, numCols, christmasColors2, setLedGrid, setCandyCanePositions);
+              break;
           default:
-            console.log(`Unknown effect: ${effectName}`);
+            console.log(`Unknown effect: ${effect.type}`);
         }
-      }, 200);
+      }, 1000/effect.speed); //controls the speed
 
       // Wait for the effect duration to complete before stopping the interval and moving to the next effect
       await new Promise<void>((resolve) => {
         setTimeout(() => {
           clearInterval(interval);
           resolve();
-        }, duration * 1000); // Duration in seconds
+        }, durationMs); 
       });
     }
 
@@ -129,15 +149,15 @@ const LEDGrid: React.FC = () => {
           onChange={(e) => setEffectType(e.target.value as EffectType)}
         >
           {effectData.map((effect) => (
-            <option key={effect.effect} value={effect.effect}>
-              {effect.effect.charAt(0).toUpperCase() + effect.effect.slice(1)}
+            <option key={effect.type} value={effect.type}>
+              {effect.type.charAt(0).toUpperCase() + effect.type.slice(1)}
             </option>
           ))}
         </select>
 
         <br />
         <label htmlFor="duration-input">Duration: </label>
-        <input type="number" value={effectData[0]?.duration || 0} disabled /> {/* Disable the input, duration comes from JSON */}
+        <input type="number" value={effectData[0]?.durationMs || 0} disabled /> {/* Disable the input, duration comes from JSON */}
         <button onClick={startEffect} disabled={isRunning}>
           Start Effects
         </button>
@@ -155,27 +175,65 @@ const LEDGrid: React.FC = () => {
                 (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % numCols
               );
 
+              const snowflakePart = snowflakeShape.find((part) => 
+                snowflakePositions.some(
+                  (position) =>
+                    rowIndex === (position.row + part.row) % numRows && // Match row
+                    colIndex === (position.col + part.col) % numCols    // Match column
+                )
+              );
+
+              const snowmanPart = snowmanShape.find(
+                (part) => rowIndex === part.row && colIndex === (snowmanPosition + part.col) % numCols
+              );
+              
+              const christmasTreePart = christmasTreeShape.find(
+                (part) => rowIndex === part.row && colIndex === (christmasTreePosition + part.col) % numCols
+              );
+                    
+              const candyCanePart = candyCaneShape.find((part) => 
+                candyCanePositions.some(
+                  (position) =>
+                    rowIndex === (position.row + part.row) % numRows && // Match row
+                    colIndex === (position.col + part.col) % numCols    // Match column
+                )
+              );
+
               let backgroundColor: string;
 
-              console.log(effectType);
-              // Handle pumpkin or ghost effect
+              // Handle shape effect
               if (effectType === 'pumpkin-rainbow' || effectType === 'pumpkin-ripple') {
-                backgroundColor = pumpkinPart ? pumpkinPart.color : colors[colorIndex];
+                backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
               } else if (effectType === 'ghost-rainbow' || effectType === 'ghost-ripple') {
-                backgroundColor = ghostPart ? ghostPart.color : colors[colorIndex];
+                backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
               } else if (effectType === 'pumpkin-ghost-rainbow' || effectType === 'pumpkin-ghost-ripple') {
-                backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : colors[colorIndex]);
-              } else {
-                backgroundColor = colors[colorIndex];
+                backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
+              } else if (effectType === 'snowflake') {
+                backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
+              } else if (effectType === 'snowman') {
+                backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
+              } else if (effectType === 'christmas-tree') {
+                backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
+              }  else if (effectType === 'candy-cane') {
+                backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
+              } 
+              else {
+                backgroundColor = rainbowColors[colorIndex];
               }
 
               return (
                 <div
                   key={colIndex}
-                  className={`led-circle ${pumpkinPart ? 'pumpkin-cell' : ''} ${ghostPart ? 'ghost-cell' : ''}`}
+                  className={`led-circle 
+                    ${pumpkinPart ? 'pumpkin-cell' : ''} 
+                    ${ghostPart ? 'ghost-cell' : ''}
+                    ${snowflakePart ? 'snowflake-cell' : ''}
+                    ${snowmanPart? 'snowman-cell': ''}
+                    ${christmasTreePart? 'christmasTree-cell': ''}
+                    ${candyCanePart? 'candy-cane-cell': ''}
+                    `}
                   style={{
                     backgroundColor,
-                    borderColor: pumpkinPart || ghostPart ? '#8a3900' : 'transparent',
                   }}
                 ></div>
               );

@@ -6,4 +6,8 @@ export type EffectType =
   | 'ghost-rainbow'
   | 'ghost-ripple'
   | 'pumpkin-ghost-rainbow'
-  | 'pumpkin-ghost-ripple';
+  | 'pumpkin-ghost-ripple'
+  | 'snowflake'
+  | 'snowman'
+  | 'christmas-tree'
+  | 'candy-cane';
