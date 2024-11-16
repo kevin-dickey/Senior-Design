@@ -9,7 +9,7 @@ using json = nlohmann::json;
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
 #define NUM_LEDS NUM_LEDS_X * NUM_LEDS_Y 
-#define MAX_BRIGHTNESS 8 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define MAX_BRIGHTNESS 16 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
 #define PROJECT_DIR SOURCE_ROOT
@@ -131,13 +131,13 @@ void setup()
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
     // SD Card Setup
-    FileManager *fm = new FileManager();
-    if (!fm->MountFileSystem())
-    {
-        std::cout << "Failed to mount file system. Halting..." << std::endl;
-        while (true)
-            ;
-    }
+    // FileManager *fm = new FileManager();
+    // if (!fm->MountFileSystem())
+    // {
+    //     std::cout << "Failed to mount file system. Halting..." << std::endl;
+    //     while (true)
+    //         ;
+    // }
 
     // FastLED Initialization
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
@@ -150,30 +150,30 @@ void setup()
     long start_loading_ghost = millis();
 
     std::cout << "⏳ Loading Ghost..." << std::endl;
-    File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
+    // File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
     std::cout << "✅ Opened Ghost File!" << std::endl;
     std::cout << "Converting to FILE..." << std::endl;
     size_t fileSize;
-    unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
+    // unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
     std::cout << "✅ Converted to FILE!" << std::endl;
     std::cout << "  File Size: " << fileSize << std::endl;
-    std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
+    // std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
 
     std::cout << "⏳ Getting Image Dimensions..." << std::endl;
     // Get the dimensions of the image and load it
-    ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+    // ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
 
     std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
     std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
     std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
-    unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+    // unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
     std::cout << "✅ Loaded Image!" << std::endl;
 
     std::cout << "↔️ Resizing Image..." << std::endl;
     int newWidth = NUM_LEDS_X;
     int newHeight = NUM_LEDS_Y;
-    unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+    // unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
     // Define a 3x3x3 unsigned char array
     unsigned char bufferPattern[3][3][3] = {
@@ -186,13 +186,9 @@ void setup()
     unsigned char *bufferPtr = &bufferPattern[0][0][0];
     
 
-
-
-
-
     std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
-    ImageProcessing::free_image(ghostFile);
-    free(ghostFileBuf);
+    // ImageProcessing::free_image(ghostFile);
+    // free(ghostFileBuf);
 
     // std::cout << "⏳ Loading Show..." << std::endl;
     // File showFile = fm->getJsonFile("/show.json");
@@ -205,14 +201,14 @@ void setup()
     std::cout << "🖼️ Displaying Image Data..." << std::endl;
     std::cout << "  New Width: " << newWidth << std::endl;
     std::cout << "  New Height: " << newHeight << std::endl;
-    ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels);
+    // ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels);
 
     // Load the resized image into the LED matrix
     std::cout << "🚦 Loading Image into LED Array..." << std::endl;
     CRGB *serpentineArray = (CRGB*)calloc(NUM_LEDS, sizeof(CRGB));
     // bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
-    bufferToCRGBArray(bufferPtr, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
-    fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+    bufferToCRGBArray(bufferPtr, 3, 3, 3, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
+    // fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
 
     rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
     free(serpentineArray);
@@ -232,7 +228,7 @@ void setup()
 
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
     std::cout << "🛑 Closing ghost from file manager..." << std::endl;
-    ghostBmpFile.close();
+    // ghostBmpFile.close();
     std::cout << "✅ Closed ghost from file manager!" << std::endl;
 }
 
