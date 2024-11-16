@@ -174,6 +174,22 @@ void setup()
     int newWidth = NUM_LEDS_X;
     int newHeight = NUM_LEDS_Y;
     unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+
+    // Define a 3x3x3 unsigned char array
+    unsigned char bufferPattern[3][3][3] = {
+        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}},
+        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}},
+        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}}
+    };
+
+    // Pointer to the array
+    unsigned char *bufferPtr = &bufferPattern[0][0][0];
+    
+
+
+
+
+
     std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
     ImageProcessing::free_image(ghostFile);
     free(ghostFileBuf);
@@ -194,7 +210,8 @@ void setup()
     // Load the resized image into the LED matrix
     std::cout << "🚦 Loading Image into LED Array..." << std::endl;
     CRGB *serpentineArray = (CRGB*)calloc(NUM_LEDS, sizeof(CRGB));
-    bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
+    // bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
+    bufferToCRGBArray(bufferPtr, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
     fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
 
     rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
