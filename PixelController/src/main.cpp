@@ -496,9 +496,16 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
     }
 }
 
-void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight) {
-    int startX = (matrixWidth - imgWidth) / 2;
-    int startY = (matrixHeight - imgHeight) / 2;
+void bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY) {
+    // int startX = (matrixWidth - imgWidth) / 2;
+    // int startY = (matrixHeight - imgHeight) / 2;
+    if (startX < 0 || startX >= matrixWidth) {
+        return 1;
+    }
+
+    if (startY < 0 || startY >= matrixHeight) {
+        return 1;
+    }
 
     for (int y = 0; y < imgHeight; ++y) {
         for (int x = 0; x < imgWidth; ++x) {
