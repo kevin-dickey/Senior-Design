@@ -100,8 +100,10 @@ void fadeToBrightness(int duration, int targetBrightness);
 
 void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);              // draws rainbow frame
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ half brightness
-
-uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY);
+/**
+ * MARK: Definition
+ */
+uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
 void fillRemainingPixels(CRGB* leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 
 void parseBitmapData(const char *hexData);
@@ -175,11 +177,13 @@ void setup()
     int newHeight = NUM_LEDS_Y;
     // unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
-    // Define a 3x3x3 unsigned char array
+/**
+ * MARK: Array
+ */
     unsigned char bufferPattern[3][3][3] = {
-        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}},
-        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}},
-        {{0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}}
+        {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
+        {{0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}},
+        {{0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}}
     };
 
     // Pointer to the array
@@ -207,7 +211,10 @@ void setup()
     std::cout << "🚦 Loading Image into LED Array..." << std::endl;
     CRGB *serpentineArray = (CRGB*)calloc(NUM_LEDS, sizeof(CRGB));
     // bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
-    bufferToCRGBArray(bufferPtr, 3, 3, 3, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0);
+/**
+ * MARK: Func Call
+ */
+    bufferToCRGBArray(bufferPtr, 3, 3, 3, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 16, 16, true);
     // fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
 
     rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
@@ -509,21 +516,29 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
     }
 }
 
-uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY) {
+/**
+ * MARK: Funcion
+ */
+uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap) {
     // int startX = (matrixWidth - imgWidth) / 2;
     // int startY = (matrixHeight - imgHeight) / 2;
-    if (startX < 0 || startX >= matrixWidth) {
+    if (startX < 0 || startY < 0) {
         return 1;
     }
 
-    if (startY < 0 || startY >= matrixHeight) {
+    if (startX >= matrixWidth || startY >= matrixHeight) {
         return 1;
     }
 
     for (int y = 0; y < imgHeight; ++y) {
         for (int x = 0; x < imgWidth; ++x) {
             int bufferIndex = (y * imgWidth + x) * imgChannels;
-            int matrixIndex = (startY + y) * matrixWidth + (startX + x);
+            uint8_t matrixIndex = 0;
+            if (wrap) {
+               matrixIndex = ((startY + y) % matrixHeight) * matrixWidth + ((startX + x) % matrixWidth); 
+            } else {
+                matrixIndex = (startY + y) * matrixWidth + (startX + x);
+            }
 
             if (imgChannels == 3) { // RGB
                 leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
