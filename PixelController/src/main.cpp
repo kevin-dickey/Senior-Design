@@ -73,11 +73,35 @@ int main() {
 
     showStart = getMillis();
     runner = new ControllerRunner(show, showStart, epoch);
+    auto sensor_state = std::vector<bool>{false, false, false, false};
 
-    for(int i = 0 ; i < 20 ; i++) {
-        auto showFrame = runner->getNextShowFrame();
-        std::cout << "Effect: " << showFrame.effect->name << std::endl;
-        std::cout << "Frame: " << showFrame.frame << std::endl;
+    for(int i = 0 ; i < 30 ; i++) {
+        if (i == 11) {
+            sensor_state = std::vector<bool>{false, false, false, false};
+        }
+        if (i == 10) {
+            // sensorValues = sensorManager->getSensors()
+            sensor_state = std::vector<bool>{true, false, false, false};
+        }
+        if((show.duration - runner->getTotalSensorRuntime() <= runner->getEffectCursor())){
+            showStart = getMillis();
+            epoch = std::chrono::high_resolution_clock::from_time_t(0);
+            runner = new ControllerRunner(show, showStart, epoch);
+        }
+
+        auto showFrame = runner->getNextShowFrame(sensor_state);
+        if(showFrame.effect->name!= "no effect" && showFrame.frame != -1)
+        {
+            std::cout << "Effect: " << showFrame.effect->name << std::endl;
+            std::cout << "Frame: " << showFrame.frame << std::endl;
+        }
+        else
+        {
+            std::cout << "no effect found. resetting runner " << std::endl;
+            showStart = getMillis();
+            epoch = std::chrono::high_resolution_clock::from_time_t(0);
+            runner = new ControllerRunner(show, showStart, epoch);
+        }
     }
     return 0;
 }
@@ -233,11 +257,18 @@ void loop() {
     auto current_millis = millis();
    
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
-    runner->setSensors(sensor_states);
-
     // get showFrame
-    auto showFrame = runner->getNextShowFrame();
-    
+    auto showFrame = runner->getNextShowFrame(sensor_states);
+    while(showFrame.effect->name== "no effect" && showFrame.frame == -1)
+    {
+            //no effect found because we're over the shows duration. reset show
+            std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
+            Show show = loadShow(filePath);
+            showStart = getMillis();
+            epoch = std::chrono::high_resolution_clock::from_time_t(0);
+            runner = new ControllerRunner(show, showStart, epoch);
+            showFrame = runner->getNextShowFrame(sensor_states);
+    }
 
     //ToDo
     // leaving this code here for reference. Needs to be removed

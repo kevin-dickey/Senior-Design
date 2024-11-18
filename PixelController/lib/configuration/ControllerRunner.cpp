@@ -34,8 +34,8 @@ sensorCurser and effectCurser are independent so the state of effectCurser isnt 
 #include <chrono>
 
 ControllerRunner::ControllerRunner(const Show &newShow, const unsigned long showStartTimeMS, std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1,1000000000>>>epoch)
-    : show(newShow), effectCursor(0), sensorCursor(0), showStartTimeMS(showStartTimeMS), totalSensorsRuntime(0), epoch(epoch),activeSensorId(-1)
-{
+    : show(newShow), effectCursor(0), sensorCursor(0), showStartTimeMS(showStartTimeMS), totalSensorsRuntime(0), epoch(epoch),activeSensorId(-1),sensorCursorStart(0), currentEffectShowFrame(), currentSensorShowFrame()
+        {
     mode = "effect";
     std::cout << "ControllerRunner initialized with effect cursor set to: " << effectCursor << ". Sensor Cursor set to: " << sensorCursor << ". Mode set to: " << mode << std::endl;
 }
@@ -56,15 +56,16 @@ unsigned long ControllerRunner::getEffectCursor() const
     return effectCursor;
 }
 
-void ControllerRunner::setSensorCursorStart(unsigned long newCursor)
+void ControllerRunner::setSensorCursorStart()
 {
-    sensorCursorStart = newCursor;
-    std::cout << "Sensor Cursor start updated to " << effectCursor << std::endl;
+    sensorCursorStart = getMillis() -showStartTimeMS -  totalSensorsRuntime;
+    std::cout << "Sensor Cursor start updated to " << sensorCursorStart << std::endl;
 }
 
 void ControllerRunner::setSensorCursor()
 {
-    sensorCursor = getMillis() - sensorCursorStart;
+    sensorCursor = getMillis() -showStartTimeMS- sensorCursorStart;
+    std::cout << "Sensor Cursor updated to " << sensorCursor << std::endl;
 }
 
 void ControllerRunner::setMode(const std::string &newMode)
@@ -91,7 +92,7 @@ int ControllerRunner::getActiveSensorId() const
 
 void ControllerRunner::setTotalSensorRuntime(unsigned long runtime)
 {
-    totalSensorsRuntime =+ runtime;
+    totalSensorsRuntime += runtime;
     std::cout << "Total sensor runtime updated to " << totalSensorsRuntime << std::endl;
 }
 unsigned long ControllerRunner::getTotalSensorRuntime() const
@@ -123,43 +124,60 @@ std::vector<bool> ControllerRunner::getSensors() const
 // will this only run the first sensor if multiple sensors are clicked together? how to make sure all sensors get a turn?
 bool ControllerRunner::checkSensors()
 {
-    for (size_t i = 0; i < sensorsStates.size(); ++i)
-    {
-        if (sensorsStates[i])
-        {
-            //if there isnt an active sensor OR new active sensor is not the current active sensor OR the sensor ran its whole duration, reset sensor start time
-            //else only update sensor cursor without reseting start time
-            if(!activeSensorId || activeSensorId != i || show.sensors.at(activeSensorId)->duration < sensorCursor){
-                setSensorCursorStart(getMillis());
-                setSensorCursor();
-            }
-            else{ 
-                setSensorCursor();
-            }
-            setActiveSensorId(i);
-            setMode("sensor");
-
+    //if sensor was already active
+    if(activeSensorId != -1){
+        setSensorCursor();
+        //if sensor ran it whole duration
+        if(sensorCursor >= show.sensors[activeSensorId]->effect->durationMs){
+            resetSensor();
+            return false;
+        }
+        //if sensor is still running its duration
+        else{
             return true;
         }
     }
-
-    //total sensor runtime should only be updated right after a sensor is done executing and right before mode is back to effect
-    if(activeSensorId != -1){
-        setTotalSensorRuntime(show.sensors.at(activeSensorId)->duration);
+    //if sensor was NOT already active
+    else{
+        //search for which new sensor was triggered
+        for (size_t i = 0; i < sensorsStates.size(); ++i)
+        {
+            //if sensor at i is true/triggered && there is NOT an active sensor (IE only the first triggered sensor is ran)
+            if (sensorsStates[i] && activeSensorId!=0)
+            {
+                setSensorCursorStart();
+                setSensorCursor();
+                setActiveSensorId(i);
+                setMode("sensor");
+                return true;
+            }
+        }
     }
 
+    // there was NOT an active sensor and no new sensors were activated
     setActiveSensorId(-1);
     return false;
 }
 
+void ControllerRunner::resetSensor() {
+    setTotalSensorRuntime(show.sensors[activeSensorId]->effect->durationMs);
+    setActiveSensorId(-1);
+    setMode("effect");
+    currentSensorShowFrame.effect = nullptr;
+    currentSensorShowFrame.frame = -1;
+    sensorCursor = 0;
+    sensorCursorStart=0;
+    currentSensorShowFrame={};
+}
+
 // Tracks show and frames
-ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame()
+ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool> sensor_states)
 {
     // ToDo Eleen:
     // find the correct frame value for effects and sensors
 
     //checks the new sensors states
-    //Assumes theres external logic deactivating sensors once their runtime is over
+    setSensors(sensor_states);
     bool sensorActive = checkSensors();
 
     if (!sensorActive)
@@ -169,34 +187,59 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame()
         setMode("effect");
     }
 
+    if(show.duration - totalSensorsRuntime <= effectCursor) {
+        currentEffectShowFrame.effect->name = "no effect" ;
+        currentEffectShowFrame.frame = -1 ;
+        return currentEffectShowFrame;
+    }
+
+    showFrames.clear();
+
     if (mode == "effect")
     {
         ShowFrame newEffectShowFrame;
-        showFrames.clear();
 
         std::cout << "Handling effect mode" << std::endl;
         // itterate to fine current effects for cursor time
-        for (Effect *e : show.effects)
-        {
-            if (e->startTimeMs <= effectCursor && effectCursor < e->startTimeMs + e->durationMs)
-            {
+        for (Effect *e : show.effects) {
+            if (e->startTimeMs <= effectCursor && effectCursor < e->startTimeMs + e->durationMs) {
                 newEffectShowFrame.effect = e;
-                newEffectShowFrame.frame = effectCursor - e->startTimeMs;
+                if(currentEffectShowFrame.effect != nullptr && currentEffectShowFrame.effect->name ==  newEffectShowFrame.effect->name) {
+                    newEffectShowFrame.frame = currentEffectShowFrame.frame + 1;
+                }
+                else {
+                    newEffectShowFrame.frame = 1;
+                }
                 showFrames.push_back(newEffectShowFrame);
             }
         }
-        currentEffectShowFrame = newEffectShowFrame;
-        return newEffectShowFrame;
+
+        if(newEffectShowFrame.frame){
+            currentEffectShowFrame = newEffectShowFrame;
+            return newEffectShowFrame;
+        }
+        else{
+            currentEffectShowFrame.effect->name = "no effect" ;
+            currentEffectShowFrame.frame = -1 ;
+            return currentEffectShowFrame;
+        }
+
     }
     else // if (mode == "sensor")
     {
-        ShowFrame newSensorShowFrame;
         std::cout << "Handling sensor mode" << std::endl;
-        Effect *sensorEffect = show.sensors.at(activeSensorId)->effect;
-        newSensorShowFrame.effect = sensorEffect;
-        newSensorShowFrame.frame = sensorCursor;
+        ShowFrame newSensorShowFrame{}; 
+        Effect *newSensorEffect = show.sensors.at(activeSensorId)->effect;
+        newSensorShowFrame.effect = newSensorEffect;
+        if(currentSensorShowFrame.effect != nullptr && currentSensorShowFrame.effect->name ==  newSensorShowFrame.effect->name) {
+            newSensorShowFrame.frame = currentSensorShowFrame.frame + 1;
+        }
+        else {
+            newSensorShowFrame.frame = 1;
+        }
         showFrames.push_back(newSensorShowFrame);
         currentSensorShowFrame = newSensorShowFrame;
-        return newSensorShowFrame;
+        return currentSensorShowFrame;
     }
 }
+

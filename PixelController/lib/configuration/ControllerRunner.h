@@ -23,10 +23,10 @@ public:
 
     ~ControllerRunner();
 
-    ShowFrame getNextShowFrame();
+    ShowFrame getNextShowFrame(std::vector<bool> sensor_states);
     void setEffectCursor();
     unsigned long getEffectCursor() const;
-    void setSensorCursorStart(unsigned long newCursor);
+    void setSensorCursorStart();
     void setSensorCursor();
     void setMode(const std::string& newMode);
     std::string getMode() const;
@@ -54,6 +54,7 @@ private:
     std::vector<ShowFrame> showFrames;
     std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1,1000000000>>>epoch;
 
+    void resetSensor();
 };
 
 #endif // PIXELCONTROLLER_CONTROLLERRUNNER_H
