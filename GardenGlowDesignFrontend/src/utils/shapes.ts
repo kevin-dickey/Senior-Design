@@ -16,6 +16,16 @@ const ghostCenterCol = Math.floor(numCols / 2); // Center column of the ghost
 const ghostHeight = Math.floor(numRows / 3); // Height of the ghost
 const ghostWidth = Math.floor(numCols / 4); // Width of the ghost
 
+export const rainbowColors = [
+  '#e81416', // Red
+  '#e88000', // Orange
+  '#faeb36', // Yellow
+  '#79c314', // Green
+  '#487de7', // Blue
+  '#4b369d', // Indigo
+  '#70369d', // Violet
+];
+
 export const pumpkinShape = [
   // Stem (centered at the top of the pumpkin)
   { row: centerRow - pumpkinHeight, col: centerCol - 1, color: stemColor },

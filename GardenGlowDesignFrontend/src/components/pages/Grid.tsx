@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './LEDGrid.css';
 
 import { updateRainbow, updateRipple, updateGhostRainbow, updateGhostRipple, updatePumpkinRainbow, updatePumpkinRipple, updatePumpkinGhostRainbow, updatePumpkinGhostRipple, updateSnowflake, updateSnowman, updateChristmasTree, updateCandyCane } from '../../utils/effects';
-import { pumpkinShape, ghostShape,snowflakeShape, christmasColors,christmasColors2, snowmanShape, christmasTreeShape, candyCaneShape} from '../../utils/shapes';
+import { pumpkinShape, ghostShape,snowflakeShape, christmasColors,christmasColors2, snowmanShape, christmasTreeShape, candyCaneShape, rainbowColors} from '../../utils/shapes';
 import { EffectType } from '../../types/index';
 
 const LEDGrid: React.FC = () => {
@@ -13,17 +13,7 @@ const LEDGrid: React.FC = () => {
     Array(numRows)
       .fill(0)
       .map(() => Array(numCols).fill(0))
-  );
-
-  const rainbowColors = [
-    '#e81416', // Red
-    '#e88000', // Orange
-    '#faeb36', // Yellow
-    '#79c314', // Green
-    '#487de7', // Blue
-    '#4b369d', // Indigo
-    '#70369d', // Violet
-  ];
+  ); 
 
   const [effectData, setEffectData] = useState<any[]>([]);
   const [, setColorOffset] = useState(0);
