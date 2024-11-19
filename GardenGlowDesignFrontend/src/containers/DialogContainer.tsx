@@ -30,7 +30,7 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
 
     const initialValues = props.show ? {
         showName: props.show.name,
-        durationSeconds: Math.floor(props.show.duration / 1000),
+        durationSeconds: Math.floor(props.show.durationMs / 1000),
         height: grid.height,
         width: grid.width,
         } : {
