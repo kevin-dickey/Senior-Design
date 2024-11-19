@@ -1,3 +1,4 @@
+import { EffectType } from "../../types";
 import {Pair} from "./Pair";
 
 export class Translation {
@@ -12,7 +13,7 @@ export class Translation {
 
 export class Effect {
     id: number;
-    type: string;
+    type?: EffectType;
     name: string;
     layer: number;
     origin: Pair;
@@ -20,7 +21,7 @@ export class Effect {
     startTimeMs: number;
     durationMs: number;
     translation?: Translation;
-
+    speed: number;
     constructor(name: string,
                 origin: Pair,
                 size: Pair,
@@ -28,7 +29,8 @@ export class Effect {
                 durationMs: number,
                 translation?: Translation,
                 id: number = -1,
-                type: string = "Effect") {
+                type?: EffectType,
+                speed: number= 1) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -39,10 +41,11 @@ export class Effect {
         this.startTimeMs = startTimeMs;
         this.durationMs = durationMs;
         this.translation = translation
+        this.speed = speed;
     }
 
     static emptyEffect() {
-        return new Effect('', new Pair(0, 0), new Pair(16, 16), -1, -1);
+        return new Effect('', new Pair(0, 0), new Pair(16, 16), -1, -1, undefined, -1, 'rainbow', 1);
     }
 
     toJSON() {
@@ -54,7 +57,8 @@ export class Effect {
             durationMs: this.durationMs,
             origin: this.origin,
             size: this.size,
-            translation: this.translation
+            translation: this.translation,
+            speed: this.speed
         };
     }
 
@@ -66,7 +70,9 @@ export class Effect {
             data.startTimeMs,
             data.durationMs,
             data.translation,
-            data.id
+            data.id,
+            data.type,
+            data.speed
         );
     }
 }
@@ -85,7 +91,7 @@ export class RainbowEffect extends Effect {
         name: string = 'rainbow',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, undefined, id, 'RainbowEffect');
+        super(name, origin, size, startTimeMs, durationMs, undefined, id, 'rainbow');
         this.colors = colors;
         this.speed = speed;
     }
@@ -139,7 +145,7 @@ export class RippleEffect extends Effect {
         name: string = 'ripple',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, translation, id, 'RippleEffect');
+        super(name, origin, size, startTimeMs, durationMs, translation, id, 'ripple');
         this.ripple_origin = ripple_origin;
         this.speed = speed;
     }
