@@ -12,6 +12,7 @@
 
 #include "../../include/json.hpp"
 #include "Spatials.h"
+#include "Effect.h"
 
 #define SENSOR_DEBOUNCE_MS 100 // originally 5000
 
