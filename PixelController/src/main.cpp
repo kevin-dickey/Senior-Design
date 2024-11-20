@@ -203,6 +203,7 @@ void setup()
     fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
 
     rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+    free(serpentineArray);
 
     // Log the time taken to load the ghost
     long end_loading_ghost = millis();
