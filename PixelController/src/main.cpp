@@ -147,6 +147,8 @@ void setup()
     FastLED.show();
     Serial.println("Initialized FastLED...");
 
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+
     long start_loading_ghost = millis();
 
     std::cout << "⏳ Loading Ghost..." << std::endl;
@@ -169,11 +171,14 @@ void setup()
 
     unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
     std::cout << "✅ Loaded Image!" << std::endl;
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
     std::cout << "↔️ Resizing Image..." << std::endl;
     int newWidth = NUM_LEDS_X;
     int newHeight = NUM_LEDS_Y;
     unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+    std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
     std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
     ImageProcessing::free_image(ghostFile);
     free(ghostFileBuf);
