@@ -13,7 +13,7 @@ interface GridContainerProps {
 }
 
 const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
-  const [effectData, setEffectData] = useState<any[]>([]);
+  const [, setEffectData] = useState<any[]>([]);
   const [, setColorOffset] = useState(0);
   const [effectType, setEffectType] = useState<EffectType>();
   const [pumpkinPosition, setPumpkinPosition] = useState(-1);
@@ -31,7 +31,7 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
         setEffectData(show.effects);
     };
     fetchEffectData();
-  }, []);
+  }, [show.layouts, show.effects]);
 
   useEffect(() => {
       const height = grid?.height;

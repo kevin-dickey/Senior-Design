@@ -7,14 +7,11 @@ const faceColor = "#000000"; // Black for eyes and smile
 const pumpkinHeight = Math.floor(numRows / 3);
 const centerRow = Math.floor(numRows / 2);
 const centerCol = Math.floor(numCols / 2);
-const pumpkinWidth = Math.floor(numCols / 4);
 
 const ghostColor = "#ffffff"; // White color for the ghost
 const ghostFaceColor = "#000000"; // Black for the ghost face
 const ghostCenterRow = Math.floor(numRows / 2); // Center row of the ghost
 const ghostCenterCol = Math.floor(numCols / 2); // Center column of the ghost
-const ghostHeight = Math.floor(numRows / 3); // Height of the ghost
-const ghostWidth = Math.floor(numCols / 4); // Width of the ghost
 
 export const rainbowColors = [
   '#e81416', // Red
@@ -438,7 +435,6 @@ export const christmasTreeShape = [
 ];
 
 const candyCaneRedColor = "#ab0000";
-const candyCaneWhiteColor = "#ab0000";
 
 export const candyCaneShape = [
   { row: 2, col: 3, color: candyCaneRedColor },

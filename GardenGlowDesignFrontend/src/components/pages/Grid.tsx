@@ -63,7 +63,7 @@ const LEDGrid: React.FC = () => {
 
     // Loop through each effect and run it for its duration
     for (const effect of effectData) {
-      const { effect: type, durationMs } = effect;
+      const { effect: durationMs } = effect;
       let offset = 0;
       setEffectType(effect.type);
       // Set the correct pumpkin/ghost positions based on effect
