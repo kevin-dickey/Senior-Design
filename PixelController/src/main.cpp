@@ -89,8 +89,10 @@ int main()
             // sensorValues = sensorManager->getSensors()
             sensor_state = std::vector<bool>{true, false, false, false};
         }
-        if ((show.duration - runner->getTotalSensorRuntime() <= runner->getEffectCursor()))
+        if ((show.duration <= runner->getEffectCursor()))
         {
+            delete runner;
+            runner = nullptr;
             showStart = getMillis();
             epoch = std::chrono::high_resolution_clock::from_time_t(0);
             runner = new ControllerRunner(show, showStart, epoch);
@@ -105,6 +107,8 @@ int main()
         else
         {
             std::cout << "no effect found. resetting runner " << std::endl;
+            delete runner;
+            runner = nullptr;
             showStart = getMillis();
             epoch = std::chrono::high_resolution_clock::from_time_t(0);
             runner = new ControllerRunner(show, showStart, epoch);

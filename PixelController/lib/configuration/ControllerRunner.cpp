@@ -173,10 +173,7 @@ void ControllerRunner::resetSensor() {
 // Tracks show and frames
 ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool> sensor_states)
 {
-    // ToDo Eleen:
-    // find the correct frame value for effects and sensors
-
-    //checks the new sensors states
+      //checks the new sensors states
     setSensors(sensor_states);
     bool sensorActive = checkSensors();
 
@@ -187,7 +184,9 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
         setMode("effect");
     }
 
-    if(show.duration - totalSensorsRuntime <= effectCursor) {
+    if(show.duration <= effectCursor) {
+        Effect* e = show.effects[0];
+        currentEffectShowFrame.effect = e;
         currentEffectShowFrame.effect->name = "no effect" ;
         currentEffectShowFrame.frame = -1 ;
         return currentEffectShowFrame;
@@ -241,5 +240,9 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
         currentSensorShowFrame = newSensorShowFrame;
         return currentSensorShowFrame;
     }
+}
+
+ControllerRunner::~ControllerRunner() {
+
 }
 
