@@ -132,13 +132,14 @@ CRGB hexToCRGB(const char *hex);
 
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
-// Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
-//                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
 int prevLeds1[NUM_LEDS] = {0};
 int prevLeds2[NUM_LEDS] = {0};
 int prevLeds3[NUM_LEDS] = {0};
 int prevLeds4[NUM_LEDS] = {0};
+
+// Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
+//                                                               of different possible layouts of the LEDs (serpentine n such)
 
 const char *pumpkin =
     "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
@@ -298,6 +299,7 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
+    // ToDo
     //  leaving this code here for reference. Needs to be removed
     //  // check the states of sensors, set the markers accordingly for which codeblock to execute
     //  if (effects includes rainbow + still pumpkin) {         // sensor0 -- rainbow + still pumpkin
@@ -407,7 +409,7 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
         }
     }
     FastLED.show();
-} 
+}
 
 /**
  * DOESN'T WORK. DUNNO WHY!
