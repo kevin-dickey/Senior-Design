@@ -61,18 +61,9 @@ public:
         // Parse the effect type input value
         EffectType parsedType;
         auto effectType = j["type"].get<std::string>();
-        if (effectType == "rainbow")
-        {
-            parsedType = E_RAINBOW;
-        }
-        else if (effectType == "ripple")
-        {
-            parsedType = E_RIPPLE;
-        }
-        else
-        {
-            throw std::invalid_argument("Could not parse effect type: " + effectType);
-        }
+        if (effectType == "RainbowEffect") parsedType = E_RAINBOW;
+        else if (effectType == "RippleEffect") parsedType = E_RIPPLE;
+        else throw std::invalid_argument("Could not parse effect type: " + effectType);
 
         return new Effect(
             j["id"].get<int>(),
