@@ -10,8 +10,18 @@
 #include "Spatials.h"
 
 enum EffectType : int {
-    E_RAINBOW = 1,
-    E_RIPPLE = 2
+    rainbow = 1,
+    ripple = 2,
+    pumpkin_rainbow = 3,
+    pumpkin_ripple = 4,
+    ghost_rainbow = 5,
+    ghost_ripple = 6,
+    pumpkin_ghost_rainbow = 7,
+    pumpkin_ghost_ripple = 8,
+    snowflake = 9,
+    snowman = 10,
+    christmas_tree = 11,
+    candy_cane = 12
 };
 
 class Effect {
@@ -56,9 +66,29 @@ public:
             EffectType parsedType;
             auto effectType = j["type"].get<std::string>();
             if (effectType == "rainbow") {
-                parsedType = E_RAINBOW;
+                parsedType = rainbow;
             } else if (effectType == "ripple") {
-                parsedType = E_RIPPLE;
+                parsedType = ripple;
+            } else if (effectType == "pumpkin-rainbow") {
+                parsedType = pumpkin_rainbow;
+            } else if (effectType == "pumpkin-ripple") {
+                parsedType = pumpkin_ripple;
+            } else if (effectType == "ghost-rainbow") {
+                parsedType = ghost_rainbow;
+            } else if (effectType == "ghost-ripple") {
+                parsedType = ghost_ripple;
+            } else if (effectType == "pumpkin-ghost-rainbow") {
+                parsedType = pumpkin_ghost_rainbow;
+            } else if (effectType == "pumpkin-ghost-ripple") {
+                parsedType = pumpkin_ghost_ripple;
+            } else if (effectType == "snowflake") {
+                parsedType = snowflake;
+            } else if (effectType == "snowman") {
+                parsedType = snowman;
+            } else if (effectType == "christmas-tree") {
+                parsedType = christmas_tree;
+            } else if (effectType == "candy-cane") {
+                parsedType = candy_cane;
             } else {
                 throw std::invalid_argument("Could not parse effect type: " + effectType);
             }
@@ -98,7 +128,7 @@ public:
             double startTimeMs, double durationMs,
             std::unique_ptr<Translation_t> translation,
             std::vector<std::string> colors,
-            double speed) : Effect(id, E_RAINBOW,
+            double speed) : Effect(id, rainbow,
                                    name,
                                    origin, size,
                                    startTimeMs, durationMs,
@@ -145,7 +175,7 @@ public:
             double startTimeMs, double durationMs,
             std::unique_ptr<Translation_t> translation,
             Pair_t ripple_origin,
-            int speed) : Effect(id, E_RIPPLE,
+            int speed) : Effect(id, ripple,
                                 name,
                                 origin, size,
                                 startTimeMs, durationMs,
