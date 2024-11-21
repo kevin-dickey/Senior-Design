@@ -47,7 +47,7 @@ public:
         return new Sensor{
                 j["id"],
                 j["pin"],
-                j["type"],
+                j.at("type").get<SensorType>(),
                 Pair_t::from_json(j["location"])
         };
     }

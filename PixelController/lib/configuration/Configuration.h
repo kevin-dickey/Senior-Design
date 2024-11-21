@@ -34,6 +34,7 @@ typedef struct Show
             {
                 try
                 {
+                    std::cout << "Parsing Effect: " << effect << std::endl;
                     auto effectObj = Effect::from_json(effect);
                     std::cout << "Effect Name: " << effectObj->name << std::endl;
                     show.effects.push_back(std::unique_ptr<Effect>(effectObj));
@@ -45,22 +46,27 @@ typedef struct Show
                 }
             }
 
+            std::cout << "Number of effects: " << show.effects.size() << std::endl;
+
             for (const auto &layout : j.at("layouts"))
             {
                 try
                 {
-                    int id = layout.at("id").get<int>();
-                    std::cout << "Layout ID: " << id << std::endl;
+                    // FIXME: We aren't including ID on the webapp export until multiple layouts are supported.
+                    // int id = layout.at("id").get<int>();
+                    // std::cout << "Layout ID: " << id << std::endl;
                     switch (layout.at("shape").get<LayoutType>())
                     {
                     case LayoutType::GRID:
                     {
+                        std::cout << "Grid Layout!" << std::endl;
                         show.layouts.push_back(std::unique_ptr<GridLayout>(GridLayout::from_json(layout)));
                         break;
                     }
                     default:
                         {
-                        std::cout << "Layout ID: " << layout.at("id").get<int>() << std::endl;
+                        std::cout << "Custom Layout!" << std::endl;
+                        // std::cout << "Layout ID: " << layout.at("id").get<int>() << std::endl;
                         show.layouts.push_back(std::unique_ptr<Layout>(Layout::from_json(layout)));
                         break;
                         }
@@ -86,13 +92,15 @@ typedef struct Show
                     // Skip this sensor
                 }
             }
+            std::cout << "Successfully deserialized show!" << std::endl;
+            return show;
         }
         catch (const std::exception &e)
         {
             std::cerr << "Error deserializing show: " << e.what() << std::endl;
+            throw new std::runtime_error("Error deserializing show");
             // Handle the error or rethrow it
         }
-        return show;
     }
 } Show_t;
 
@@ -137,17 +145,13 @@ Show_t loadShow(File sdFile)
     try
     {
         show = Show::from_json(data);
+        return show;
     }
     catch (const std::exception &e)
     {
         std::cerr << "Error deserializing show: " << e.what() << std::endl;
         throw;
     }
-
-    std::cout << "Show Name: " << show.name << std::endl;
-    std::cout << "Show Duration: " << show.duration << std::endl;
-
-    return show;
 }
 
 #endif // CONFIGURATION_H

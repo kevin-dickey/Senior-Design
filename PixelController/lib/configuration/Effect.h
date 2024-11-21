@@ -45,6 +45,12 @@ public:
             translation.reset(Translation_t::from_json(j["translation"]));
         }
 
+        // Check if all required fields are present
+        if (!j.contains("id") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
+        {
+            throw std::invalid_argument("Effect JSON missing required fields");
+        }
+
         return new Effect(
             j["id"].get<int>(),
             j["name"].get<std::string>(),
