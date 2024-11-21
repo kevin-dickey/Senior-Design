@@ -10,9 +10,9 @@
 using json = nlohmann::json;
 
 #define LED_PIN 13
-#define NUM_LEDS_X 16
-#define NUM_LEDS_Y 16
-#define NUM_LEDS 256
+// #define NUM_LEDS_X 16
+// #define NUM_LEDS_Y 16
+// #define NUM_LEDS 256
 #define MAX_BRIGHTNESS 64  // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
@@ -123,15 +123,21 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
 void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 CRGB hexToCRGB(const char *hex);
 
+void generateFrame(ControllerRunner::ShowFrame showframe);
+
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
-int prevLeds1[NUM_LEDS] = {0};
-int prevLeds2[NUM_LEDS] = {0};
-int prevLeds3[NUM_LEDS] = {0};
-int prevLeds4[NUM_LEDS] = {0};
+// Default w/ 256
+CRGB* leds;
+int NUM_LEDS = 256;
+int NUM_LEDS_X = 16;
+int NUM_LEDS_Y = 16;
+int* prevLeds1;
+int* prevLeds2;
+int* prevLeds3;
+int* prevLeds4;
 
 const char *pumpkin =
     "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
@@ -178,6 +184,7 @@ int hue;
 int count;
 bool goUp;
 char set_sensors;
+unsigned long current_millis;
 
 std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
@@ -219,6 +226,19 @@ void setup() {
     Show show = loadShow(filePath);
     runner = new ControllerRunner(show, millis(), epoch);
 
+    // MARK: TODO
+    // get parameters from the show for the LEDs & set em (global parameters for whole field of LEDs, even if only displaying a circle, need params for WHOLE thing)
+    NUM_LEDS = 2400;   // placeholder
+    NUM_LEDS_X = 100; // placeholder
+    NUM_LEDS_Y = 0; // placeholder
+    leds = new CRGB[NUM_LEDS];
+    prevLeds1 = new int[NUM_LEDS]; // one of these per ripple effect
+    // prevLeds2 = new int[NUM_LEDS]; // these may not be necessary, depends on how many ripples are intended to be able to show at once (check frontend design)
+    // prevLeds3 = new int[NUM_LEDS];
+    // prevLeds4 = new int[NUM_LEDS];
+    kMatrixHeight = NUM_LEDS_Y; 
+    kMatrixWidth = NUM_LEDS_X;
+
     hue = 30;
     count = 0;
     goUp = true;
@@ -254,7 +274,7 @@ void resetTriggerMarkers(int exception) {
 void loop() {
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
-    auto current_millis = millis();
+    current_millis = millis();
    
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
@@ -262,7 +282,7 @@ void loop() {
     while(showFrame.effect->name== "no effect" && showFrame.frame == -1)
     {
             //no effect found because we're over the shows duration. reset show
-            std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
+            std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json"; // will prob have to be updated to a relative path :^)
             Show show = loadShow(filePath);
             showStart = getMillis();
             epoch = std::chrono::high_resolution_clock::from_time_t(0);
@@ -347,10 +367,55 @@ void loop() {
     // }
 
     //Kevins scoop:
-    // run(showFrame); 
+    // generateFrame(showFrame);
 
     delay(33);  // delay(33): approx 30fps (30.3)
 }
+
+
+/**
+ * Sets up the leds array (CRGB leds[]) based on the provided showframe.
+ * 
+ * Limited -- only generates frames based on the specified EffectTypes in the backend (Effect.h),
+ *         -- which is based on the frontend EffectTypes, but the backend needs to be manually updated to
+ *         -- whatever EffectTypes the frontend has.
+ */
+void generateFrame(ControllerRunner::ShowFrame showframe) {
+    switch (showframe.effect->effectType) {
+        case rainbow:            
+                int32_t yHueDelta32 = ((int32_t)cos16(current_millis * (27 / 1)) * (350 / kMatrixWidth));
+                int32_t xHueDelta32 = ((int32_t)cos16(current_millis * (39 / 1)) * (310 / kMatrixHeight));
+                DrawOneFrameReducedBright(current_millis / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+                FastLED.show();
+            break;
+        case ripple:            
+            break;
+        case pumpkin_rainbow:            
+            break;
+        case pumpkin_ripple:            
+            break;
+        case ghost_rainbow:            
+            break;
+        case ghost_ripple:            
+            break;
+        case pumpkin_ghost_rainbow:            
+            break;
+        case pumpkin_ghost_ripple:            
+            break;
+        case snowflake:            
+            break;
+        case snowman:            
+            break;
+        case christmas_tree:            
+            break;
+        case candy_cane:
+            break;
+        default:
+            Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");
+            break;
+    }
+}
+
 
 // Function to load an 8x8 bitmap from a hex string
 // startX and startY specify the position of the top-right of the bitmap to load in
