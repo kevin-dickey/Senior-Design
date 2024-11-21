@@ -189,13 +189,14 @@ char set_sensors;
 std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
 
-namespace std {
+namespace std
+{
     template <typename T, typename... Args>
-    std::unique_ptr<T> make_unique(Args&&... args) {
+    std::unique_ptr<T> make_unique(Args &&...args)
+    {
         return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
     }
 }
-
 
 void setup()
 {
@@ -213,12 +214,10 @@ void setup()
     Pair_t sensor_pos{0, 0};
     Pair_t size = {10, 10};
 
-  std::unique_ptr<Translation_t> translation = std::make_unique<Translation_t>(
-    Translation_t{
-        .end_pos = sensor_pos,
-        .durationMs = 1000.0
-    }
-);
+    std::unique_ptr<Translation_t> translation = std::make_unique<Translation_t>(
+        Translation_t{
+            .end_pos = sensor_pos,
+            .durationMs = 1000.0});
 
     Effect *sensorEffect = new Effect(1, E_RAINBOW, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
 
@@ -299,7 +298,6 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
-    // ToDo
     //  leaving this code here for reference. Needs to be removed
     //  // check the states of sensors, set the markers accordingly for which codeblock to execute
     //  if (effects includes rainbow + still pumpkin) {         // sensor0 -- rainbow + still pumpkin
@@ -409,7 +407,7 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
         }
     }
     FastLED.show();
-}
+} 
 
 /**
  * DOESN'T WORK. DUNNO WHY!
