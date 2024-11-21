@@ -1,6 +1,6 @@
 {
   "name": "Jingle Bell Rock",
-  "duration": 12000,
+  "durationMs": 12000,
   "endless": true,
   "effects": [
     {

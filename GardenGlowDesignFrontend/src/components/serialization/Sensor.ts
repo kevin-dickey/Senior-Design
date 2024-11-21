@@ -17,4 +17,13 @@ export class Sensor {
         this.location = location;
         this.pin = pin;
     }
+
+    static fromJSON(data: any): Sensor {
+        return new Sensor(
+            data.type,
+            Pair.fromJSON(data.location),
+            data.id,
+            data.pin
+        );
+    }
 }

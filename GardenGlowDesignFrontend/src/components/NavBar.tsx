@@ -23,6 +23,7 @@ export interface NavBarProps {
     onClickAccount: () => void;
     onClickHome: () => void;
     onClickSave: () => void;
+    onClickSaveAs: () => void;
     onClickExport: () => void;
 }
 
@@ -53,6 +54,12 @@ const NavBar: React.FC<NavBarProps> = (props) => {
     const handleSaveClick = () => {
         if (open) {
             props.onClickSave();
+        }
+    }
+
+    const handleSaveAsClick = () => {
+        if (open) {
+            props.onClickSaveAs();
         }
     }
 
@@ -135,10 +142,17 @@ const NavBar: React.FC<NavBarProps> = (props) => {
                             >
                                 <MenuItem
                                     onClick={() => {
-                                        props.onClickSave();
+                                        handleSaveClick()
                                         handleSavePopoverClose();
                                     }}>
                                     Save
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        handleSaveAsClick()
+                                        handleSavePopoverClose();
+                                    }}>
+                                    Save As
                                 </MenuItem>
                                 <MenuItem
                                     onClick={() => {

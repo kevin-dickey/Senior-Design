@@ -57,17 +57,20 @@ public:
 class SensorManager {
 public:
     SensorManager() = default;
+
     ~SensorManager() = default;
 
     void setSensors(std::vector<Sensor *> sensors);
 
     std::vector<Sensor *> getSensors();
+
     std::vector<bool> getSensorStates(bool reset = false);
 
 private:
     std::vector<Sensor *> sensors;
 
     void removeSensorInterrupts(std::vector<Sensor *> sensors);
+
     void addSensorInterrupts(std::vector<Sensor *> sensors);
 };
 

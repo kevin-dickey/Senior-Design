@@ -1,9 +1,10 @@
 import { Show } from "../components/serialization/Show";
 import {Effect, RainbowEffect, RippleEffect} from "../components/serialization/Effect";
 import { Layout } from "../components/serialization/Layout";
+import {Sensor} from "../components/serialization/Sensor";
 
 export const deserializeShow = (data: any): Show => {
-    const show = new Show(data.name, data.duration);
+    const show = new Show(data.name, data.durationMs);
 
     // Create the effects array from the data. Use different constructors for effects based on
     // their 'type' parameter such as 'RainbowEffect' or 'RippleEffect'.
@@ -22,5 +23,6 @@ export const deserializeShow = (data: any): Show => {
 
     show.setEffects(effects);
     show.layouts = data.layouts.map((layoutData: any) => Layout.fromJSON(layoutData));
+    show.sensors = data.sensors?.map((sensorData: any) => Sensor.fromJSON(sensorData));
     return show;
 };

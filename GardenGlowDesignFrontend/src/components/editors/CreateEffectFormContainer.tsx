@@ -10,20 +10,18 @@ interface CreateEffectFormContainerProps {
     onSubmit: (effect: Effect) => void;
 }
 
+// TODO: This can probably be collapsed into the EditEffectForm container which will handle both
+//  creation and editing.
 export const CreateEffectFormContainer: React.FC<CreateEffectFormContainerProps> =
     ({effectType, onSubmit}) => {
         switch (effectType) {
             case 'RainbowEffect':
                 return (
-                    <CreateRainbowEffectFormContainer
-                        onSubmit={onSubmit}
-                    />
+                    <CreateRainbowEffectFormContainer onSubmit={onSubmit} />
                 );
             case 'RippleEffect':
                 return (
-                    <CreateRippleEffectFormContainer
-                        onSubmit={onSubmit}
-                    />
+                    <CreateRippleEffectFormContainer onSubmit={onSubmit} />
                 );
             default:
                 return null;

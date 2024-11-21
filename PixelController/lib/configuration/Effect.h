@@ -1,6 +1,7 @@
 #ifndef PIXELCONTROLLER_EFFECT_H
 #define PIXELCONTROLLER_EFFECT_H
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -8,33 +9,39 @@
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
+enum EffectType : int
+{
+    E_RAINBOW = 1,
+    E_RIPPLE = 2
+};
+
 class Effect
 {
 public:
     int id;
+    EffectType effectType;
     std::string name;
-    Pair_t origin;
-    Pair_t size;
+    Pair_t origin{};
+    Pair_t size{};
     double startTimeMs;
     double durationMs;
     std::unique_ptr<Translation_t> translation;
 
-    inline Effect(int id, std::string name,
+    inline Effect(int id,
+                  EffectType type,
+                  std::string name,
                   Pair_t origin, Pair_t size,
                   double startTimeMs, double durationMs,
                   std::unique_ptr<Translation_t> translation)
-    {
-        this->id = id;
-        this->name = std::move(name);
-        this->origin = origin;
-        this->size = size;
-        this->startTimeMs = startTimeMs;
-        this->durationMs = durationMs;
-        this->translation = std::move(translation);
-    }
+        : id(id), effectType(type), name(std::move(name)),
+          origin(origin), size(size),
+          startTimeMs(startTimeMs), durationMs(durationMs),
+          translation(std::move(translation)) {}
 
     Effect(const Effect &) = delete;
+
     Effect &operator=(const Effect &) = delete;
+
     virtual ~Effect() = default;
 
     static Effect *from_json(const nlohmann::json &j)
@@ -46,20 +53,37 @@ public:
         }
 
         // Check if all required fields are present
-        if (!j.contains("id") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
+        if (!j.contains("id") || !j.contains("type") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
         {
             throw std::invalid_argument("Effect JSON missing required fields");
         }
 
+        // Parse the effect type input value
+        EffectType parsedType;
+        auto effectType = j["type"].get<std::string>();
+        if (effectType == "rainbow")
+        {
+            parsedType = E_RAINBOW;
+        }
+        else if (effectType == "ripple")
+        {
+            parsedType = E_RIPPLE;
+        }
+        else
+        {
+            throw std::invalid_argument("Could not parse effect type: " + effectType);
+        }
+
         return new Effect(
             j["id"].get<int>(),
+            parsedType,
             j["name"].get<std::string>(),
             Pair_t::from_json(j["origin"]),
             Pair_t::from_json(j["size"]),
             j["startTimeMs"].get<double>(),
             j["durationMs"].get<double>(),
             std::move(translation));
-    }
+    };
 };
 
 class RainbowEffect : public Effect
@@ -69,17 +93,21 @@ public:
     double speed;
 
     inline RainbowEffect(
-        int id, std::string name,
+        int id, const std::string &name,
         Pair_t origin, Pair_t size,
         double startTimeMs, double durationMs,
         std::unique_ptr<Translation_t> translation,
         std::vector<std::string> colors,
-        double speed) : Effect(id, std::move(name), origin, size, startTimeMs, durationMs, std::move(translation)),
+        double speed) : Effect(id, E_RAINBOW,
+                               name,
+                               origin, size,
+                               startTimeMs, durationMs,
+                               std::move(translation)),
                         colors(std::move(colors)), speed(speed) {}
 
     RainbowEffect(const RainbowEffect &) = delete;
+
     RainbowEffect &operator=(const RainbowEffect &) = delete;
-    ~RainbowEffect() = default;
 
     static RainbowEffect *from_json(const nlohmann::json &j)
     {
@@ -116,17 +144,21 @@ public:
     int speed;
 
     inline RippleEffect(
-        int id, std::string name,
+        int id, const std::string &name,
         Pair_t origin, Pair_t size,
         double startTimeMs, double durationMs,
         std::unique_ptr<Translation_t> translation,
         Pair_t ripple_origin,
-        int speed) : Effect(id, std::move(name), origin, size, startTimeMs, durationMs, std::move(translation)),
+        int speed) : Effect(id, E_RIPPLE,
+                            name,
+                            origin, size,
+                            startTimeMs, durationMs,
+                            std::move(translation)),
                      ripple_origin(ripple_origin), speed(speed) {}
 
     RippleEffect(const RippleEffect &) = delete;
+
     RippleEffect &operator=(const RippleEffect &) = delete;
-    ~RippleEffect() = default;
 
     static RippleEffect *from_json(const nlohmann::json &j)
     {
