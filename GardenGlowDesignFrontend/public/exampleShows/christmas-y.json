@@ -7,8 +7,8 @@
       "id": 1,
       "name": "Orange Sweep",
       "type": "RainbowEffect",
-      "startTime": 0,
-      "duration": 2000,
+      "startTimeMs": 0,
+      "durationMs": 2000,
       "origin": {
         "x": 0,
         "y": 0
@@ -24,8 +24,8 @@
       "id": 2,
       "name": "Ghost",
       "type": "RippleEffect",
-      "startTime": 2000,
-      "duration": 2000,
+      "startTimeMs": 2000,
+      "durationMs": 2000,
       "origin": {
         "x": 0,
         "y": 0
@@ -44,8 +44,8 @@
       "id": 3,
       "name": "Scary Pumpkin",
       "type": "RippleEffect",
-      "startTime": 4000,
-      "duration": 1000,
+      "startTimeMs": 4000,
+      "durationMs": 1000,
       "origin": {
         "x": 0,
         "y": 0
@@ -63,7 +63,7 @@
   ],
   "layouts": [
     {
-      "shape": "grid",
+      "shape": 1,
       "width": 20,
       "height": 20
     }
@@ -71,7 +71,7 @@
   "sensors": [
     {
       "id": 1,
-      "type": "S_BINARY",
+      "type": 1,
       "location": {
         "x": 10,
         "y": 0
@@ -80,7 +80,7 @@
     },
     {
       "id": 2,
-      "type": "S_BINARY",
+      "type": 1,
       "location": {
         "x": 20,
         "y": 10

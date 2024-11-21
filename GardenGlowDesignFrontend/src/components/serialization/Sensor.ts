@@ -1,8 +1,8 @@
 import {Pair} from "./Pair";
 
 export enum SensorType {
-    BINARY = 'BINARY',
-    ANALOG = 'ANALOG'
+    BINARY = 1,
+    ANALOG = 2,
 }
 
 export class Sensor {
