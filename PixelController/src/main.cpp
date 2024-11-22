@@ -1,57 +1,90 @@
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
 #include <iostream>
 
-#include "../include/json.hpp"
-#include "../lib/configuration/Configuration.h"
-
+#include "json.hpp"
 using json = nlohmann::json;
+
+#include <FileManager.h>
 
 #define LED_PIN 13
 #define NUM_LEDS_X 16
 #define NUM_LEDS_Y 16
-#define NUM_LEDS 256
-#define MAX_BRIGHTNESS 64  // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define NUM_LEDS NUM_LEDS_X *NUM_LEDS_Y
+#define MAX_BRIGHTNESS 8 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
-
 #define PROJECT_DIR SOURCE_ROOT
 
-#else
-#define PROJECT_DIR PROJECT_DIR
+// TODO: Gotta do this for anything in lib while using CMake. PlatformIO automatically adds the include path for lib
+//  so that we can include the headers directly (<Configuration.h>). This is a workaround for CMake.
+#include "configuration/Configuration.h"
+#include "configuration/FileManager.h"
+#include "imageProcessing/ImageProcessing.h"
 
+#else
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
 
-#include "../lib/configuration/Sensor.h"
-#include "../lib/patternGeneration/rippleEffect.h"
-#include "../lib/patternGeneration/utils.h"
+#include <Configuration.h>
+#include <ImageProcessing.h>
+#include "rippleEffect.h"
+#include "utils.h"
 
 #endif
 
-enum ShiftDirection {
+enum ShiftDirection
+{
     LEFT,
     RIGHT,
     UP,
     DOWN
 };
 
-SensorManager *sensorManager;
+FileManager *fileManager;
+Show_t show;
+
+// Function prototypes
+void loadExampleImages(const std::vector<std::string *> &image_paths,
+                       std::vector<ImageProcessing::ImageData_t> &out_loadedImages);
+
+void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages, GridLayout *gridLayout,
+                  std::vector<ImageProcessing::ImageData_t> &resizedImages);
 
 #if USE_EMULATOR
 
-int main() {
-    sensorManager = new SensorManager();
+int main()
+{
+    std::string showFilePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
+    std::string risingSunFilePath = std::string(PROJECT_DIR) + "/test/rising_sun.png";
+    std::string djiboutiFilepath = std::string(PROJECT_DIR) + "/test/djibouti.jpg";
+    // Array of image paths
+    auto imagePaths = std::vector<std::string *>{&risingSunFilePath, &djiboutiFilepath};
 
-    std::string filePath = std::string(PROJECT_DIR) + "/lib/configuration/test/Basic_Show_File.json";
-    Show show = loadShow(filePath);
+    auto loadedImages = std::vector<ImageProcessing::ImageData_t>();
+    auto resizedImages = std::vector<ImageProcessing::ImageData_t>();
 
-    auto *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
-    std::cout << "Grid Layout Width: " << gridLayout->width << std::endl;
-    std::cout << "Grid Layout Height: " << gridLayout->height << std::endl;
+    show = loadShow(showFilePath);
+    loadExampleImages(imagePaths, loadedImages);
+    resizeImages(loadedImages, dynamic_cast<GridLayout *>(show.layouts[0].get()), resizedImages);
+
+    // Print info about the loaded images
+    for (auto &i : resizedImages)
+    {
+        std::cout << "Resized image: " << i.width << "x" << i.height << "x" << i.channels << std::endl;
+    }
+
+    // Free the loaded images
+    for (auto &i : loadedImages)
+    {
+        ImageProcessing::free_image(i.data);
+    }
+
+    // Free the resized images
+    for (auto &i : resizedImages)
+    {
+        ImageProcessing::free_image(i.data);
+    }
 
     return 0;
 }
@@ -65,8 +98,11 @@ int main() {
 void fadeToBlack(int duration);
 void fadeToBrightness(int duration, int targetBrightness);
 
-void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
+void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);              // draws rainbow frame
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ half brightness
+
+void bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight);
+void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 
 void parseBitmapData(const char *hexData);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
@@ -78,232 +114,154 @@ void shiftLeds(CRGB leds[], ShiftDirection direction);
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
 CRGB leds[NUM_LEDS];
-int prevLeds1[NUM_LEDS] = {0};
-int prevLeds2[NUM_LEDS] = {0};
-int prevLeds3[NUM_LEDS] = {0};
-int prevLeds4[NUM_LEDS] = {0};
 
-const char *pumpkin =
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff "
-    "ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff "
-    "ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff "
-    "ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff "
-    "ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
+int loadedImageHeight, loadedImageWidth, loadedImageChannels;
+unsigned char *loadedImage;
 
-const char *pumpkin8bit =
-    "000000 000000 000000 000000 267f00 267f00 000000 000000 "
-    "000000 000000 000000 267f00 267f00 000000 000000 000000 "
-    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 "
-    "ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 "
-    "ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 "
-    "ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 "
-    "ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 "
-    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+void setup()
+{
+    Serial.begin(115200);                    // for setting up stuff to print to serial monitor
+    delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
+    std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
-const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
+    // SD Card Setup
+    FileManager *fm = new FileManager();
+    if (!fm->MountFileSystem())
+    {
+        std::cout << "Failed to mount file system. Halting..." << std::endl;
+        while (true)
+            ;
+    }
 
-const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
-
-                        // const unsigned char ghost8bit[] = {
-                        //     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x7f, 0x7f, 0x3f, 0x3f, 0x3f, 0x1f, 0x1f, 0x0f, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x0f, 0x1f, 0x3f, 0x3f, 0x3f, 0x3f, 0x7f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xc0, 0xe0, 0xe0, 0xe0, 0xf0, 0xf0, 0xe0, 0xe0, 0xc0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf0, 0xf0, 0xe0, 0xe0, 0xe0, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x3f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x3f, 0x7f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x7f, 0x3f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x07, 0x07, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x07, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xf0, 0xf8, 0xf8, 0xf8, 0xfc, 0xfc, 0xf8, 0xf8, 0xf0, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xe0, 0xf8, 0xf8, 0xf8, 0xfc, 0xfc, 0xf8, 0xf8, 0xf8, 0xe0, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-                        // const unsigned char pumptest[] = {
-                        //     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x07, 0x07, 0x07, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x07, 0x07, 0x07, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfe, 0xfc, 0xf8, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xf8, 0xfc, 0xfe, 0xfe, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-                        Sensor *
-                        sensor0,
-           *sensor1, *sensor2, *sensor3;
-int hue;
-int count;
-bool goUp;
-char set_sensors;
-
-std::vector<Sensor *> a_sensors;
-std::vector<bool> prev_sensor_triggered;
-
-
-void setup() {
-    Serial.begin(115200);           // for setting up stuff to print to serial monitor
-    delay(3000);                    // delay for 3 seconds to give time to open the serial monitor
-    Serial.println("Starting...");  // print to the serial monitor that the program is starting
-
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
-    FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
-    pinMode(LED_BUILTIN, OUTPUT);                                                                  // setup the built-in LED for the esp32
+    // FastLED Initialization
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+    FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
+    pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
     Serial.println("Initialized FastLED...");
 
-    Pair_t sensor_pos = {x : 0, y : 0};
-    // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
-    sensor0 = new Sensor(0, 34, S_BINARY, sensor_pos);  // ne
-    sensor1 = new Sensor(1, 35, S_BINARY, sensor_pos);  // nw
-    sensor2 = new Sensor(2, 32, S_BINARY, sensor_pos);  // sw
-    sensor3 = new Sensor(3, 33, S_BINARY, sensor_pos);  // se
-    
-    a_sensors = std::vector<Sensor *>{sensor0, sensor1, sensor2, sensor3};
-    prev_sensor_triggered = std::vector<bool>(a_sensors.size());
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
-    sensorManager = new SensorManager();
-    sensorManager->setSensors(a_sensors);
-    set_sensors = 'a';
-    Serial.println("Initialized Sensors...");
+    try
+    {
+        std::cout << "⏳ Loading Show..." << std::endl;
+        File showFile = fm->getJsonFile("/christmas-y.json");
+        show = loadShow(showFile);
+        std::cout << "✅ Loaded Show!" << std::endl;
+        // std::cout << "➡️ Show Name: " << show.name << std::endl;
+        showFile.close();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading show: " << e.what() << std::endl;
+    }
 
-    hue = 30;
-    count = 0;
-    goUp = true;
-    srand(static_cast<unsigned int>(time(0)));
+    try
+    {
+        long start_loading_ghost = millis();
 
-    /* Testing Stuff */
-    // these don't work
-    // loadByteBitmap(leds, pumptest, 4, 4, 8, 8);
-    // loadByteBitmap(leds, ghost8bit, 4, 4, 8, 8);
+        std::cout << "⏳ Loading Ghost..." << std::endl;
+        File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
+        std::cout << "✅ Opened Ghost File!" << std::endl;
 
-    // if this doesn't work, something is seriously messed up
-    // loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
+        std::cout << "Converting to FILE..." << std::endl;
+        size_t fileSize;
+        unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
+        std::cout << "✅ Converted to FILE!" << std::endl;
+        std::cout << "  File Size: " << fileSize << std::endl;
+        std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
 
-    // loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
-}
+        std::cout << "⏳ Getting Image Dimensions..." << std::endl;
+        // Get the dimensions of the image and load it
+        ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
 
-/**
- * Resets every index in prev_sensor_triggered to false except for the specified index, which is set to true.
- */
-void resetTriggerMarkers(int exception) {
-    for (int i = 0; i < prev_sensor_triggered.size(); i++) {
-        if (i == exception) {
-            prev_sensor_triggered[i] = true;
-        } else {
-            prev_sensor_triggered[i] = false;
-        }
+        std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
+        std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
+        std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
+
+        unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+        std::cout << "✅ Loaded Image!" << std::endl;
+        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+
+        std::cout << "↔️ Resizing Image..." << std::endl;
+        int newWidth = NUM_LEDS_X;
+        int newHeight = NUM_LEDS_Y;
+        unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+        std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
+        ImageProcessing::free_image(ghostFile);
+        free(ghostFileBuf);
+
+        std::cout << "🖼️ Displaying Image Data..." << std::endl;
+        std::cout << "  New Width: " << newWidth << std::endl;
+        std::cout << "  New Height: " << newHeight << std::endl;
+        ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels);
+
+        // Load the resized image into the LED matrix
+        std::cout << "🚦 Loading Image into LED Array..." << std::endl;
+        CRGB *serpentineArray = (CRGB *)calloc(NUM_LEDS, sizeof(CRGB));
+        bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
+        fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+
+        rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+        free(serpentineArray);
+
+        // Log the time taken to load the ghost
+        long end_loading_ghost = millis();
+        std::cout << "⏲️ Time taken to load ghost: " << end_loading_ghost - start_loading_ghost << "ms" << std::endl;
+
+        FastLED.show();
+
+        // TODO: `free` or free_image causes a kernel panic, possibly due to a double free, the large size, or something else.
+        //  Not freeing will cause a memory leak, but it's better than a kernel panic for now.
+        // std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+        // std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
+        // free(resizedGhost);
+        // std::cout << "✅ Freed Image!" << std::endl;
+
+        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+        std::cout << "🛑 Closing ghost from file manager..." << std::endl;
+        ghostBmpFile.close();
+        std::cout << "✅ Closed ghost from file manager!" << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error loading ghost: " << e.what() << std::endl;
     }
 }
 
 /**
  * MARK: Looping
  */
-void loop() {
+void loop()
+{
     // gets the current state of every sensor, the state automatically resets after it's viewed
-    auto sensor_states = sensorManager->getSensorStates(true);
     auto current_millis = millis();
-
-    // check the states of sensors, set the markers accordingly for which codeblock to execute
-    if (sensor_states[0]) {         // sensor0 -- rainbow + still pumpkin
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        Serial.println("Sensor 0 triggered");
-        
-        resetTriggerMarkers(0);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[1]) {  // sensor1 -- skull
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, skull8bit, 0, 0, 16, 16);
-        Serial.println("Sensor 1 triggered");
-
-        resetTriggerMarkers(1);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[2]) {  // sensor2 -- ghost zig zagging
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        Serial.println("Sensor 2 triggered");
-
-        resetTriggerMarkers(2);
-        count = 0;
-        goUp = true;
-    } else if (sensor_states[3]) {  // sensor3 -- pumpkin & ghost chasing each other
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.setBrightness(MAX_BRIGHTNESS);
-        FastLED.show();
-        loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
-        loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
-        Serial.println("Sensor 3 triggered");
-
-        resetTriggerMarkers(3);
-        count = 0;
-        goUp = true;
-    }
-
-    /************************************************************* */
-
-    // check to see what was the last effect triggered, keep running it
-    if (prev_sensor_triggered[0]) { // rainbow & pumpkin
-        uint32_t ms = millis();
-        int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
-        int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
-        DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-        
-        // draw pumpkin on top
-        loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-        // FastLED.show(); // commented out b/c loadHexBitmap already calls it, but here for clarity
-
-    } else if (prev_sensor_triggered[1]) { // skull/crossbones
-
-    /***** these are blocking! will have to figure out something else to go here *****/
-        fadeToBrightness(2, MAX_BRIGHTNESS / 4);
-        fadeToBrightness(2, MAX_BRIGHTNESS);
-
-    } else if (prev_sensor_triggered[2]) { // ghost zigzagging
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
-        
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
-
-    } else if (prev_sensor_triggered[3]) { // pumpkin & ghost chasing each other
-        // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-        shiftLeds(leds, RIGHT);
-        if (count % 2 == 0) {
-            shiftLeds(leds, goUp ? UP : DOWN);
-        }
-        
-        if (count % 4 == 0) {
-            goUp = !goUp;
-        }
-        count++;
-    }
-
-    delay(33);  // delay(33): approx 30fps (30.3)
 }
 
 // Function to load an 8x8 bitmap from a hex string
 // startX and startY specify the position of the top-right of the bitmap to load in
-void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth) {
-    for (uint8_t y = 0; y < bitmapHeight; y++) {
-        for (uint8_t x = 0; x < bitmapWidth; x++) {
+void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth)
+{
+    for (uint8_t y = 0; y < bitmapHeight; y++)
+    {
+        for (uint8_t x = 0; x < bitmapWidth; x++)
+        {
             // Calculate the position in the string
-            int index = (y * bitmapWidth + x) * 7;  // 6 for color + 1 for space
+            int index = (y * bitmapWidth + x) * 7; // 6 for color + 1 for space
 
             // Extract the hex color (6 characters)
-            char hexColor[7];  // 6 for color + 1 for null terminator
+            char hexColor[7]; // 6 for color + 1 for null terminator
             strncpy(hexColor, &bitmap[index], 6);
-            hexColor[6] = '\0';  // Null-terminate the string
+            hexColor[6] = '\0'; // Null-terminate the string
 
             // Only load if within bounds
-            if (startX + x < kMatrixWidth && startY + y < kMatrixHeight) {
+            if (startX + x < kMatrixWidth && startY + y < kMatrixHeight)
+            {
                 CRGB color = hexToCRGB(hexColor);
-                if (color != (CRGB::Black)) {  // black color is interpreted as intending to be transparent
+                if (color != (CRGB::Black))
+                { // black color is interpreted as intending to be transparent
                     leds[XY(startX + x, startY + y)] = color;
                 }
             }
@@ -315,11 +273,15 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
 /**
  * DOESN'T WORK. DUNNO WHY!
  */
-void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth) {
-    for (uint8_t y = 0; y < bitmapHeight; y++) {
-        for (uint8_t x = 0; x < bitmapWidth; x++) {
+void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth)
+{
+    for (uint8_t y = 0; y < bitmapHeight; y++)
+    {
+        for (uint8_t x = 0; x < bitmapWidth; x++)
+        {
             // Only draw if within bounds of the LED matrix
-            if ((startX + x) < kMatrixWidth && (startY + y) < kMatrixHeight) {
+            if ((startX + x) < kMatrixWidth && (startY + y) < kMatrixHeight)
+            {
                 // Calculate the index for this pixel (3 bytes per pixel: RGB)
                 int index = (y * bitmapWidth + x) * 3;
 
@@ -328,66 +290,79 @@ void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uin
                 snprintf(hexColor, sizeof(hexColor), "%02x%02x%02x", bitmap[index], bitmap[index + 1], bitmap[index + 2]);
                 hexColor[6] = '\0';
 
-                if (startX + x < kMatrixHeight && startY + y < kMatrixHeight) {
+                if (startX + x < kMatrixHeight && startY + y < kMatrixHeight)
+                {
                     CRGB color = hexToCRGB(hexColor);
-                    if (color != (CRGB::Black)) {
+                    if (color != (CRGB::Black))
+                    {
                         leds[XY(startX + x, startY + y)] = color;
                     }
                 }
             }
         }
     }
-    FastLED.show();  // Display the updated LED matrix
+    FastLED.show(); // Display the updated LED matrix
 }
 
-void shiftLeds(CRGB leds[], ShiftDirection direction) {
+void shiftLeds(CRGB leds[], ShiftDirection direction)
+{
     CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
 
     // Copy current state to temp array
-    for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++) {
+    for (int i = 0; i < NUM_LEDS_X * NUM_LEDS_Y; i++)
+    {
         temp[i] = leds[i];
     }
 
-    switch (direction) {
-        case RIGHT:  // if you look closely right and left might look flipped, and you're right!
-                     // don't ask me why, it just works :)
-            for (int y = 0; y < NUM_LEDS_Y; y++) {
-                for (int x = 0; x < NUM_LEDS_X; x++) {
-                    int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
-                    leds[XY(newX, y)] = temp[XY(x, y)];
-                }
+    switch (direction)
+    {
+    case RIGHT: // if you look closely right and left might look flipped, and you're right!
+                // don't ask me why, it just works :)
+        for (int y = 0; y < NUM_LEDS_Y; y++)
+        {
+            for (int x = 0; x < NUM_LEDS_X; x++)
+            {
+                int newX = (x - 1 + NUM_LEDS_X) % NUM_LEDS_X;
+                leds[XY(newX, y)] = temp[XY(x, y)];
             }
-            break;
+        }
+        break;
 
-        case LEFT:
-            for (int y = 0; y < NUM_LEDS_Y; y++) {
-                for (int x = 0; x < NUM_LEDS_X; x++) {
-                    int newX = (x + 1) % NUM_LEDS_X;
-                    leds[XY(newX, y)] = temp[XY(x, y)];
-                }
+    case LEFT:
+        for (int y = 0; y < NUM_LEDS_Y; y++)
+        {
+            for (int x = 0; x < NUM_LEDS_X; x++)
+            {
+                int newX = (x + 1) % NUM_LEDS_X;
+                leds[XY(newX, y)] = temp[XY(x, y)];
             }
-            break;
+        }
+        break;
 
-        case UP:
-            for (int x = 0; x < NUM_LEDS_X; x++) {
-                for (int y = 0; y < NUM_LEDS_Y; y++) {
-                    int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
-                    leds[XY(x, newY)] = temp[XY(x, y)];
-                }
+    case UP:
+        for (int x = 0; x < NUM_LEDS_X; x++)
+        {
+            for (int y = 0; y < NUM_LEDS_Y; y++)
+            {
+                int newY = (y - 1 + NUM_LEDS_Y) % NUM_LEDS_Y;
+                leds[XY(x, newY)] = temp[XY(x, y)];
             }
-            break;
+        }
+        break;
 
-        case DOWN:
-            for (int x = 0; x < NUM_LEDS_X; x++) {
-                for (int y = 0; y < NUM_LEDS_Y; y++) {
-                    int newY = (y + 1) % NUM_LEDS_Y;
-                    leds[XY(x, newY)] = temp[XY(x, y)];
-                }
+    case DOWN:
+        for (int x = 0; x < NUM_LEDS_X; x++)
+        {
+            for (int y = 0; y < NUM_LEDS_Y; y++)
+            {
+                int newY = (y + 1) % NUM_LEDS_Y;
+                leds[XY(x, newY)] = temp[XY(x, y)];
             }
-            break;
+        }
+        break;
     }
 
-    FastLED.show();  // Update the LED display
+    FastLED.show(); // Update the LED display
 }
 
 /**
@@ -398,14 +373,16 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
  * If you want to use it on a specific subset of LEDs, will have to provide
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
-void fadeToBlack(int duration) {
+void fadeToBlack(int duration)
+{
     uint8_t initialBrightness = FastLED.getBrightness();
     if (initialBrightness == 0)
         return;
 
     int updatesPerSec = initialBrightness / duration;
 
-    for (int i = initialBrightness; i > 0; i--) {
+    for (int i = initialBrightness; i > 0; i--)
+    {
         FastLED.setBrightness(i);
         FastLED.show();
         delay(1000 / updatesPerSec);
@@ -427,34 +404,41 @@ void fadeToBlack(int duration) {
  * If you want to use it on a specific subset of LEDs, will have to provide
  * that subset as well as somehow keeping track of what the LEDs previously were.
  */
-void fadeToBrightness(int duration, int targetBrightness) {
+void fadeToBrightness(int duration, int targetBrightness)
+{
     uint8_t curBrightness = FastLED.getBrightness();
     if (curBrightness == targetBrightness)
         return;
 
     int updatesPerSec;
-    if (targetBrightness > curBrightness) {  // increase brightness to target
+    if (targetBrightness > curBrightness)
+    { // increase brightness to target
         updatesPerSec = (targetBrightness - curBrightness) / duration;
-        for (int i = curBrightness; i < targetBrightness; i++) {
+        for (int i = curBrightness; i < targetBrightness; i++)
+        {
             FastLED.setBrightness(i);
             FastLED.show();
             delay(1000 / updatesPerSec);
         }
-    } else {  // decrease brightness to target
+    }
+    else
+    { // decrease brightness to target
         updatesPerSec = (curBrightness - targetBrightness) / duration;
-        for (int i = curBrightness; i > targetBrightness; i--) {
+        for (int i = curBrightness; i > targetBrightness; i--)
+        {
             FastLED.setBrightness(i);
             FastLED.show();
             delay(1000 / updatesPerSec);
         }
     }
 
-    FastLED.setBrightness(targetBrightness);  // just in case it doesnt fully work lol
+    FastLED.setBrightness(targetBrightness); // just in case it doesnt fully work lol
     FastLED.show();
 }
 
 // Function to convert a 6-character hex string to CRGB
-CRGB hexToCRGB(const char *hex) {
+CRGB hexToCRGB(const char *hex)
+{
     uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
     uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
     uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
@@ -462,22 +446,28 @@ CRGB hexToCRGB(const char *hex) {
 }
 
 // Function to parse the bitmap data from a hex string
-void parseBitmapData(const char *hexData) {
+void parseBitmapData(const char *hexData)
+{
     int index = 0;
-    while (*hexData) {
+    while (*hexData)
+    {
         // Skip spaces
-        if (*hexData == ' ') {
+        if (*hexData == ' ')
+        {
             hexData++;
             continue;
         }
 
         // Convert the next 6 characters to CRGB and store in the leds array
-        if (index < NUM_LEDS) {
+        if (index < NUM_LEDS)
+        {
             leds[index] = hexToCRGB(hexData);
-            hexData += 6;  // Move to the next color
+            hexData += 6; // Move to the next color
             index++;
-        } else {
-            break;  // Avoid exceeding the array size
+        }
+        else
+        {
+            break; // Avoid exceeding the array size
         }
     }
 }
@@ -485,12 +475,15 @@ void parseBitmapData(const char *hexData) {
 /**
  * Draws a single frame of the rainbow effect
  */
-void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
+void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
+{
     uint8_t lineStartHue = startHue8;
-    for (uint8_t y = 0; y < kMatrixHeight; y++) {
+    for (uint8_t y = 0; y < kMatrixHeight; y++)
+    {
         lineStartHue += yHueDelta8;
         uint8_t pixelHue = lineStartHue;
-        for (uint8_t x = 0; x < kMatrixWidth; x++) {
+        for (uint8_t x = 0; x < kMatrixWidth; x++)
+        {
             pixelHue += xHueDelta8;
             leds[XY(x, y)] = CHSV(pixelHue, 255, 255);
         }
@@ -500,16 +493,117 @@ void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
 /**
  * Draws a single frame of the rainbow effect
  */
-void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
+void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
+{
     uint8_t lineStartHue = startHue8;
-    for (uint8_t y = 0; y < kMatrixHeight; y++) {
+    for (uint8_t y = 0; y < kMatrixHeight; y++)
+    {
         lineStartHue += yHueDelta8;
         uint8_t pixelHue = lineStartHue;
-        for (uint8_t x = 0; x < kMatrixWidth; x++) {
+        for (uint8_t x = 0; x < kMatrixWidth; x++)
+        {
             pixelHue += xHueDelta8;
             leds[XY(x, y)] = CHSV(pixelHue * 5 / 6, 255 * 5 / 6, 255 * 5 / 6);
         }
     }
 }
 
+void bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight)
+{
+    int startX = (matrixWidth - imgWidth) / 2;
+    int startY = (matrixHeight - imgHeight) / 2;
+
+    for (int y = 0; y < imgHeight; ++y)
+    {
+        for (int x = 0; x < imgWidth; ++x)
+        {
+            int bufferIndex = (y * imgWidth + x) * imgChannels;
+            int matrixIndex = (startY + y) * matrixWidth + (startX + x);
+
+            if (imgChannels == 3)
+            { // RGB
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+            }
+            else if (imgChannels == 4)
+            { // RGBA
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+            }
+        }
+    }
+}
+
+void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor)
+{
+    for (int y = 0; y < matrixHeight; ++y)
+    {
+        for (int x = 0; x < matrixWidth; ++x)
+        {
+            int index = y * matrixWidth + x;
+            if (leds[index] == CRGB::Black)
+            {
+                leds[index] = backgroundColor;
+            }
+        }
+    }
+}
 #endif
+
+void loadExampleImages(const std::vector<std::string *> &image_paths,
+                       std::vector<ImageProcessing::ImageData_t> &out_loadedImages)
+{
+    // Clear the loaded images
+    out_loadedImages.clear();
+
+    for (const auto &i : image_paths)
+    {
+        // Load the imagePath
+        std::string imagePath = *i;
+
+        int ok, width, height, channels;
+        ok = ImageProcessing::get_image_dimensions(imagePath.c_str(), &width, &height, &channels);
+        if (!ok)
+        {
+            std::cerr << "Error getting imagePath dimensions" << std::endl;
+            return;
+        }
+
+        unsigned char *data = ImageProcessing::load_image(imagePath.c_str(), &width, &height, &channels);
+        if (data == nullptr)
+        {
+            std::cerr << "Error loading imagePath: " << imagePath << std::endl;
+            return;
+        }
+
+        std::cout << "Image Filename: " << imagePath << std::endl;
+        std::cout << "Image Width: " << width << std::endl;
+        std::cout << "Image Height: " << height << std::endl;
+        std::cout << "Image Channels: " << channels << std::endl;
+
+        // Store the loaded image
+        out_loadedImages.push_back({data, width, height, channels});
+    }
+
+    std::cout << "Loaded " << out_loadedImages.size() << " images" << std::endl;
+}
+
+void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages, GridLayout *gridLayout,
+                  std::vector<ImageProcessing::ImageData_t> &resizedImages)
+{
+    // Resize the loaded images to the grid layout size
+    for (auto &i : loadedImages)
+    {
+        int resize_width = gridLayout->width;
+        int resize_height = gridLayout->height;
+
+        unsigned char *resizedImage = ImageProcessing::resize_image(i.data, i.width, i.height, i.channels,
+                                                                    resize_width, resize_height);
+        if (resizedImage == nullptr)
+        {
+            std::cerr << "Error resizing image" << std::endl;
+            return;
+        }
+
+        // Store the resized image
+        resizedImages.push_back({resizedImage, resize_width, resize_height, i.channels});
+    }
+}

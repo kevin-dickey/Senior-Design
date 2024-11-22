@@ -46,13 +46,13 @@ void Window::glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-void Window::clearWindow(GLFWwindow *window) {
+void Window::clearWindow(GLFWwindow *window, ImVec4 *clear_color) {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x * clear_color.w,
-                 clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w,
-                 clear_color.w);
+    glClearColor(clear_color->x * clear_color->w,
+                 clear_color->y * clear_color->w,
+                 clear_color->z * clear_color->w,
+                 clear_color->w);
     glClear(GL_COLOR_BUFFER_BIT);
 }

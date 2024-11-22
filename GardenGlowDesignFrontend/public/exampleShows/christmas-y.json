@@ -210,7 +210,7 @@
   ],
   "layouts": [
     {
-      "shape": "grid",
+      "shape": 1,
       "width": 20,
       "height": 20
     }
@@ -218,7 +218,7 @@
   "sensors": [
     {
       "id": 1,
-      "type": "S_BINARY",
+      "type": 1,
       "location": {
         "x": 10,
         "y": 0
@@ -227,7 +227,7 @@
     },
     {
       "id": 2,
-      "type": "S_BINARY",
+      "type": 1,
       "location": {
         "x": 20,
         "y": 10
