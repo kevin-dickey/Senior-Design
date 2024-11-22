@@ -76,6 +76,25 @@ void pattern_greys(uint len, uint t) {
     }
 }
 
+void pattern_gradient(uint len, uint t) {
+    // Rainbow gradient
+    for (uint i = 0; i < len; ++i) {
+        uint x = (i + t) % 64;
+        uint r = 0, g = 0, b = 0;
+        if (x < 21) {
+            r = 0xff - x * 0xff / 21;
+            g = x * 0xff / 21;
+        } else if (x < 42) {
+            g = 0xff - (x - 21) * 0xff / 21;
+            b = (x - 21) * 0xff / 21;
+        } else {
+            b = 0xff - (x - 42) * 0xff / 21;
+            r = (x - 42) * 0xff / 21;
+        }
+        put_pixel(urgb_u32(r, g, b));
+    }
+}
+
 void pattern_solid(uint len, uint t) {
     t = 1;
     for (uint i = 0; i < len; ++i) {
@@ -112,9 +131,10 @@ const struct {
     const char *name;
 } pattern_table[] = {
         {pattern_snakes,  "Snakes!"},
-        {pattern_random,  "Random data"},
-        {pattern_sparkle, "Sparkles"},
-        {pattern_greys,   "Greys"},
+        // {pattern_random,  "Random data"},
+        // {pattern_sparkle, "Sparkles"},
+        {pattern_gradient, "Gradient"},
+        // {pattern_greys,   "Greys"},
 //        {pattern_solid,  "Solid!"},
 //        {pattern_fade, "Fade"},
 };
@@ -304,7 +324,7 @@ int main() {
             current_strip_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
             current_strip_out = strip1.data;
-            current_strip_4color = true;
+            current_strip_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
             transform_strips(strips, count_of(strips), colors, NUM_PIXELS * 4, brightness);
