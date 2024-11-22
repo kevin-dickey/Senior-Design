@@ -43,19 +43,13 @@ public:
 
     virtual ~Sensor() = default;
 
-    static Sensor *from_json(const nlohmann::json &j) {
-        try {
-            return new Sensor{
-                    j["id"],
-                    j["pin"],
-                    j["type"],
-                    Pair_t::from_json(j["location"])
-            };
-        }
-        catch (const std::exception &e) {
-            std::cerr << "Error parsing sensor: " << e.what() << std::endl;
-            throw e;
-        }
+    static Sensor* from_json(const nlohmann::json& j) {
+        return new Sensor{
+                j["id"],
+                j["pin"],
+                j.at("type").get<SensorType>(),
+                Pair_t::from_json(j["location"])
+        };
     }
 };
 

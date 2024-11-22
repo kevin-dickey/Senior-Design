@@ -73,6 +73,16 @@ uint16_t XY(uint8_t x, uint8_t y) {
     return i;
 }
 
+void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int width, int height) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int originalIndex = y * width + x;
+            int rearrangedIndex = XY(x, y);
+            rearrangedArray[rearrangedIndex] = originalArray[originalIndex];
+        }
+    }
+}
+
 /**
  * Makes sure the specified point is in bounds before calculating its (x, y) position.
  */
