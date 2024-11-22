@@ -15,7 +15,7 @@
 #define VSPI_MISO 19
 #define VSPI_MOSI 23
 #define VSPI_SCK 18
-#define VSPI_SS 17 
+#define VSPI_SS 16 
 
 // Required for the SD library to work. Cannot be overriden by function arguments.
 #define SPI_MISO_PIN VSPI_MISO
