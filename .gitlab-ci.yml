@@ -25,18 +25,28 @@ webapp:build:
   stage: build
   image: node:latest
   before_script:
-    - cd GardenGlowDesignFrontend
-    - mkdir -p ./build
-    - npm install
     # Allow warnings to pass a merge request pipeline build.
     - if [ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]; then export CI=false; fi
+    - cd GardenGlowDesignFrontend
+    - mkdir -p ./build
+
+    - wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.38.0/install.sh | bash #install nvm
+    - export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" --no-use #load nvm
+    - eval "[ -f .nvmrc ] && nvm install || nvm install 22" #install node
+    - nvm use 22
+    - echo "Using Node Version $(node -v)"
+    - echo "Using NPM Version $(npm -v)"
+
+    - if [ $CLEAR_CACHE == "true" ]; then npm cache clean --force; fi
+    - npm install --loglevel verbose
   script:
-    - npm run build > build_output.log 2>&1
+    - npm run build --loglevel verbose > build_output.log 2>&1
     # TODO: Add linting and testing
     # - if [ "$CI_COMMIT_BRANCH" == "main" ]; then npm run lint && npm run test; fi
   artifacts:
     paths:
       - ./GardenGlowDesignFrontend/build/
+      - ./GardenGlowDesignFrontend/build_output.log
     when: always
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
