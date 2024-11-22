@@ -7,39 +7,7 @@ import storageManager from "../Managers/ShowStorageManager";
 import {Show} from "../components/serialization/Show";
 import {GridLayout} from '../components/serialization/Layout';
 
-const reduceFiles = async (files: string[]): Promise<Folder[]> => {
-    const folderMap: { [key: string]: Folder } = {};
-    const showPromises: Promise<void>[] = [];
 
-    files.forEach(file => {
-        const parts = file.split('/');
-        const folderName = parts[0];
-
-        if (!folderMap[folderName]) {
-            folderMap[folderName] = {name: folderName, files: []};
-        }
-
-        if (!file.endsWith('/')) {
-            const showPromise = storageManager.loadShow(file)
-                .then(show => {
-                    console.log(`Loaded show: ${show.name}`);
-                    folderMap[folderName].files.push({
-                        name: show.name,
-                        path: file
-                    });
-                })
-                .catch(e => {
-                    console.error(`Could not load show: ${file} - ${e}`);
-                });
-
-            showPromises.push(showPromise);
-        }
-    });
-
-    await Promise.all(showPromises);
-
-    return Object.values(folderMap);
-};
 
 const FoldersOverviewContainer: React.FC = () => {
     const [loading, setLoading] = useState(true);
@@ -47,23 +15,13 @@ const FoldersOverviewContainer: React.FC = () => {
 
     useEffect(() => {
         const fetchFolders = async () => {
-            const folders = await loadFolders();
-            setFolders(folders);
+            setFolders(await storageManager.listAllShows());
             setLoading(false);
         };
 
         fetchFolders();
     }, []);
 
-    const loadFolders = async () => {
-        let loadedFolders: Folder[] = [];
-        loadedFolders = loadedFolders.concat(await reduceFiles(storageManager.listShows()));
-
-        const shows = await storageManager.listExampleShows()
-        const exampleFolders = await reduceFiles(shows);
-        loadedFolders = loadedFolders.concat(exampleFolders);
-        return loadedFolders;
-    };
 
     const addNewFolder = (folderName: string) => {
         storageManager.createFolder(folderName);
@@ -82,7 +40,7 @@ const FoldersOverviewContainer: React.FC = () => {
         const layout = new GridLayout(width, height);
         show.addLayout(layout);
         storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, show);
-        reduceFiles(storageManager.listShows()).then(folders => setFolders(folders));
+        storageManager.listShows().then(folders => setFolders(folders));
     };
 
     const loadShow = (path: string) => {

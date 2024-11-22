@@ -63,8 +63,8 @@ export class Effect {
             data.name,
             data.origin,
             data.size,
-            data.startTime,
-            data.duration,
+            data.startTimeMs,
+            data.durationMs,
             data.translation,
             data.id
         );

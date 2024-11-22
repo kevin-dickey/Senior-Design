@@ -1,12 +1,19 @@
 import {Show} from "../components/serialization/Show";
 import {deserializeShow} from "../utils/deserializeShow";
+import {Folder} from "../components/pages/FoldersOverview";
 
 interface IShowStorage {
     saveShow(path: string, show: Show): void;
+
+    getShowInfo(path: string): Promise<{ name: string, path: string }>;
+
     loadShow(path: string): Promise<Show>;
+
     deleteShow(path: string): void;
-    listShows(directory?: string): string[];
-    listExampleShows(): Promise<string[]>;
+
+    listShows(directory?: string): Promise<Folder[]>;
+
+    listExampleShows(): Promise<Folder[]>;
 }
 
 export class LocalStorageManager implements IShowStorage {
@@ -17,20 +24,39 @@ export class LocalStorageManager implements IShowStorage {
         localStorage.setItem(`${this.rootKey}/${path}`, showData);
     }
 
-    loadShow = async (path: string): Promise<Show> => {
+    async getAndParseJSON(path: string): Promise<any> {
         // If we have a show file starting with exampleShows/, it's not in local storage
         // and we should fetch it from the public folder.
         if (path.startsWith('exampleShows/')) {
             const resp = await fetch('/' + path);
-            const showData = await resp.json();
-            return deserializeShow(showData);
+            return await resp.json();
+        } else {
+            const showData = localStorage.getItem(`${this.rootKey}/${path}`);
+            if (!showData) {
+                throw new Error(`Show file not found at path: ${path}`);
+            }
+            return JSON.parse(showData);
         }
+    }
 
-        const showData = localStorage.getItem(`${this.rootKey}/${path}`);
-        if (!showData) {
-            throw new Error(`Show file not found at path: ${path}`);
+    async getShowInfo(path: string): Promise<{ name: string, path: string }> {
+        try {
+            const showJSON = await this.getAndParseJSON(path)
+
+            if (!showJSON.name || !showJSON.effects) {
+                console.error('Show file is missing name or effects');
+            }
+            return {
+                name: showJSON.name,
+                path: showJSON.path
+            }
+        } catch (e) {
+            throw new Error(`Show file not found at path: ${path}. ${e}`);
         }
-        const parsedData = JSON.parse(showData);
+    }
+
+    loadShow = async (path: string): Promise<Show> => {
+        const parsedData = await this.getAndParseJSON(path);
         return deserializeShow(parsedData);
     };
 
@@ -41,7 +67,7 @@ export class LocalStorageManager implements IShowStorage {
         localStorage.removeItem(`${this.rootKey}/${path}`);
     }
 
-    listShows(directory: string = ''): string[] {
+    listShows(directory: string = ''): Promise<Folder[]> {
         const shows: string[] = [];
         const prefix = `${this.rootKey}/${directory}`;
         for (let i = 0; i < localStorage.length; i++) {
@@ -55,10 +81,37 @@ export class LocalStorageManager implements IShowStorage {
                 }
             }
         }
-        return shows;
+        return this.reduceFiles(shows);
     }
 
-    listExampleShows = async (): Promise<string[]> => {
+    // TODO: This and some other non-explicitly LOCAL storage related items
+    //  can be moved upward
+    reduceFiles = async (files: string[]): Promise<Folder[]> => {
+        const folderMap: { [key: string]: Folder } = {};
+
+        for (const file of files) {
+            const parts = file.split('/');
+            const folderName = parts[0];
+
+            if (!folderMap[folderName]) {
+                folderMap[folderName] = {name: folderName, files: []};
+            }
+
+            if (!file.endsWith('/')) {
+                try {
+                    const showInfo = await storageManager.getShowInfo(file)
+                    console.log(`Loaded show: ${showInfo.name}`);
+                    folderMap[folderName].files.push({name: showInfo.name, path: file});
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        return Object.values(folderMap);
+    };
+
+    listExampleShows = async (): Promise<Folder[]> => {
         // Read from the public/exampleShows/show-manifest.txt file and return the list of shows.
         const shows: string[] = [];
         // Fetch and read the text file
@@ -70,8 +123,15 @@ export class LocalStorageManager implements IShowStorage {
         const validLines = lines.filter(line => line.length > 0);
         // Add each line to the shows array
         validLines.forEach(line => shows.push(line));
-        return shows;
+        return this.reduceFiles(shows);
     };
+
+    listAllShows = async (): Promise<Folder[]> => {
+        let loadedFolders: Folder[] = [];
+        loadedFolders = loadedFolders.concat(await storageManager.listShows());
+        loadedFolders = loadedFolders.concat(await storageManager.listExampleShows());
+        return loadedFolders;
+    }
 
     createFolder(folderName: string): void {
         localStorage.setItem(`${this.rootKey}/${folderName}/`, '');

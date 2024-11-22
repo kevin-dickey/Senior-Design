@@ -16,7 +16,6 @@ import Toolbar from "@mui/material/Toolbar";
 
 export interface EntityPaletteProps {
     show: Show;
-    saveShow: (show: Show) => void;
     selectedEffectId: number | null;
     setSelectedEffectId: (id: number | null) => void;
     createEffectType: string;
