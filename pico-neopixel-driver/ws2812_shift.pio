@@ -1,0 +1,70 @@
+;
+; PIO state machine program for WS2812 parallel output using 74HC595 shift registers.
+; See https://learn.adafruit.com/neopio-drive-lots-of-leds-with-raspberry-pi-pico/code-walkthrough-pio for more information.
+; 
+; Author: Nick Vazquez
+; Date: 2024-11-26
+;
+
+.pio_version 0
+
+.program ws2812_shift
+.side_set 2
+
+.define public T1 7
+.define public T2 10
+.define public T3 8
+
+.wrap_target
+    set x, 7            side 2  ; Set loop counter to 7 (8 bits per SR load/output)
+                                ; Side 2 is used to parallel load the shift register
+    pull                        ; Load next 24-bit word from TX FIFO into the PIO OSR
+                                ; NOTE: Default PULL behavior is to load 32 bits, but we only need 24.
+                                ;    This is configured with sm_config_set_out_shift() in the c-sdk.
+.wrap
+
+bitloop0:                       ; Sends a high pulse for the start of the WS2812 bit
+    set pins, 1         size 0
+    jmp x--, bitloop0   side 1  ; Loop 7 more times to fully populate the SR.
+    set x, 7            side 2  ; Reset for the data bits
+
+bitloop1:                       ; Output the next bit of the WS2812 bitplane sent to PIO.
+    out pins, 1         side 0  ; Move the next bit of the OSR to the output pin
+    jmp x--, bitloop1   side 1  ; Loop; Output the next bit of the WS2812 bitplane sent to PIO. 7 more times to fully populate the SR.
+    set x, 7            side 2  ; Reset for the low bits
+
+bitloop2:
+    set pins, 0         size 0
+    jmp x--, bitloop2   side 1  ; Loop 7 more times to fully populate the SR.
+.wrap                           ; Fallthrough to the next word in the TX FIFO.
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void ws2812_shift_program_init(PIO pio, uint sm, uint offset, uint pin, float freq) {
+    // GPIO 0: Serial Output
+    // GPIO 1: Shift Register Clock
+    // GPIO 2: Shift Register Parallel Load Pin
+    for (int i = 0; i < 3; i++) {
+        pio_gpio_init(pio, i);
+    }
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 3, true);
+
+    pio_sm_config c = ws2812_shift_program_get_default_config(offset);
+    // Configure auto-load 24 bits (GRB) from TX FIFO into OSR.
+    // Most suspect op when porting to PIO ASM.
+    // Adafruit shifts OSR from right to left. Parallel WS2812 output shifts from left to right.
+    sm_config_set_out_shift(&c, false, true, 24);
+    sm_config_set_set_pins(&c, pin, 3);
+    sm_config_set_out_pins(&c, pin, 1);
+    // sm_config_set_sideset_pins(&c, pin + 1, 2);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    int cycles_per_bit = ws2812_shift_T1 + ws2812_shift_T2 + ws2812_shift_T3;
+    float div = clock_get_hz(clk_sys) / (freq * cycles_per_bit);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
