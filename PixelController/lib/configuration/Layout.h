@@ -47,7 +47,7 @@ public:
     }
 
     static GridLayout *from_json(const nlohmann::json &j) {
-        auto id = j.value("id", -1);
+        auto id = j.value("id", 1);
         auto width = std::max(1, j["width"].get<int>());
         auto height = std::max(1, j["height"].get<int>());
 

@@ -35,9 +35,13 @@ export const EffectSchema = Yup.object().shape({
         .required('Required')
 });
 
+export const labelColumns = 7;
+export const fieldColumns = 12 - labelColumns;
+
 export const EffectForm: React.FC<EffectFormProps> = (
     {effect, onSubmit, onDelete, children}
 ) => {
+
 
 
     return (
@@ -64,10 +68,10 @@ export const EffectForm: React.FC<EffectFormProps> = (
                             <Grid item xs={12}>
                                 <h3>Effect - {values.name}</h3>
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={labelColumns}>
                                 <label htmlFor="name">Name</label>
                             </Grid>
-                            <Grid item xs={8}>
+                            <Grid item xs={fieldColumns}>
                                 {errors.name && touched.name ? (
                                     <div>{errors.name}</div>
                                 ) : null}
@@ -78,19 +82,19 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                     type="text"
                                 />
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={labelColumns}>
                                 <label htmlFor="start">Start</label>
                             </Grid>
-                            <Grid item xs={8}>
+                            <Grid item xs={fieldColumns}>
                                 {errors.startTimeMs && touched.startTimeMs ? (
                                     <div>{errors.startTimeMs}</div>
                                 ) : null}
                                 <Field id="startTimeMs" name="startTimeMs" type="number"/>
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={labelColumns}>
                                 <label htmlFor="duration">Duration</label>
                             </Grid>
-                            <Grid item xs={8}>
+                            <Grid item xs={fieldColumns}>
                                 {errors.durationMs && touched.durationMs ? (
                                     <div>{errors.durationMs}</div>
                                 ) : null}

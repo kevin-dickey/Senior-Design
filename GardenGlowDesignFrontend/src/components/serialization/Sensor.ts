@@ -1,8 +1,8 @@
 import {Pair} from "./Pair";
 
 export enum SensorType {
-    BINARY = 'BINARY',
-    ANALOG = 'ANALOG'
+    BINARY = 1,
+    ANALOG = 2,
 }
 
 export class Sensor {
@@ -16,5 +16,14 @@ export class Sensor {
         this.type = type;
         this.location = location;
         this.pin = pin;
+    }
+
+    static fromJSON(data: any): Sensor {
+        return new Sensor(
+            data.type,
+            Pair.fromJSON(data.location),
+            data.id,
+            data.pin
+        );
     }
 }
