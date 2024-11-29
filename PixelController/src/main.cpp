@@ -271,15 +271,9 @@ void setup()
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
 
-    /* Testing Stuff */
-    // these don't work
-    // loadByteBitmap(leds, pumptest, 4, 4, 8, 8);
-    // loadByteBitmap(leds, ghost8bit, 4, 4, 8, 8);
-
-    // if this doesn't work, something is seriously messed up
-    // loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-
-    // loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
+    // MARK: TODO
+    // Load in the images from SD card
+    
 }
 
 /**
