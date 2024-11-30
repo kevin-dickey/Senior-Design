@@ -122,7 +122,7 @@ int main()
 #else
 
 /**
- * MARK: Functions
+ * MARK: Prototypes
  */
 void fadeToBlack(int duration);
 void fadeToBrightness(int duration, int targetBrightness);
@@ -221,7 +221,7 @@ void setup()
     Show show = loadShow(filePath);
     runner = new ControllerRunner(show, millis(), epoch);
 
-// MARK: TODO
+// MARK: HELP
 //       get parameters from the show for the LEDs & set em (global parameters for whole field of LEDs, even if only displaying a circle, need params for WHOLE thing)
 //       ALSO, should prob dynamically create however many prevLeds arrays and ripplecounters based on however many ripple effects are being used in show
 //       OR, we just hard-code a bunch of em (uses more memory but maybe not that big an issue)
@@ -242,7 +242,7 @@ void setup()
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
 
-// MARK: TODO
+// MARK: HELP
 //       Load in the images from SD card (or just store them locally on the esp...)
 //       This includes stuff like the candy cane, christmas tree, etc. i think...?
     
@@ -354,6 +354,7 @@ void loop()
 }
 
 
+// MARK: Functions
 
 /**
  * Builds frame onto the leds array (CRGB leds[]) based on the provided showframe.
@@ -363,8 +364,9 @@ void loop()
  *         -- whatever EffectTypes the frontend has.
  */
 void generateFrame(ControllerRunner::ShowFrame showframe) {
-    // MARK: TODO
-    // reset rippleCounters and prevLeds of ripple effects not currently in use
+    
+// MARK: TODO
+//       reset rippleCounters and prevLeds of ripple effects not currently in use so they properly work together
     
 
     // if last thing in case statement a loadHexBitmap or something similar 
@@ -375,46 +377,48 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
         case ripple: 
             // generate a ripple frame of desired color and size
-                    // MARK: NOTE
-                            // i entered dummy vals for rgb, prevleds, ripplecounter, and width for now.
+                    // MARK: HELP
+                    //       i entered dummy vals for rgb, prevleds, ripplecounter, and width for now. where should i get vals for these?
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             FastLED.show();
             break;
         case pumpkin_rainbow:       
             // draw rainbow with pumpkin on top
             drawRainbow(current_millis);
-            // draw pumpkin w/ either this sort of thing:
-                // bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
-                // fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
-                // rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
-                // free(serpentineArray);
-            // or this:
-                // loadHexBitmap(...)
+
+            // MARK: HELP
+            //       draw pumpkin w/ either this sort of thing:
+            //             bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
+            //             fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+            //             rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+            //             free(serpentineArray);
+            //       or this:
+            //             loadHexBitmap(...)
 
             break;
         case pumpkin_ripple:
             // draw ripple with pumpkin on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
 
             break;
         case ghost_rainbow:
             // draw rainbow with ghost on top  
             drawRainbow(current_millis);
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
 
             break;
         case ghost_ripple:
             // draw ripple with ghost on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
 
             break;
         case pumpkin_ghost_rainbow: 
             // draw rainbow, then pumpkin and ghost (maybe chasing, need to see frontend)
             drawRainbow(current_millis);
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
+            // see line 389 HELP
 
             // add shifting here if desired by effect
 
@@ -422,26 +426,34 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
         case pumpkin_ghost_ripple:     
             // draw ripple, then pumpkin and ghost (maybe chasing, need to see frontend)
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
+            // see line 389 HELP
 
             // add shifting here if desired by effect
 
             break;
         case snowflake:
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
 
             break;
         case snowman:
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
-            
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
+
             break;
         case christmas_tree:
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
 
             break;
         case candy_cane:
-            // see "pumpkin_rainbow" -- unsure where to get jpg/bmp from (sd or local char array)
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
 
             break;
         default:
@@ -736,7 +748,8 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
 }
 
 /**
- * Resets every index in prev_sensor_triggered to false except for the specified index, which is set to true.
+ * Resets every index in prev_sensor_triggered to false except for the specified index.
+ * 
  * Was used in the softlaunch (before loop iteration -- meaning the version w/ interactivity w/ buttons), effects were
  * purely driven by sensor inputs. This was used to just clear the array which said which sensor was last triggered (which
  * was checked to see what effect to run), and was called whenever a new sensor trigger was detected.
