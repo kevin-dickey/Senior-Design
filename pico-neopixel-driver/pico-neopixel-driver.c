@@ -346,7 +346,7 @@ int main()
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_shift_program);
 
-    ws2812_shift_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strips), 800000);
+    ws2812_shift_program_init(pio, sm, offset, WS2812_PIN_BASE, 800000);
 
     sem_init(&reset_delay_complete_sem, 1, 1); // initially posted so we don't block first time
     dma_init(pio, sm);

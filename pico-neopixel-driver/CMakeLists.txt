@@ -42,7 +42,7 @@ pico_set_program_version(pico-neopixel-driver "0.1")
 
 # Generate PIO header
 pico_generate_pio_header(pico-neopixel-driver ${CMAKE_CURRENT_LIST_DIR}/blink.pio)
-pico_generate_pio_header(pico-neopixel-driver ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(pico-neopixel-driver ${CMAKE_CURRENT_LIST_DIR}/ws2812_shift.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(pico-neopixel-driver 0)

@@ -9,7 +9,7 @@
 .pio_version 0
 
 .program ws2812_shift
-.side_set 2
+.side_set 2 opt
 
 .define public T1 7
 .define public T2 10
@@ -21,10 +21,9 @@
     pull                        ; Load next 24-bit word from TX FIFO into the PIO OSR
                                 ; NOTE: Default PULL behavior is to load 32 bits, but we only need 24.
                                 ;    This is configured with sm_config_set_out_shift() in the c-sdk.
-.wrap
 
 bitloop0:                       ; Sends a high pulse for the start of the WS2812 bit
-    set pins, 1         size 0
+    set pins, 1         side 0
     jmp x--, bitloop0   side 1  ; Loop 7 more times to fully populate the SR.
     set x, 7            side 2  ; Reset for the data bits
 
@@ -34,7 +33,7 @@ bitloop1:                       ; Output the next bit of the WS2812 bitplane sen
     set x, 7            side 2  ; Reset for the low bits
 
 bitloop2:
-    set pins, 0         size 0
+    set pins, 0         side 0
     jmp x--, bitloop2   side 1  ; Loop 7 more times to fully populate the SR.
 .wrap                           ; Fallthrough to the next word in the TX FIFO.
 
@@ -51,16 +50,17 @@ static inline void ws2812_shift_program_init(PIO pio, uint sm, uint offset, uint
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 3, true);
 
     pio_sm_config c = ws2812_shift_program_get_default_config(offset);
-    // Configure auto-load 24 bits (GRB) from TX FIFO into OSR.
-    // Most suspect op when porting to PIO ASM.
+    // Configure auto-load 32 bits (GRB) from TX FIFO into OSR.
+    // Most suspect ops when porting to PIO ASM.
     // Adafruit shifts OSR from right to left. Parallel WS2812 output shifts from left to right.
-    sm_config_set_out_shift(&c, false, true, 24);
-    sm_config_set_set_pins(&c, pin, 3);
-    sm_config_set_out_pins(&c, pin, 1);
-    sm_config_set_sideset_pins(&c, pin + 1, 2);
-    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_out_shift(&c, false, true, 32);                   // PIO OSR is 32 bits wide. We pad 24 bits of RGB with 8 bits of 0.
+    sm_config_set_set_pins(&c, pin, 3);                             // Uses 3 total pins: 1 for data, 1 for clock, 1 for parallel load.
+    sm_config_set_out_pins(&c, pin, 1);                             // Output data on the first pin.
+    sm_config_set_sideset_pins(&c, pin + 1, 2);                     // Clock and parallel load pins are side-set.
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);                  // Join TX FIFO to OSR for `pull` ops.
 
-    int cycles_per_bit = ws2812_shift_T1 + ws2812_shift_T2 + ws2812_shift_T3;
+    // 52 is taken from Adafruit's PIO ASM. Verified with Claude but still needs scope verification.
+    int cycles_per_bit = 52;                                        // # ops for each loop to execute. 
     float div = clock_get_hz(clk_sys) / (freq * cycles_per_bit);
     sm_config_set_clkdiv(&c, div);
 
