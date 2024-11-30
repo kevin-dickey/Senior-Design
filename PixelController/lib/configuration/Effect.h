@@ -206,6 +206,4 @@ public:
     }
 };
 
-void drawRainbow(unsigned long current_millis);
-
 #endif // PIXELCONTROLLER_EFFECT_H
