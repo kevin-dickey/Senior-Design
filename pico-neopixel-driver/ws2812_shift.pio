@@ -44,7 +44,7 @@ static inline void ws2812_shift_program_init(PIO pio, uint sm, uint offset, uint
     // GPIO 0: Serial Output
     // GPIO 1: Shift Register Clock
     // GPIO 2: Shift Register Parallel Load Pin
-    for (int i = 0; i < 3; i++) {
+    for (int i = pin; i < pin + 3; i++) {
         pio_gpio_init(pio, i);
     }
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 3, true);
@@ -54,9 +54,9 @@ static inline void ws2812_shift_program_init(PIO pio, uint sm, uint offset, uint
     // Most suspect ops when porting to PIO ASM.
     // Adafruit shifts OSR from right to left. Parallel WS2812 output shifts from left to right.
     sm_config_set_out_shift(&c, false, true, 32);                   // PIO OSR is 32 bits wide. We pad 24 bits of RGB with 8 bits of 0.
-    sm_config_set_set_pins(&c, pin, 3);                             // Uses 3 total pins: 1 for data, 1 for clock, 1 for parallel load.
     sm_config_set_out_pins(&c, pin, 1);                             // Output data on the first pin.
-    sm_config_set_sideset_pins(&c, pin + 1, 2);                     // Clock and parallel load pins are side-set.
+    sm_config_set_set_pins(&c, pin, 1);                             // Uses 3 total pins: 1 for data, 1 for clock, 1 for parallel load.
+    sm_config_set_sideset_pin_base(&c, pin + 1);                        // Clock and parallel load pins are side-set.
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);                  // Join TX FIFO to OSR for `pull` ops.
 
     // 52 is taken from Adafruit's PIO ASM. Verified with Claude but still needs scope verification.

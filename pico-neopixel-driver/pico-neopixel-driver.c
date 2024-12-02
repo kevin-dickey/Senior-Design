@@ -17,7 +17,7 @@
 
 #define FRAC_BITS 4
 #define NUM_PIXELS 256
-#define WS2812_PIN_BASE 2
+#define WS2812_PIN_BASE 0
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_strip_out;
@@ -355,8 +355,8 @@ int main()
     {
         int pat = 0; // rand() % count_of(pattern_table);
         int dir = (rand() >> 30) & 1 ? 1 : -1;
-        if (rand() & 1)
-            dir = 0;
+        // if (rand() & 1)
+            // dir = 0;
         puts(pattern_table[pat].name);
         puts(dir == 1 ? "(forward)" : dir ? "(backward)"
                                           : "(still)");
