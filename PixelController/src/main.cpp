@@ -1,8 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include "../include/json.hpp"
-#include "../lib/configuration/Configuration.h"
-#include "../lib/configuration/ControllerRunner.h"
+#include "json.hpp"
 using json = nlohmann::json;
 
 #include <FileManager.h>
@@ -27,12 +25,16 @@ using json = nlohmann::json;
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
-#include "../lib/configuration/Sensor.h"
-#include "../lib/configuration/ControllerRunner.h"
-#include "../lib/patternGeneration/rippleEffect.h"
-#include "../lib/patternGeneration/utils.h"
+#include "Configuration.h"
+#include "ControllerRunner.h"
+#include "Sensor.h"
+#include "ControllerRunner.h"
+#include <ImageProcessing.h>
+#include "rippleEffect.h"
+#include "utils.h"
 
 #endif
+
 
 enum ShiftDirection {
     LEFT,
@@ -226,7 +228,7 @@ void resetTriggerMarkers(int exception);
 void generateFrame(ControllerRunner::ShowFrame showframe);
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
-// MARK: Variables
+    // MARK: Variables
     // led stuff
     CRGB* leds;
     int NUM_LEDS = 256;
@@ -265,9 +267,9 @@ void shiftLeds(CRGB leds[], ShiftDirection direction);
     const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
     const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
 
-// Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
-//                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
+    // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
+    //                                                               of different possible layouts of the LEDs (serpentine n such))
+    CRGB* leds;
 
 unsigned char bufferPattern[3][3][3] = {
     {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
@@ -444,85 +446,8 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
-    // ToDo
-    //  leaving this code here for reference. Needs to be removed
-    //  // check the states of sensors, set the markers accordingly for which codeblock to execute
-    //  if (effects includes rainbow + still pumpkin) {         // sensor0 -- rainbow + still pumpkin
-    //      runRainbowAndSkull(frame)
-    //  } else if (effect = skull effect) {  // sensor1 -- skull
-    //      runSkull(frame)
-    //      for effect in effects:
-    //          runEffect("skull", effect.frame)
-    //  } else if (effect = ghost effect) {  // sensor2 -- ghost zig zagging
-    //      fill_solid(leds, NUM_LEDS, CRGB::Black);
-    //      FastLED.setBrightness(MAX_BRIGHTNESS);
-    //      FastLED.show();
-    //      loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);  // startx = 4, starty = 4, bitmapheight = 8, bitmapwidth = 8
-    //      Serial.println("Sensor 2 triggered");
-
-    //     resetTriggerMarkers(2);
-    //     count = 0;
-    //     goUp = true;
-    // } else if (effect = ghost and pumpkin effect) {  // sensor3 -- pumpkin & ghost chasing each other
-    //     fill_solid(leds, NUM_LEDS, CRGB::Black);
-    //     FastLED.setBrightness(MAX_BRIGHTNESS);
-    //     FastLED.show();
-    //     loadHexBitmap(leds, ghost8bit, 8, 4, 8, 8);  // startx = 8, starty = 4, bitmapheight = 8, bitmapwidth = 8
-    //     loadHexBitmap(leds, pumpkin8bit, 0, 4, 8, 8);
-    //     Serial.println("Sensor 3 triggered");
-
-    //     resetTriggerMarkers(3);
-    //     count = 0;
-    //     goUp = true;
-    // }
-
-    // /************************************************************* */
-
-    // // check to see what was the last effect triggered, keep running it
-    // if (prev_sensor_triggered[0]) { // rainbow & pumpkin
-    //     uint32_t ms = millis();
-    //     int32_t yHueDelta32 = ((int32_t)cos16(ms * (27 / 1)) * (350 / kMatrixWidth));
-    //     int32_t xHueDelta32 = ((int32_t)cos16(ms * (39 / 1)) * (310 / kMatrixHeight));
-    //     DrawOneFrameReducedBright(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-
-    //     // draw pumpkin on top
-    //     loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-    //     // FastLED.show(); // commented out b/c loadHexBitmap already calls it, but here for clarity
-
-    // } else if (prev_sensor_triggered[1]) { // skull/crossbones
-
-    // /***** these are blocking! will have to figure out something else to go here *****/
-    //     fadeToBrightness(2, MAX_BRIGHTNESS / 4);
-    //     fadeToBrightness(2, MAX_BRIGHTNESS);
-
-    // } else if (prev_sensor_triggered[2]) { // ghost zigzagging
-    //     // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-    //     shiftLeds(leds, RIGHT);
-    //     if (count % 2 == 0) {
-    //         shiftLeds(leds, goUp ? UP : DOWN);
-    //     }
-
-    //     if (count % 4 == 0) {
-    //         goUp = !goUp;
-    //     }
-    //     count++;
-
-    // } else if (prev_sensor_triggered[3]) { // pumpkin & ghost chasing each other
-    //     // shift right every frame, vertically every two frames, changes vertical direction every 4 frames
-    //     shiftLeds(leds, RIGHT);
-    //     if (count % 2 == 0) {
-    //         shiftLeds(leds, goUp ? UP : DOWN);
-    //     }
-
-    //     if (count % 4 == 0) {
-    //         goUp = !goUp;
-    //     }
-    //     count++;
-    // }
-
-    // Kevins scoop:
-    //  generateFrame(showFrame);
-
+    // generateFrame(showFrame);
+    
     delay(33);  // delay(33): approx 30fps (30.3)
 }
 

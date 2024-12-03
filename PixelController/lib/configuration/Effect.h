@@ -104,30 +104,40 @@ public:
                     j["durationMs"].get<double>(),
                     std::move(translation)
             );
+        } catch (const std::exception &e) {
+            std::cerr << "Error parsing effect: " << e.what() << std::endl;
+            try {
+                std::cerr << "JSON: " << j.dump(4) << std::endl;
+            }
+            catch (const std::exception &e) {
+                std::cerr << "Error printing faulty JSON: " << e.what() << std::endl;
+            }
+            throw e;
         }
 
-        // Check if all required fields are present
-        if (!j.contains("id") || !j.contains("type") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
-        {
-            throw std::invalid_argument("Effect JSON missing required fields");
-        }
 
-        // Parse the effect type input value
-        EffectType parsedType;
-        auto effectType = j["type"].get<std::string>();
-        if (effectType == "RainbowEffect") parsedType = E_RAINBOW;
-        else if (effectType == "RippleEffect") parsedType = E_RIPPLE;
-        else throw std::invalid_argument("Could not parse effect type: " + effectType);
+    //     // Check if all required fields are present
+    //     if (!j.contains("id") || !j.contains("type") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
+    //     {
+    //         throw std::invalid_argument("Effect JSON missing required fields");
+    //     }
 
-        return new Effect(
-            j["id"].get<int>(),
-            parsedType,
-            j["name"].get<std::string>(),
-            Pair_t::from_json(j["origin"]),
-            Pair_t::from_json(j["size"]),
-            j["startTimeMs"].get<double>(),
-            j["durationMs"].get<double>(),
-            std::move(translation));
+    //     // Parse the effect type input value
+    //     EffectType parsedType;
+    //     auto effectType = j["type"].get<std::string>();
+    //     if (effectType == "RainbowEffect") parsedType = rainbow;
+    //     else if (effectType == "RippleEffect") parsedType = ripple;
+    //     else throw std::invalid_argument("Could not parse effect type: " + effectType);
+
+    //     return new Effect(
+    //         j["id"].get<int>(),
+    //         parsedType,
+    //         j["name"].get<std::string>(),
+    //         Pair_t::from_json(j["origin"]),
+    //         Pair_t::from_json(j["size"]),
+    //         j["startTimeMs"].get<double>(),
+    //         j["durationMs"].get<double>(),
+    //         std::move(translation));
     };
 };
 

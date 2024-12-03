@@ -16,29 +16,30 @@ typedef struct Show
 {
     std::string name;
     double duration;
-    std::vector<std::unique_ptr<Layout>> layouts;
-    std::vector<std::unique_ptr<Effect>> effects;
-    std::vector<std::unique_ptr<Sensor>> sensors;
+    std::vector<Layout*> layouts;
+    std::vector<Effect*> effects;
+    std::vector<Sensor*> sensors;
+
 
     static Show from_json(const nlohmann::json &j)
     {
         Show show;
         try
         {
-            show.name = j.at("name").get<std::string>();
-            show.duration = j.at("duration").get<double>();
+            show.name = j["name"];
+            show.duration = j["duration"];
 
             std::cout << "Show Name: " << show.name << std::endl;
             std::cout << "Show Duration: " << show.duration << std::endl;
 
-            for (const auto &effect : j.at("effects"))
+            for (const auto &effect : j["effects"])
             {
                 try
                 {
                     std::cout << "Parsing Effect: " << effect << std::endl;
                     auto effectObj = Effect::from_json(effect);
                     std::cout << "Effect Name: " << effectObj->name << std::endl;
-                    show.effects.push_back(std::unique_ptr<Effect>(effectObj));
+                    show.effects.push_back(effectObj);
                 }
                 catch (const std::exception &e)
                 {
@@ -49,7 +50,7 @@ typedef struct Show
 
             std::cout << "Number of effects: " << show.effects.size() << std::endl;
 
-            for (const auto &layout : j.at("layouts"))
+            for (const auto &layout : j["layouts"])
             {
                 try
                 {
@@ -61,14 +62,14 @@ typedef struct Show
                     case LayoutType::GRID:
                     {
                         std::cout << "Grid Layout!" << std::endl;
-                        show.layouts.push_back(std::unique_ptr<GridLayout>(GridLayout::from_json(layout)));
+                        show.layouts.push_back(GridLayout::from_json(layout));
                         break;
                     }
                     default:
                         {
                         std::cout << "Custom Layout!" << std::endl;
                         // std::cout << "Layout ID: " << layout.at("id").get<int>() << std::endl;
-                        show.layouts.push_back(std::unique_ptr<Layout>(Layout::from_json(layout)));
+                        show.layouts.push_back(Layout::from_json(layout));
                         break;
                         }
                     }
@@ -80,12 +81,12 @@ typedef struct Show
                 }
             }
 
-            for (const auto &sensor : j.at("sensors"))
+            for (const auto &sensor : j["sensors"])
             {
                 try
                 {
                     std::cout << "Sensor ID: " << sensor.at("id").get<int>() << std::endl;
-                    show.sensors.push_back(std::unique_ptr<Sensor>(Sensor::from_json(sensor)));
+                    show.sensors.push_back(Sensor::from_json(sensor));
                 }
                 catch (const std::exception &e)
                 {
@@ -154,5 +155,18 @@ Show_t loadShow(File sdFile)
         throw;
     }
 }
+
+inline Show_t loadShow(const std::string& filename) {
+    std::ifstream f3(filename);
+    nlohmann::json data3 = nlohmann::json::parse(f3);
+    Show show = Show::from_json(data3);
+    f3.close();
+
+    std::cout << "Show Name: " << show.name << std::endl;
+    std::cout << "Show Duration: " << show.duration << std::endl;
+
+    return show;
+}
+
 
 #endif // CONFIGURATION_H
