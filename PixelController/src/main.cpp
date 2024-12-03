@@ -10,10 +10,10 @@
 using json = nlohmann::json;
 
 #define LED_PIN 13
-#define NUM_LEDS_X 16
-#define NUM_LEDS_Y 16
-#define NUM_LEDS 256
-#define MAX_BRIGHTNESS 64  // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+// #define NUM_LEDS_X 16
+// #define NUM_LEDS_Y 16
+// #define NUM_LEDS 256
+#define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 
 #if USE_EMULATOR
 
@@ -41,19 +41,21 @@ enum ShiftDirection {
     DOWN
 };
 
-SensorManager *sensorManager;
-ControllerRunner *runner;
-unsigned long showStart = 0;
-std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000>>> epoch;
+namespace std {
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args &&...args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+}  // namespace std
 
-unsigned long getMillis()
-{
+
+
+unsigned long getMillis() {
 #if USE_EMULATOR
     auto now = std::chrono::high_resolution_clock ::now();
     auto mseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - epoch).count();
     return mseconds;
 #else
-
     return millis();
 #endif
 }
@@ -119,92 +121,67 @@ int main()
 #else
 
 /**
- * MARK: Setup
+ * MARK: Prototypes
  */
-
 void fadeToBlack(int duration);
 void fadeToBrightness(int duration, int targetBrightness);
-
-void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);  // draws rainbow frame
-void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ half brightness
-
+void drawRainbow(unsigned long current_millis);
+// void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);           // used in drawRainbow
+void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ slightly lower brightness for readability of other things on leds (e.g. pumpkin more easily visible)
 void parseBitmapData(const char *hexData);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 CRGB hexToCRGB(const char *hex);
-
+void resetTriggerMarkers(int exception);
+void generateFrame(ControllerRunner::ShowFrame showframe);
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
-// Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
-//                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
-int prevLeds1[NUM_LEDS] = {0};
-int prevLeds2[NUM_LEDS] = {0};
-int prevLeds3[NUM_LEDS] = {0};
-int prevLeds4[NUM_LEDS] = {0};
+// MARK: Variables
+    // led stuff
+    CRGB* leds;
+    int NUM_LEDS = 256;
+    int NUM_LEDS_X = 16;
+    int NUM_LEDS_Y = 16;
+    int LEDS_SIZE_ARR[2] = {NUM_LEDS_X, NUM_LEDS_Y};
+    uint8_t kMatrixWidth;
+    uint8_t kMatrixHeight;
 
-const char *pumpkin =
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff "
-    "ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff "
-    "ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff "
-    "ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff "
-    "ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff "
-    "ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff "
-    "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
+    // ripple effect stuff
+    int* prevLeds1;
+    int* prevLeds2;
+    int* prevLeds3;
+    int* prevLeds4;
+    int rippleCounter;
 
-const char *pumpkin8bit =
-    "000000 000000 000000 000000 267f00 267f00 000000 000000 "
-    "000000 000000 000000 267f00 267f00 000000 000000 000000 "
-    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 "
-    "ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 "
-    "ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 "
-    "ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 "
-    "ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 "
-    "000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+    // sensor & show stuff
+    SensorManager *sensorManager;
+    ControllerRunner *runner;
+    unsigned long showStart = 0;
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000> > > epoch;
+    Sensor *sensor0, *sensor1, *sensor2, *sensor3;
+    std::vector<Sensor *> a_sensors;
+    std::vector<bool> prev_sensor_triggered;
 
-const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
+    // misc. stuff (effect variables, sensor stuff, running-time)
+    int hue;
+    int count;
+    bool goUp;
+    char set_sensors;
+    unsigned long current_millis;
 
-const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
+    // can be loaded using loadHexBitmap
+    const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
+    const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+    const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
+    const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
 
-// const unsigned char ghost8bit[] = {
-//     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x7f, 0x7f, 0x3f, 0x3f, 0x3f, 0x1f, 0x1f, 0x0f, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x0f, 0x1f, 0x3f, 0x3f, 0x3f, 0x3f, 0x7f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xc0, 0xe0, 0xe0, 0xe0, 0xf0, 0xf0, 0xe0, 0xe0, 0xc0, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf0, 0xf0, 0xe0, 0xe0, 0xe0, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x3f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x3f, 0x7f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x7f, 0x3f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x80, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x07, 0x07, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x07, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xf0, 0xf8, 0xf8, 0xf8, 0xfc, 0xfc, 0xf8, 0xf8, 0xf0, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xe0, 0xf8, 0xf8, 0xf8, 0xfc, 0xfc, 0xf8, 0xf8, 0xf8, 0xe0, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-// const unsigned char pumptest[] = {
-//     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x07, 0x07, 0x07, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x07, 0x07, 0x07, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfe, 0xfc, 0xf8, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xf8, 0xfc, 0xfe, 0xfe, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-Sensor *
-    sensor0,
-    *sensor1, *sensor2, *sensor3;
-int hue;
-int count;
-bool goUp;
-char set_sensors;
-
-std::vector<Sensor *> a_sensors;
-std::vector<bool> prev_sensor_triggered;
-
-namespace std
+// MARK: Setup
+void setup()
 {
-    template <typename T, typename... Args>
-    std::unique_ptr<T> make_unique(Args &&...args)
-    {
-        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-    }
-}
-
-void setup() {
-    Serial.begin(115200);           // for setting up stuff to print to serial monitor
-    delay(3000);                    // delay for 3 seconds to give time to open the serial monitor
-    Serial.println("Starting...");  // print to the serial monitor that the program is starting
+    Serial.begin(115200);          // for setting up stuff to print to serial monitor
+    delay(3000);                   // delay for 3 seconds to give time to open the serial monitor
+    Serial.println("Starting..."); // print to the serial monitor that the program is starting
 
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);  // setup the LEDs & LED pin for the esp32
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                         // set the max brightness for the LEDs
@@ -221,7 +198,7 @@ void setup() {
             .end_pos = sensor_pos,
             .durationMs = 1000.0});
 
-    Effect *sensorEffect = new Effect(1, E_RAINBOW, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
+    Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
 
     // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
     sensor0 = new Sensor(0, 34, 1000, S_BINARY, sensor_pos, sensorEffect); // ne
@@ -243,43 +220,41 @@ void setup() {
     Show show = loadShow(filePath);
     runner = new ControllerRunner(show, millis(), epoch);
 
+// MARK: HELP
+//       get parameters from the show for the LEDs & set em (global parameters for whole field of LEDs, even if only displaying a circle, need params for WHOLE thing)
+//       ALSO, should prob dynamically create however many prevLeds arrays and ripplecounters based on however many ripple effects are being used in show
+//       OR, we just hard-code a bunch of em (uses more memory but maybe not that big an issue)
+    NUM_LEDS = 2400;  // placeholder
+    NUM_LEDS_X = 100; // placeholder
+    NUM_LEDS_Y = 0; // placeholder
+    leds = new CRGB[NUM_LEDS];
+    prevLeds1 = new int[NUM_LEDS]; // one of these per ripple effect
+    // prevLeds2 = new int[NUM_LEDS]; // these may not be necessary, depends on how many ripples are intended to be able to show at once (check frontend design)
+    // prevLeds3 = new int[NUM_LEDS];
+    // prevLeds4 = new int[NUM_LEDS];
+    kMatrixHeight = NUM_LEDS_Y; // this is prob ok 
+    kMatrixWidth = NUM_LEDS_X;  // this is prob ok
+
     hue = 30;
     count = 0;
+    rippleCounter = 0;
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
 
-    /* Testing Stuff */
-    // these don't work
-    // loadByteBitmap(leds, pumptest, 4, 4, 8, 8);
-    // loadByteBitmap(leds, ghost8bit, 4, 4, 8, 8);
-
-    // if this doesn't work, something is seriously messed up
-    // loadHexBitmap(leds, pumpkin8bit, 4, 4, 8, 8);
-
-    // loadHexBitmap(leds, ghost8bit, 4, 4, 8, 8);
+// MARK: HELP
+//       Load in the images from SD card (or just store them locally on the esp...)
+//       This includes stuff like the candy cane, christmas tree, etc. i think...?
+    
 }
 
 /**
- * Resets every index in prev_sensor_triggered to false except for the specified index, which is set to true.
- */
-void resetTriggerMarkers(int exception) {
-    for (int i = 0; i < prev_sensor_triggered.size(); i++) {
-        if (i == exception) {
-            prev_sensor_triggered[i] = true;
-        } else {
-            prev_sensor_triggered[i] = false;
-        }
-    }
-}
-
-/**
- * MARK: Looping
+ * MARK: Loop
  */
 void loop()
 {
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
-    auto current_millis = millis();
+    current_millis = millis();
 
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
@@ -372,10 +347,128 @@ void loop()
     // }
 
     // Kevins scoop:
-    //  run(showFrame);
+    //  generateFrame(showFrame);
 
     delay(33);  // delay(33): approx 30fps (30.3)
 }
+
+
+// MARK: Functions
+
+/**
+ * Builds frame onto the leds array (CRGB leds[]) based on the provided showframe.
+ * 
+ * Limited -- only generates frames based on the specified EffectTypes in the backend (Effect.h),
+ *         -- which is based on the frontend EffectTypes, but the backend needs to be manually updated to
+ *         -- whatever EffectTypes the frontend has.
+ */
+void generateFrame(ControllerRunner::ShowFrame showframe) {
+    
+// MARK: TODO
+//       reset rippleCounters and prevLeds of ripple effects not currently in use so they properly work together
+    
+
+    // if last thing in case statement a loadHexBitmap or something similar 
+    // (which already calls FastLED.show()), don't add another call to FastLED.show()
+    switch (showframe.effect->effectType) {  // set-up the leds[] with the frame based on desired effect
+        case rainbow:            
+            drawRainbow(current_millis);
+            break;
+        case ripple: 
+            // generate a ripple frame of desired color and size
+                    // MARK: HELP
+                    //       i entered dummy vals for rgb, prevleds, ripplecounter, and width for now. where should i get vals for these?
+            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            FastLED.show();
+            break;
+        case pumpkin_rainbow:       
+            // draw rainbow with pumpkin on top
+            drawRainbow(current_millis);
+
+            // MARK: HELP
+            //       draw pumpkin w/ either this sort of thing:
+            //             bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
+            //             fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
+            //             rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+            //             free(serpentineArray);
+            //       or this:
+            //             loadHexBitmap(...)
+
+            break;
+        case pumpkin_ripple:
+            // draw ripple with pumpkin on top
+            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            // see line 389 HELP
+
+            break;
+        case ghost_rainbow:
+            // draw rainbow with ghost on top  
+            drawRainbow(current_millis);
+            // see line 389 HELP
+
+            break;
+        case ghost_ripple:
+            // draw ripple with ghost on top
+            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            // see line 389 HELP
+
+            break;
+        case pumpkin_ghost_rainbow: 
+            // draw rainbow, then pumpkin and ghost (maybe chasing, need to see frontend)
+            drawRainbow(current_millis);
+            // see line 389 HELP
+            // see line 389 HELP
+
+            // add shifting here if desired by effect
+
+            break;
+        case pumpkin_ghost_ripple:     
+            // draw ripple, then pumpkin and ghost (maybe chasing, need to see frontend)
+            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            // see line 389 HELP
+            // see line 389 HELP
+
+            // add shifting here if desired by effect
+
+            break;
+        case snowflake:
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
+
+            break;
+        case snowman:
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
+
+            break;
+        case christmas_tree:
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
+
+            break;
+        case candy_cane:
+            // see line 389 HELP
+
+            // rest of effect (shifting...?)
+
+            break;
+        default:
+            Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");
+            return;
+    }
+}
+
+
+// current_millis isn't a LiveData (see android studio), so should be ok to pass (don't need to though, it's relatively global)
+void drawRainbow(unsigned long current_millis) {
+    int32_t yHueDelta32 = ((int32_t)cos16(current_millis * (27 / 1)) * (350 / kMatrixWidth));
+    int32_t xHueDelta32 = ((int32_t)cos16(current_millis * (39 / 1)) * (310 / kMatrixHeight));
+    DrawOneFrameReducedBright(current_millis / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+}
+
 
 // Function to load an 8x8 bitmap from a hex string
 // startX and startY specify the position of the top-right of the bitmap to load in
@@ -401,6 +494,7 @@ void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t start
     }
     FastLED.show();
 }
+
 
 /**
  * DOESN'T WORK. DUNNO WHY!
@@ -430,7 +524,9 @@ void loadByteBitmap(CRGB *leds, const unsigned char *bitmap, uint8_t startX, uin
     FastLED.show();  // Display the updated LED matrix
 }
 
-void shiftLeds(CRGB leds[], ShiftDirection direction) {
+
+void shiftLeds(CRGB leds[], ShiftDirection direction)
+{
     CRGB temp[NUM_LEDS_X * NUM_LEDS_Y];
 
     // Copy current state to temp array
@@ -480,6 +576,7 @@ void shiftLeds(CRGB leds[], ShiftDirection direction) {
     FastLED.show();  // Update the LED display
 }
 
+
 /**
  * duration is given in seconds.
  *
@@ -505,6 +602,7 @@ void fadeToBlack(int duration) {
     FastLED.setBrightness(0);
     FastLED.show();
 }
+
 
 /**
  * Slowly and "smoothly" transitions the brightness of all LEDs to the targetBrightness over the given duration.
@@ -543,6 +641,7 @@ void fadeToBrightness(int duration, int targetBrightness) {
     FastLED.show();
 }
 
+
 // Function to convert a 6-character hex string to CRGB
 CRGB hexToCRGB(const char *hex) {
     uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
@@ -550,6 +649,7 @@ CRGB hexToCRGB(const char *hex) {
     uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
     return CRGB(r, g, b);
 }
+
 
 // Function to parse the bitmap data from a hex string
 void parseBitmapData(const char *hexData) {
@@ -572,6 +672,7 @@ void parseBitmapData(const char *hexData) {
     }
 }
 
+
 /**
  * Draws a single frame of the rainbow effect
  */
@@ -587,8 +688,9 @@ void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
     }
 }
 
+
 /**
- * Draws a single frame of the rainbow effect
+ * Draws a single frame of the rainbow effect @ reduced brightness
  */
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
     uint8_t lineStartHue = startHue8;
@@ -598,6 +700,27 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
         for (uint8_t x = 0; x < kMatrixWidth; x++) {
             pixelHue += xHueDelta8;
             leds[XY(x, y)] = CHSV(pixelHue * 5 / 6, 255 * 5 / 6, 255 * 5 / 6);
+        }
+    }
+}
+
+/**
+ * Resets every index in prev_sensor_triggered to false except for the specified index.
+ * 
+ * Was used in the softlaunch (before loop iteration -- meaning the version w/ interactivity w/ buttons), effects were
+ * purely driven by sensor inputs. This was used to just clear the array which said which sensor was last triggered (which
+ * was checked to see what effect to run), and was called whenever a new sensor trigger was detected.
+ *
+ * TLDR; kinda deprecated, but might be used later if necessary -- need testing w/ sensors on real field (just reduces code dup.)
+ * 
+ *  -- Note: You can still see how it was used in the commented out code in loop rn (11/29/2024 @ 6pm)
+ */
+void resetTriggerMarkers(int exception) {
+    for (int i = 0; i < prev_sensor_triggered.size(); i++) {
+        if (i == exception) {
+            prev_sensor_triggered[i] = true;
+        } else {
+            prev_sensor_triggered[i] = false;
         }
     }
 }

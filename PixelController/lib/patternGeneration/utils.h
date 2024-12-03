@@ -11,8 +11,8 @@ uint16_t XYsafe(uint8_t x, uint8_t y);
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
-const uint8_t kMatrixWidth = 16;
-const uint8_t kMatrixHeight = 16;
+extern uint8_t kMatrixWidth; 
+extern uint8_t kMatrixHeight;
 // Param for different pixel layouts
 const bool kMatrixSerpentineLayout = true;
 const bool kMatrixVertical = false;
