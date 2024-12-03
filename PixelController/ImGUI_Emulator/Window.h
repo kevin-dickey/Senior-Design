@@ -16,11 +16,9 @@ extern const char *glsl_version;
 
 class Window {
 public:
-    void glfw_error_callback(int error, const char *description);
-    GLFWwindow* createWindow();
-    void clearWindow(GLFWwindow *window);
-private:
-    ImVec4 clear_color;
+    static void glfw_error_callback(int error, const char *description);
+    static GLFWwindow* createWindow();
+    static void clearWindow(GLFWwindow *window, ImVec4 *clear_color);
 };
 
 #endif //PIXELCONTROLLER_WINDOW_H

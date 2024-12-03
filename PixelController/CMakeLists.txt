@@ -9,10 +9,15 @@ add_compile_definitions(USE_EMULATOR)
 add_compile_definitions("SOURCE_ROOT=\"${CMAKE_SOURCE_DIR}\"")
 
 # Add an option to enable or disable the ImGUI emulator.
-option(USE_IMGUI "Include ImGUI Packages in the build" OFF)
+option(USE_IMGUI "Include ImGUI Packages in the build" ON)
+
+# Add the include directory to the project.
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/lib)
 
 # Included from: https://github.com/ocornut/imgui/wiki/Getting-Started
 if (USE_IMGUI)
+    message(STATUS "Building with ImGUI")
     add_compile_definitions(USE_IMGUI)
     find_package(glad CONFIG REQUIRED)
     find_package(glfw3 CONFIG REQUIRED)
@@ -27,6 +32,13 @@ add_library(ConfigurationLib
         lib/configuration/Configuration.cpp
         lib/configuration/ControllerRunner.h
         lib/configuration/ControllerRunner.cpp
+        lib/configuration/FileManager.h
+        lib/configuration/FileManager.cpp
+)
+
+add_library(ImageProcessingLib
+        lib/imageProcessing/ImageProcessing.h
+        lib/imageProcessing/ImageProcessing.cpp
 )
 
 # TODO: Make this into a library and link library to executable.
@@ -43,9 +55,12 @@ endif ()
 target_link_libraries(
         PixelController PRIVATE
         ConfigurationLib
+        ImageProcessingLib
 )
 
 if (USE_IMGUI)
+    message(STATUS "Linking ImGUI Libraries")
+    include_directories(${ImGUI_Emulator_SOURCE_DIR})
     target_link_libraries(
             PixelController PRIVATE
             glad::glad
