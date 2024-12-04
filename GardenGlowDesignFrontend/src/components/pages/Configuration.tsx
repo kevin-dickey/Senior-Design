@@ -135,10 +135,6 @@ const Configuration: React.FC<ConfigurationProps> = (
         setCreatingNewEffect(false);
     }
 
-    function startEffect(): void {
-        throw new Error('Function not implemented.');
-    }
-
     // noinspection JSUnusedLocalSymbols
     function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
         throw new Error('Function not implemented.');
@@ -206,7 +202,6 @@ const Configuration: React.FC<ConfigurationProps> = (
                                 setCreateEffectType={setCreatingEffectType}
                                 creatingNewEffect={creatingNewEffect}
                                 setCreatingNewEffect={setCreatingNewEffect}
-                                startEffect={startEffect}
                                 handleInputChange={handleInputChange}
                                 handleEffectChange={handleEffectChange}
                             />

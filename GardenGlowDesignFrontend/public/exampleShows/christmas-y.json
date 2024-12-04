@@ -5,10 +5,10 @@
   "effects": [
     {
       "id": 1,
-      "name": "Orange Sweep",
-      "type": "RainbowEffect",
+      "name": "candy-cane",
+      "type": "candy-cane",
       "startTimeMs": 0,
-      "durationMs": 2000,
+      "durationMs": 10000,
       "origin": {
         "x": 0,
         "y": 0
@@ -18,14 +18,14 @@
         "y": 20
       },
       "colors": [],
-      "speed": 10
+      "speed": 1
     },
     {
       "id": 2,
-      "name": "Ghost",
-      "type": "RippleEffect",
-      "startTimeMs": 2000,
-      "durationMs": 2000,
+      "name": "christmas-tree",
+      "type": "christmas-tree",
+      "startTimeMs": 0,
+      "durationMs": 10000,
       "origin": {
         "x": 0,
         "y": 0
@@ -34,18 +34,15 @@
         "x": 20,
         "y": 20
       },
-      "ripple_origin": {
-        "x": 0,
-        "y": 0
-      },
-      "speed": 40
+      "colors": [],
+      "speed": 5
     },
     {
       "id": 3,
-      "name": "Scary Pumpkin",
-      "type": "RippleEffect",
-      "startTimeMs": 4000,
-      "durationMs": 1000,
+      "name": "snowman",
+      "type": "snowman",
+      "startTimeMs": 0,
+      "durationMs": 10000,
       "origin": {
         "x": 0,
         "y": 0
@@ -54,11 +51,161 @@
         "x": 20,
         "y": 20
       },
-      "ripple_origin": {
+      "colors": [],
+      "speed": 2
+    },
+    {
+      "id": 4,
+      "name": "snowflake",
+      "type": "snowflake",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
         "x": 0,
         "y": 0
       },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 4
+    },
+    {
+      "id": 5,
+      "name": "rainbow",
+      "type": "rainbow",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
       "speed": 1
+    },
+    {
+      "id": 6,
+      "name": "ripple",
+      "type": "ripple",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 3
+    },
+    {
+      "id": 7,
+      "name": "pumpkin-rainbow",
+      "type": "pumpkin-rainbow",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 5
+    },
+    {
+      "id": 8,
+      "name": "pumpkin-ripple",
+      "type": "pumpkin-ripple",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 1
+    },
+    {
+      "id": 9,
+      "name": "ghost-rainbow",
+      "type": "ghost-rainbow",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 4
+    },
+    {
+      "id": 10,
+      "name": "ghost-ripple",
+      "type": "ghost-ripple",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 2
+    },
+    {
+      "id": 11,
+      "name": "pumpkin-ghost-rainbow",
+      "type": "pumpkin-ghost-rainbow",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 5
+    },
+    {
+      "id": 12,
+      "name": "pumpkin-ghost-ripple",
+      "type": "pumpkin-ghost-ripple",
+      "startTimeMs": 0,
+      "durationMs": 10000,
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "colors": [],
+      "speed": 3
     }
   ],
   "layouts": [

@@ -22,7 +22,6 @@ export interface EntityPaletteProps {
     setCreateEffectType: (effectType: string) => void;
     creatingNewEffect: boolean;
     setCreatingNewEffect: (creatingNewEffect: boolean) => void;
-    startEffect: () => void;
     handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleEffectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
@@ -130,7 +129,6 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                             </Button>
                         </div>
                     )}
-                    <Button onClick={props.startEffect}>Start Effect</Button>
                 </Box>
             </Box>
         </Drawer>
