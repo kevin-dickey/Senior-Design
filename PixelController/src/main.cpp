@@ -316,21 +316,28 @@ void setup()
         std::cerr << "Error loading show: " << e.what() << std::endl;
     }
 
-// inserted from merge, will decide what to do with this later
-// MARK: HELP
-//       get parameters from the show for the LEDs & set em (global parameters for whole field of LEDs, even if only displaying a circle, need params for WHOLE thing)
-//       ALSO, should prob dynamically create however many prevLeds arrays and ripplecounters based on however many ripple effects are being used in show
-//       OR, we just hard-code a bunch of em (uses more memory but maybe not that big an issue)
-    NUM_LEDS = 2400;  // placeholder
-    NUM_LEDS_X = 100; // placeholder
-    NUM_LEDS_Y = 0; // placeholder
-    leds = new CRGB[NUM_LEDS];
-    prevLeds1 = new int[NUM_LEDS]; // one of these per ripple effect
-    // prevLeds2 = new int[NUM_LEDS]; // these may not be necessary, depends on how many ripples are intended to be able to show at once (check frontend design)
-    // prevLeds3 = new int[NUM_LEDS];
-    // prevLeds4 = new int[NUM_LEDS];
-    kMatrixHeight = NUM_LEDS_Y; // this is prob ok 
-    kMatrixWidth = NUM_LEDS_X;  // this is prob ok
+    if (show.layouts[0]->shape == LayoutType::GRID) {
+        GridLayout *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
+        if (gridLayout) {
+            NUM_LEDS_X = gridLayout->width; 
+            NUM_LEDS_Y = gridLayout->height; 
+            NUM_LEDS = gridLayout->height * gridLayout->width;
+            kMatrixHeight = NUM_LEDS_Y;  
+            kMatrixWidth = NUM_LEDS_X;  
+            
+            leds = new CRGB[NUM_LEDS];
+
+            // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
+            prevLeds1 = new int[NUM_LEDS];
+
+        } else {
+            // throw an error or somethin
+            std::cerr << "Error occurred while processing parameters from the layout in setup(). Assumed grid layout.";
+        }
+    } else {
+        // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
+    }
+    
 
     hue = 30;
     count = 0;
@@ -461,7 +468,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
     
 // MARK: TODO
 //       reset rippleCounters and prevLeds of ripple effects not currently in use so they properly work together
-    
 
     // if last thing in case statement a loadHexBitmap or something similar 
     // (which already calls FastLED.show()), don't add another call to FastLED.show()
@@ -476,7 +482,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             FastLED.show();
             break;
-        case pumpkin_rainbow:       
+        case pumpkinRainbow:       
             // draw rainbow with pumpkin on top
             drawRainbow(current_millis);
 
@@ -490,25 +496,25 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             //             loadHexBitmap(...)
 
             break;
-        case pumpkin_ripple:
+        case pumpkinRipple:
             // draw ripple with pumpkin on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             // see line 389 HELP
 
             break;
-        case ghost_rainbow:
+        case ghostRainbow:
             // draw rainbow with ghost on top  
             drawRainbow(current_millis);
             // see line 389 HELP
 
             break;
-        case ghost_ripple:
+        case ghostRipple:
             // draw ripple with ghost on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             // see line 389 HELP
 
             break;
-        case pumpkin_ghost_rainbow: 
+        case pumpkinGhostRainbow: 
             // draw rainbow, then pumpkin and ghost (maybe chasing, need to see frontend)
             drawRainbow(current_millis);
             // see line 389 HELP
@@ -517,7 +523,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // add shifting here if desired by effect
 
             break;
-        case pumpkin_ghost_ripple:     
+        case pumpkinGhostRipple:     
             // draw ripple, then pumpkin and ghost (maybe chasing, need to see frontend)
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             // see line 389 HELP
@@ -538,13 +544,13 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // rest of effect (shifting...?)
 
             break;
-        case christmas_tree:
+        case christmasTree:
             // see line 389 HELP
 
             // rest of effect (shifting...?)
 
             break;
-        case candy_cane:
+        case candyCane:
             // see line 389 HELP
 
             // rest of effect (shifting...?)

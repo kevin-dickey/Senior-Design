@@ -12,16 +12,16 @@
 enum EffectType : int {
     rainbow = 1,
     ripple = 2,
-    pumpkin_rainbow = 3,
-    pumpkin_ripple = 4,
-    ghost_rainbow = 5,
-    ghost_ripple = 6,
-    pumpkin_ghost_rainbow = 7,
-    pumpkin_ghost_ripple = 8,
+    pumpkinRainbow = 3,
+    pumpkinRipple = 4,
+    ghostRainbow = 5,
+    ghostRipple = 6,
+    pumpkinGhostRainbow = 7,
+    pumpkinGhostRipple = 8,
     snowflake = 9,
     snowman = 10,
-    christmas_tree = 11,
-    candy_cane = 12
+    christmasTree = 11,
+    candyCane = 12
 };
 
 class Effect
@@ -71,25 +71,25 @@ public:
             } else if (effectType == "ripple") {
                 parsedType = ripple;
             } else if (effectType == "pumpkin-rainbow") {
-                parsedType = pumpkin_rainbow;
+                parsedType = pumpkinRainbow;
             } else if (effectType == "pumpkin-ripple") {
-                parsedType = pumpkin_ripple;
+                parsedType = pumpkinRipple;
             } else if (effectType == "ghost-rainbow") {
-                parsedType = ghost_rainbow;
+                parsedType = ghostRainbow;
             } else if (effectType == "ghost-ripple") {
-                parsedType = ghost_ripple;
+                parsedType = ghostRipple;
             } else if (effectType == "pumpkin-ghost-rainbow") {
-                parsedType = pumpkin_ghost_rainbow;
+                parsedType = pumpkinGhostRainbow;
             } else if (effectType == "pumpkin-ghost-ripple") {
-                parsedType = pumpkin_ghost_ripple;
+                parsedType = pumpkinGhostRipple;
             } else if (effectType == "snowflake") {
                 parsedType = snowflake;
             } else if (effectType == "snowman") {
                 parsedType = snowman;
             } else if (effectType == "christmas-tree") {
-                parsedType = christmas_tree;
+                parsedType = christmasTree;
             } else if (effectType == "candy-cane") {
-                parsedType = candy_cane;
+                parsedType = candyCane;
             } else {
                 throw std::invalid_argument("Could not parse effect type: " + effectType);
             }
@@ -114,30 +114,6 @@ public:
             }
             throw e;
         }
-
-
-    //     // Check if all required fields are present
-    //     if (!j.contains("id") || !j.contains("type") || !j.contains("name") || !j.contains("origin") || !j.contains("size") || !j.contains("startTimeMs") || !j.contains("durationMs"))
-    //     {
-    //         throw std::invalid_argument("Effect JSON missing required fields");
-    //     }
-
-    //     // Parse the effect type input value
-    //     EffectType parsedType;
-    //     auto effectType = j["type"].get<std::string>();
-    //     if (effectType == "RainbowEffect") parsedType = rainbow;
-    //     else if (effectType == "RippleEffect") parsedType = ripple;
-    //     else throw std::invalid_argument("Could not parse effect type: " + effectType);
-
-    //     return new Effect(
-    //         j["id"].get<int>(),
-    //         parsedType,
-    //         j["name"].get<std::string>(),
-    //         Pair_t::from_json(j["origin"]),
-    //         Pair_t::from_json(j["size"]),
-    //         j["startTimeMs"].get<double>(),
-    //         j["durationMs"].get<double>(),
-    //         std::move(translation));
     };
 };
 
