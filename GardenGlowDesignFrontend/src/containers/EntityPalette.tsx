@@ -31,10 +31,10 @@ export interface EntityPaletteProps {
 const drawerWidth = 240;
 
 export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
-    const [isShapesOpen, setIsShapesOpen] = useState(true);
-    const [isEffectsOpen, setIsEffectsOpen] = useState(true);
-    const [isColorsOpen, setIsColorsOpen] = useState(true);
-    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
+    const [isShapesOpen, setIsShapesOpen] = useState(false);
+    const [isEffectsOpen, setIsEffectsOpen] = useState(false);
+    const [isColorsOpen, setIsColorsOpen] = useState(false);
+    const [isEffectsListOpen, setIsEffectsListOpen] = useState(false);
 
     return (
         <Drawer
@@ -48,26 +48,15 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
         >
             <Toolbar />
             <Box sx={{ overflow: 'auto' }}>
+            <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
                     <Button
                         fullWidth onClick={() => setIsShapesOpen(!isShapesOpen)}
                         sx={{ color: '#fff', justifyContent: 'flex-start' }}>
-                        Shapes {isShapesOpen ? <ExpandLess /> : <ExpandMore />}
+                        Sensors {isShapesOpen ? <ExpandLess /> : <ExpandMore />}
                     </Button>
                     {isShapesOpen &&
                         <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>Shapes content</Box>}
-                </Box>
-                <Divider sx={{ bgcolor: '#444' }} />
-                <Box>
-                    <Button
-                        fullWidth
-                        onClick={() => setIsEffectsOpen(!isEffectsOpen)}
-                        sx={{ color: '#fff', justifyContent: 'flex-start' }}
-                    >
-                        Effects {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
-                    </Button>
-                    {isEffectsOpen &&
-                        <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>Effects content</Box>}
                 </Box>
                 <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
@@ -87,28 +76,39 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                 <Box>
                     <Button
                         fullWidth
-                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
+                        onClick={() => setIsEffectsOpen(!isEffectsOpen)}
                         sx={{ color: '#fff', justifyContent: 'flex-start' }}
                     >
-                        Effects in Show {isEffectsListOpen ? <ExpandLess /> : <ExpandMore />}
+                        Effects In Show {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
                     </Button>
-                    {isEffectsListOpen && (
-                        <div>
+                    {isEffectsOpen &&
+                        <Box sx={{}}>
                             <EffectList
                                 effects={props.show.effects}
                                 onEffectSelected={(effectId: number) => {
                                     const finalSelectedId = props.selectedEffectId === effectId ? null : effectId;
                                     props.setSelectedEffectId(finalSelectedId);
                                 }} />
+                        </Box>}
+                </Box>
+                <Divider sx={{ bgcolor: '#444' }} />
+                <Box>
+                    <Button
+                        fullWidth
+                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
+                        sx={{ color: '#fff', justifyContent: 'flex-start' }}
+                    >
+                        Add Effect {isEffectsListOpen ? <ExpandLess /> : <ExpandMore />}
+                    </Button>
+                    {isEffectsListOpen && (
+                        <div>
                             <FormControl fullWidth>
-                                <InputLabel id="effect-type-label">Effect Type</InputLabel>
                                 <Select
                                     labelId="effect-type-label"
                                     id="effect-type"
-                                    value={props.createEffectType}
-                                    label="Effect Type"
+                                    value={props.createEffectType} // Default value
                                     onChange={(e) => props.setCreateEffectType(e.target.value as EffectType)}
-                                    variant='outlined'
+                                    displayEmpty
                                 >
                                     <MenuItem value="rainbow">Rainbow</MenuItem>
                                     <MenuItem value="ripple">Ripple</MenuItem>
@@ -140,6 +140,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                         </div>
                     )}
                 </Box>
+                <Divider sx={{ bgcolor: '#444' }} />
             </Box>
         </Drawer>
     );
