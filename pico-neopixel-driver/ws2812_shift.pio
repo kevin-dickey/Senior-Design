@@ -18,7 +18,7 @@
 .wrap_target
     set x, 7            side 2  ; Set loop counter to 7 (8 bits per SR load/output)
                                 ; Side 2 is used to parallel load the shift register
-    pull                        ; Load next 8-bit word from TX FIFO into the PIO OSR
+    ; pull                        ; Load next 8-bit word from TX FIFO into the PIO OSR
                                 ; NOTE: Default PULL behavior is to load 32 bits, but we only need 8.
                                 ;    This is configured with sm_config_set_out_shift() in the c-sdk.
 
@@ -53,7 +53,7 @@ static inline void ws2812_shift_program_init(PIO pio, uint sm, uint offset, uint
     // Configure auto-load 32 bits (GRB) from TX FIFO into OSR.
     // Most suspect ops when porting to PIO ASM.
     // Adafruit shifts OSR from right to left. Parallel WS2812 output shifts from left to right.
-    sm_config_set_out_shift(&c, false, true, 8);                   // PIO OSR is 32 bits wide. We pad 24 bits of RGB with 8 bits of 0.
+    sm_config_set_out_shift(&c, false, true, 32);                   // PIO OSR is 32 bits wide. We pad 24 bits of RGB with 8 bits of 0.
     sm_config_set_out_pins(&c, pin, 1);                             // Output data on the first pin.
     sm_config_set_set_pins(&c, pin, 1);                             // Uses 3 total pins: 1 for data, 1 for clock, 1 for parallel load.
     sm_config_set_sideset_pin_base(&c, pin + 1);                        // Clock and parallel load pins are side-set.

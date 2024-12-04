@@ -16,7 +16,7 @@
 #include "ws2812_shift.pio.h"
 
 #define FRAC_BITS 4
-#define NUM_PIXELS 32
+#define NUM_PIXELS 5
 #define WS2812_PIN_BASE 0
 
 // horrible temporary hack to avoid changing pattern code
@@ -239,6 +239,14 @@ static uint8_t strip0_data[NUM_PIXELS * 3];
 // example - strip 1 is RGBW
 static uint8_t strip1_data[NUM_PIXELS * 3];
 
+static uint8_t example_data[NUM_PIXELS * 3] = {
+    0x11, 0x22, 0x33,
+    0x44, 0x55, 0x66,
+    0x77, 0x88, 0x99,
+    0xaa, 0xbb, 0xcc,
+    0xdd, 0xee, 0xff,
+};
+
 strip_t strip0 = {
     .data = strip0_data,
     .data_len = sizeof(strip0_data),
@@ -332,21 +340,28 @@ void dma_init(PIO pio, uint sm)
 // 
 void output_strips_dma(value_bits_t *bits, uint value_length)
 {
+    printf("Output Strips DMA\n");
     for (uint i = 0; i < value_length; i++)
     {
         // fragment_start[i] wants a uintptr_t, so we cast the bits[i].planes to uintptr_t
         // fragment_start[i] = (uintptr_t)bits[i].planes; // MSB first
-        fragment_start[i] = dummy_data + i*10;
+        // fragment_start[i] = example_data[i];
+
+        // Assign the value of example_data[i] to the address of fragment_start[i]
+        fragment_start[i] = (uintptr_t)&example_data[i];
     }
     fragment_start[value_length] = 0;
 
-    // Print the address and value at the address for the first 10 values
-    printf("\nFragment Start Debug (First 10 Values):\n");
-    for (uint i = 0; i < 10; i++) {
-        printf("Loc: %d: %p\n", i, (void*)fragment_start[i]);
-        printf("Value at loc %d: %u\n", i, *(uint8_t*)fragment_start[i]);
+    // Print the following
+    // Address of fragment_start [0]
+    // Value Length
+    // value_length values of fragment_start
+    printf("Fragment Start Address: %p\n", (void*)fragment_start);
+    printf("Value Length: %d\n", value_length);
+    for (uint i = 0; i < value_length; i++) {
+        printf("Value at loc %d: %p\n", i, (void*)fragment_start[i]);
     }
-    
+
     dma_channel_hw_addr(DMA_CB_CHANNEL)->al3_read_addr_trig = (uintptr_t)fragment_start;
 }
 
