@@ -1,0 +1,53 @@
+{
+    "effects": [
+      {
+        "effect": "candy-cane",
+        "duration": 10
+      },
+      {
+        "effect": "christmas-tree",
+        "duration": 10
+      },
+      {
+        "effect": "snowman",
+        "duration": 10
+      },
+      {
+        "effect": "snowflake",
+        "duration": 10
+      },
+      {
+        "effect": "rainbow",
+        "duration": 10
+      },
+      {
+        "effect": "ripple",
+        "duration": 10
+      },
+      {
+        "effect": "pumpkin-rainbow",
+        "duration": 10
+      },
+      {
+        "effect": "pumpkin-ripple",
+        "duration": 10
+      },
+      {
+        "effect": "ghost-rainbow",
+        "duration": 10
+      },
+      {
+        "effect": "ghost-ripple",
+        "duration": 10
+      },
+      {
+        "effect": "pumpkin-ghost-rainbow",
+        "duration": 10
+      },
+      {
+        "effect": "pumpkin-ghost-ripple",
+        "duration": 10
+      }
+    ]
+  }
+  
