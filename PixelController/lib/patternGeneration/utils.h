@@ -16,7 +16,7 @@ void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int widt
 extern uint8_t kMatrixWidth; 
 extern uint8_t kMatrixHeight;
 // Param for different pixel layouts
-const bool kMatrixSerpentineLayout = true;
+const bool kMatrixSerpentineLayout = false; // <-- this should be passed thru json file :)
 const bool kMatrixVertical = false;
 /***********************************************************************************************************/
 
