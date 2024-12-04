@@ -28,6 +28,7 @@ import {Folder} from "./FoldersOverview";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
+import { EffectType } from '../../types';
 
 
 export interface ConfigurationProps {
@@ -41,6 +42,7 @@ export interface ConfigurationProps {
     saveShowToFolders: Folder[];
 }
 
+// Todo Eleen: pass show from here to grid.tsx
 const Configuration: React.FC<ConfigurationProps> = (
     {
         show, setShow, onSaveShow,
@@ -49,7 +51,7 @@ const Configuration: React.FC<ConfigurationProps> = (
     const navigate = useNavigate();
 
     const [selectedEffectId, setSelectedEffectId] = useState<number | null>(null);
-    const [creatingEffectType, setCreatingEffectType] = useState<string>('');
+    const [creatingEffectType, setCreatingEffectType] = useState<EffectType>(EffectType.rainbow);
     const [creatingNewEffect, setCreatingNewEffect] = useState(false);
     const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
 
@@ -74,6 +76,8 @@ const Configuration: React.FC<ConfigurationProps> = (
         }
 
         const updatedShow = new Show(show.name, show.durationMs);
+        updatedShow.setLayouts(show.layouts);
+        updatedShow.setSensors(show.sensors);
         updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
         setShow(updatedShow);
     }
@@ -236,6 +240,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                                                 key={selectedEffectId}
                                                 // TODO: This will error if selectedEffectId isn't present in .effects
                                                 effect={show.getEffectById(selectedEffectId!)!}
+                                                // effect={show.getEffectById(selectedEffectId)}
                                                 onSubmit={(effect: any) => {
                                                     console.log("Saving effect: " + effect);
                                                     updateEffect(effect, selectedEffectId!);

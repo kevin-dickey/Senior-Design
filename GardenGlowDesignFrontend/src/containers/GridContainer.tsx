@@ -57,7 +57,7 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
       let offset = 0;
       setEffectType(effect.type);
       // Set the correct pumpkin/ghost positions based on effect
-      if (effect.type === 'pumpkin-ghost-rainbow' || effect.type === 'pumpkin-ghost-ripple') {
+      if (effect.type === EffectType.pumpkinGhostRainbow || effect.type === EffectType.pumpkinGhostRipple) {
         setPumpkinPosition(-5);
         setGhostPosition(5);
       } else {
@@ -76,40 +76,40 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
         // Call the appropriate effect update function
         if (grid) {
           switch (effect.type) {
-            case 'rainbow':
+            case EffectType.rainbow:
               updateRainbow(offset, grid.height, grid.width, rainbowColors, setLedGrid);
               break;
-            case 'ripple':
+            case EffectType.ripple:
               updateRipple(offset, grid.height, grid.width, rainbowColors, setLedGrid);
               break;
-            case 'pumpkin-rainbow':
+            case EffectType.pumpkinRainbow:
               updatePumpkinRainbow(offset, grid.height, grid.width, rainbowColors, setLedGrid, setPumpkinPosition);
               break;
-            case 'pumpkin-ripple':
+            case EffectType.pumpkinRipple:
               updatePumpkinRipple(offset, grid.height, grid.width, rainbowColors, setLedGrid, setPumpkinPosition);
               break;
-            case 'ghost-rainbow':
+            case EffectType.ghostRainbow:
               updateGhostRainbow(offset, grid.height, grid.width, rainbowColors, setLedGrid, setGhostPosition);
               break;
-            case 'ghost-ripple':
+            case EffectType.ghostRipple:
               updateGhostRipple(offset, grid.height, grid.width, rainbowColors, setLedGrid, setGhostPosition);
               break;
-            case 'pumpkin-ghost-rainbow':
+            case EffectType.pumpkinGhostRainbow:
               updatePumpkinGhostRainbow(offset, grid.height, grid.width, rainbowColors, setLedGrid, setPumpkinPosition, setGhostPosition);
               break;
-            case 'pumpkin-ghost-ripple':
+            case EffectType.pumpkinGhostRipple:
               updatePumpkinGhostRipple(offset, grid.height, grid.width, rainbowColors, setLedGrid, setPumpkinPosition, setGhostPosition);
               break;
-            case 'snowflake':
+            case EffectType.snowflake:
               updateSnowflake(offset, grid.height, grid.width, christmasColors, setLedGrid, setSnowflakePositions);
               break;
-            case 'snowman':
+            case EffectType.snowman:
               updateSnowman(offset, grid.height, grid.width, christmasColors, setLedGrid, setSnowmanPosition);
               break;
-            case 'christmas-tree':
+            case EffectType.christmasTree:
               updateChristmasTree(offset, grid.height, grid.width, christmasColors2, setLedGrid, setChristmasTreePosition);
               break;
-            case 'candy-cane':
+            case EffectType.candyCane:
               updateCandyCane(offset, grid.height, grid.width, christmasColors2, setLedGrid, setCandyCanePositions);
               break;
             default:
@@ -193,19 +193,19 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
                     );
 
                     // Handle shape effect
-                    if (effectType === 'pumpkin-rainbow' || effectType === 'pumpkin-ripple') {
+                    if (effectType === EffectType.pumpkinRainbow || effectType === EffectType.pumpkinRipple) {
                       backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === 'ghost-rainbow' || effectType === 'ghost-ripple') {
+                    } else if (effectType === EffectType.ghostRainbow || effectType === EffectType.ghostRipple) {
                       backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === 'pumpkin-ghost-rainbow' || effectType === 'pumpkin-ghost-ripple') {
+                    } else if (effectType === EffectType.pumpkinGhostRainbow || effectType === EffectType.pumpkinGhostRipple) {
                       backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
-                    } else if (effectType === 'snowflake') {
+                    } else if (effectType === EffectType.snowflake) {
                       backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
-                    } else if (effectType === 'snowman') {
+                    } else if (effectType === EffectType.snowman) {
                       backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
-                    } else if (effectType === 'christmas-tree') {
+                    } else if (effectType === EffectType.christmasTree) {
                       backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
-                    } else if (effectType === 'candy-cane') {
+                    } else if (effectType === EffectType.candyCane) {
                       backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
                     }
                     else {

@@ -22,16 +22,16 @@ export const deserializeShow = (data: any): Show => {
         return Effect.fromJSON(effectData);
       case "rainbow":
       case "ripple":
-      case "pumpkin-rainbow":
-      case "pumpkin-ripple":
-      case "ghost-rainbow":
-      case "ghost-ripple":
-      case "pumpkin-ghost-rainbow":
-      case "pumpkin-ghost-ripple":
+      case "pumpkinRainbow":
+      case "pumpkinRipple":
+      case "ghostRainbow":
+      case "ghostRipple":
+      case "pumpkinGhostRainbow":
+      case "pumpkinGhostRipple":
       case "snowflake":
       case "snowman":
-      case "christmas-tree":
-      case "candy-cane":
+      case "christmasTree":
+      case "candyCane":
         return Effect.fromJSON(effectData);
 
       default:
