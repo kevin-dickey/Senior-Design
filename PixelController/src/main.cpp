@@ -462,8 +462,9 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 // MARK: TODO
 //       reset rippleCounters and prevLeds of ripple effects not currently in use so they properly work together
 
-    // if last thing in case statement a loadHexBitmap or something similar 
-    // (which already calls FastLED.show()), don't add another call to FastLED.show()
+    // shift directions might be incorrect, need to test on field!
+    // rainbow + shifting effects might look a little goofy, but shouldn't be completely broken i don't think
+    // ripple + shifting effects almost surely broken af
     switch (showframe.effect->effectType) {  // set-up the leds[] with the frame based on desired effect
         case rainbow:            
             drawRainbow(current_millis);
@@ -478,76 +479,63 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
         case pumpkinRainbow:       
             // draw rainbow with pumpkin on top
             drawRainbow(current_millis);
+            
+            // load in pumpkin from sd card
 
-            // MARK: HELP
-            //       draw pumpkin w/ either this sort of thing:
-            //             bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y);
-            //             fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
-            //             rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
-            //             free(serpentineArray);
-            //       or this:
-            //             loadHexBitmap(...)
 
+            shiftLeds(leds, RIGHT); // might make the rainbow effect look v weird, not sure
             break;
         case pumpkinRipple:
             // draw ripple with pumpkin on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see line 389 HELP
+            
 
             break;
         case ghostRainbow:
             // draw rainbow with ghost on top  
             drawRainbow(current_millis);
-            // see line 389 HELP
-
+            
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case ghostRipple:
             // draw ripple with ghost on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see line 389 HELP
+            
 
             break;
         case pumpkinGhostRainbow: 
             // draw rainbow, then pumpkin and ghost (maybe chasing, need to see frontend)
             drawRainbow(current_millis);
-            // see line 389 HELP
-            // see line 389 HELP
 
-            // add shifting here if desired by effect
-
+            // draw pumpkin & ghost
+            
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
-        case pumpkinGhostRipple:     
+        case pumpkinGhostRipple:
             // draw ripple, then pumpkin and ghost (maybe chasing, need to see frontend)
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            // see line 389 HELP
-            // see line 389 HELP
+            
+            // draw pumpkin & ghost
 
-            // add shifting here if desired by effect
-
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case snowflake:
-            // see line 389 HELP
-
-            // rest of effect (shifting...?)
-
+            
+            shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
         case snowman:
-            // see line 389 HELP
-
-            // rest of effect (shifting...?)
-
+            
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case christmasTree:
-            // see line 389 HELP
+            // load in christmas tree & pattern onto leds
 
-            // rest of effect (shifting...?)
-
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case candyCane:
-            // see line 389 HELP
+            // load in candycane & pattern onto leds
 
-            // rest of effect (shifting...?)
-
+            shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
         default:
             Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");
