@@ -228,44 +228,44 @@ void resetTriggerMarkers(int exception);
 void generateFrame(ControllerRunner::ShowFrame showframe);
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
-    // MARK: Variables
-    // led stuff
-    CRGB* leds;
-    int NUM_LEDS = 256;
-    int NUM_LEDS_X = 16;
-    int NUM_LEDS_Y = 16;
-    int LEDS_SIZE_ARR[2] = {NUM_LEDS_X, NUM_LEDS_Y};
-    uint8_t kMatrixWidth;
-    uint8_t kMatrixHeight;
+// MARK: Variables
+// led stuff
+CRGB* leds;
+int NUM_LEDS = 256;
+int NUM_LEDS_X = 16;
+int NUM_LEDS_Y = 16;
+int LEDS_SIZE_ARR[2] = {NUM_LEDS_X, NUM_LEDS_Y};
+uint8_t kMatrixWidth;
+uint8_t kMatrixHeight;
 
-    // ripple effect stuff
-    int* prevLeds1;
-    int* prevLeds2;
-    int* prevLeds3;
-    int* prevLeds4;
-    int rippleCounter;
+// ripple effect stuff
+int* prevLeds1;
+int* prevLeds2;
+int* prevLeds3;
+int* prevLeds4;
+int rippleCounter;
 
-    // sensor & show stuff
-    SensorManager *sensorManager;
-    ControllerRunner *runner;
-    unsigned long showStart = 0;
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000> > > epoch;
-    Sensor *sensor0, *sensor1, *sensor2, *sensor3;
-    std::vector<Sensor *> a_sensors;
-    std::vector<bool> prev_sensor_triggered;
+// sensor & show stuff
+SensorManager *sensorManager;
+ControllerRunner *runner;
+unsigned long showStart = 0;
+std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000> > > epoch;
+Sensor *sensor0, *sensor1, *sensor2, *sensor3;
+std::vector<Sensor *> a_sensors;
+std::vector<bool> prev_sensor_triggered;
 
-    // misc. stuff (effect variables, sensor stuff, running-time)
-    int hue;
-    int count;
-    bool goUp;
-    char set_sensors;
-    unsigned long current_millis;
+// misc. stuff (effect variables, sensor stuff, running-time)
+int hue;
+int count;
+bool goUp;
+char set_sensors;
+unsigned long current_millis;
 
-    // can be loaded using loadHexBitmap
-    const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
-    const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
-    const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
-    const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
+// can be loaded using loadHexBitmap
+const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
+const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
+const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
 
 unsigned char bufferPattern[3][3][3] = {
     {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
@@ -317,7 +317,7 @@ void setup()
     }
 
     if (show.layouts[0]->isGridLayout()) { // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
-        NUM_LEDS_X = show.layouts[0]->getWidth();
+        NUM_LEDS_X = show.layouts[0]->getWidth(); // this returns size of frontend
         NUM_LEDS_Y = show.layouts[0]->getHeight(); 
         NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y;
         kMatrixHeight = NUM_LEDS_Y;  
@@ -331,7 +331,6 @@ void setup()
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }
     
-
     hue = 30;
     count = 0;
     rippleCounter = 0;
@@ -347,47 +346,47 @@ void setup()
         long start_loading_ghost = millis();
 
         std::cout << "⏳ Loading Ghost..." << std::endl;
-        File ghostBmpFile = fm->getJsonFile("/djibouti.jpg");
+        File ghostBmpFile = fm->getJsonFile("/djibouti.jpg"); // <--
         std::cout << "✅ Opened Ghost File!" << std::endl;
 
         std::cout << "Converting to FILE..." << std::endl;
         size_t fileSize;
-        unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);
+        unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);  // <--
         std::cout << "✅ Converted to FILE!" << std::endl;
         std::cout << "  File Size: " << fileSize << std::endl;
         std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
 
         std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
         std::cout << "🛑 Closing ghost from file manager..." << std::endl;
-        ghostBmpFile.close();
+        ghostBmpFile.close();  // <--
         std::cout << "✅ Closed ghost from file manager!" << std::endl;
 
         std::cout << "⏳ Getting Image Dimensions..." << std::endl;
 
         // Get the dimensions of the image and load it
-        ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+        ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);  // <--
 
         std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
         std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
         std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
-        unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+        unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);  // <--
         std::cout << "✅ Loaded Image!" << std::endl;
         std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
         std::cout << "↔️ Resizing Image..." << std::endl;
-        int newWidth = NUM_LEDS_X;
-        int newHeight = NUM_LEDS_Y;
-        unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+        int newWidth = NUM_LEDS_X;  // <-- 
+        int newHeight = NUM_LEDS_Y;  // <--
+        unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);  // <--
         std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
-        ImageProcessing::free_image(ghostFile);
-        free(ghostFileBuf);
+        ImageProcessing::free_image(ghostFile);  // <--
+        free(ghostFileBuf);  // <--
 
         // DEBUG: Display the loaded image data
         std::cout << "🖼️ Displaying Image Data..." << std::endl;
         std::cout << "  New Width: " << newWidth << std::endl;
         std::cout << "  New Height: " << newHeight << std::endl;
-        ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels);
+        ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels); 
 
         // Log the time taken to load the ghost
         long end_loading_ghost = millis();
@@ -395,13 +394,14 @@ void setup()
 
         // Load the resized image into the LED matrix
         std::cout << "🚦 Loading Image into LED Array..." << std::endl;
-        CRGB *serpentineArray = (CRGB *)calloc(NUM_LEDS, sizeof(CRGB));
+        CRGB *serpentineArray = (CRGB *)calloc(NUM_LEDS, sizeof(CRGB));  // <--
         // Load the test pattern
         // bufferToCRGBArray(bufferPtr, 3, 3, 3, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 16, 16, true);
         // Load the resized ghost
         bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
         fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
         rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+        
 
         FastLED.show();
 
@@ -442,7 +442,7 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
-    // generateFrame(showFrame);
+    generateFrame(showFrame);
 
     delay(33);  // delay(33): approx 30fps (30.3)
 }
