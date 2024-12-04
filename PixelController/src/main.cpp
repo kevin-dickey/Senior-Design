@@ -316,24 +316,17 @@ void setup()
         std::cerr << "Error loading show: " << e.what() << std::endl;
     }
 
-    if (show.layouts[0]->shape == LayoutType::GRID) {
-        GridLayout *gridLayout = dynamic_cast<GridLayout *>(show.layouts[0]);
-        if (gridLayout) {
-            NUM_LEDS_X = gridLayout->width; 
-            NUM_LEDS_Y = gridLayout->height; 
-            NUM_LEDS = gridLayout->height * gridLayout->width;
-            kMatrixHeight = NUM_LEDS_Y;  
-            kMatrixWidth = NUM_LEDS_X;  
-            
-            leds = new CRGB[NUM_LEDS];
+    if (show.layouts[0]->isGridLayout()) { // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
+        NUM_LEDS_X = show.layouts[0]->getWidth();
+        NUM_LEDS_Y = show.layouts[0]->getHeight(); 
+        NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y;
+        kMatrixHeight = NUM_LEDS_Y;  
+        kMatrixWidth = NUM_LEDS_X;  
+        
+        leds = new CRGB[NUM_LEDS];
 
-            // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
-            prevLeds1 = new int[NUM_LEDS];
-
-        } else {
-            // throw an error or somethin
-            std::cerr << "Error occurred while processing parameters from the layout in setup(). Assumed grid layout.";
-        }
+        // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
+        prevLeds1 = new int[NUM_LEDS];
     } else {
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }

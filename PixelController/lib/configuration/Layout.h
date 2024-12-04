@@ -24,6 +24,10 @@ public:
     }
 
     virtual ~Layout() = default;
+    // added these vvv
+    virtual bool isGridLayout() const { return false; }
+    virtual int getWidth() const { throw std::runtime_error("Not a GridLayout"); }
+    virtual int getHeight() const { throw std::runtime_error("Not a GridLayout"); }
 
     static Layout *from_json(const nlohmann::json &j) {
         auto *layout = new Layout(
@@ -53,6 +57,11 @@ public:
 
         return new GridLayout(id, width, height);
     }
+
+    // i know these look nonsensical (maybe not the getters lol) but trust -- i need em
+    bool isGridLayout() const override { return true; }
+    int getWidth() const override { return width; }
+    int getHeight() const override { return height; }
 };
 
 #endif // PIXELCONTROLLER_LAYOUT_H
