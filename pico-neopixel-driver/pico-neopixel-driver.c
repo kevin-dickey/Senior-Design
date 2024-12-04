@@ -16,7 +16,7 @@
 #include "ws2812_shift.pio.h"
 
 #define FRAC_BITS 4
-#define NUM_PIXELS 256
+#define NUM_PIXELS 32
 #define WS2812_PIN_BASE 0
 
 // horrible temporary hack to avoid changing pattern code
@@ -116,7 +116,7 @@ void pattern_solid(uint len, uint t)
     t = 1;
     for (uint i = 0; i < len; ++i)
     {
-        put_pixel(t * 0x10101);
+        put_pixel(t * 0xFFAABB);
     }
 }
 
@@ -152,11 +152,11 @@ const struct
     const char *name;
 } pattern_table[] = {
     // {pattern_snakes, "Snakes!"},
-    {pattern_random,  "Random data"},
+    // {pattern_random,  "Random data"},
     // {pattern_sparkle, "Sparkles"},
     // {pattern_gradient, "Gradient"},
     // {pattern_greys,   "Greys"},
-    //        {pattern_solid,  "Solid!"},
+           {pattern_solid,  "Solid!"},
     //        {pattern_fade, "Fade"},
 };
 
@@ -237,7 +237,7 @@ static value_bits_t states[2][NUM_PIXELS * 4];
 // example - strip 0 is RGB only
 static uint8_t strip0_data[NUM_PIXELS * 3];
 // example - strip 1 is RGBW
-static uint8_t strip1_data[NUM_PIXELS * 4];
+static uint8_t strip1_data[NUM_PIXELS * 3];
 
 strip_t strip0 = {
     .data = strip0_data,
@@ -268,6 +268,8 @@ strip_t *strips[] = {
 // start of each value fragment (+1 for NULL terminator)
 static uintptr_t fragment_start[NUM_PIXELS * 4 + 1];
 
+uint8_t dummy_data = 0x01;
+
 // posted when it is safe to output a new set of values
 static struct semaphore reset_delay_complete_sem;
 // alarm handle for handling delay
@@ -291,6 +293,7 @@ void __isr dma_complete_handler()
         if (reset_delay_alarm_id)
             cancel_alarm(reset_delay_alarm_id);
         reset_delay_alarm_id = add_alarm_in_us(400, reset_delay_complete, NULL, true);
+        printf("DMA Complete\n");
     }
 }
 
@@ -303,6 +306,7 @@ void dma_init(PIO pio, uint sm)
     channel_config_set_dreq(&channel_config, pio_get_dreq(pio, sm, true));
     channel_config_set_chain_to(&channel_config, DMA_CB_CHANNEL);
     channel_config_set_irq_quiet(&channel_config, true);
+    channel_config_set_read_increment(&channel_config, false);
     dma_channel_configure(DMA_CHANNEL,
                           &channel_config,
                           &pio->txf[sm],
@@ -324,13 +328,25 @@ void dma_init(PIO pio, uint sm)
     irq_set_enabled(DMA_IRQ_0, true);
 }
 
+// value_length is the number of bytes needed for one total output frame.
+// 
 void output_strips_dma(value_bits_t *bits, uint value_length)
 {
     for (uint i = 0; i < value_length; i++)
     {
-        fragment_start[i] = (uintptr_t)bits[i].planes; // MSB first
+        // fragment_start[i] wants a uintptr_t, so we cast the bits[i].planes to uintptr_t
+        // fragment_start[i] = (uintptr_t)bits[i].planes; // MSB first
+        fragment_start[i] = dummy_data + i*10;
     }
     fragment_start[value_length] = 0;
+
+    // Print the address and value at the address for the first 10 values
+    printf("\nFragment Start Debug (First 10 Values):\n");
+    for (uint i = 0; i < 10; i++) {
+        printf("Loc: %d: %p\n", i, (void*)fragment_start[i]);
+        printf("Value at loc %d: %u\n", i, *(uint8_t*)fragment_start[i]);
+    }
+    
     dma_channel_hw_addr(DMA_CB_CHANNEL)->al3_read_addr_trig = (uintptr_t)fragment_start;
 }
 
@@ -360,7 +376,7 @@ int main()
         puts(pattern_table[pat].name);
         puts(dir == 1 ? "(forward)" : dir ? "(backward)"
                                           : "(still)");
-        int brightness = 0;
+        int brightness = (0x20 << FRAC_BITS) - 1;
         uint current = 0;
         current_strip_4color = false;
         for (int i = 0; i < 1000; ++i)
@@ -373,13 +389,15 @@ int main()
             transform_strips(strips, count_of(strips), colors, NUM_PIXELS * 4, brightness);
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
-            output_strips_dma(states[current], NUM_PIXELS * 4);
+            output_strips_dma(states[current], NUM_PIXELS * 4); // RGBW support - put_pixel() will write 4 bytes per pixel
 
             current ^= 1;
             t += dir;
-            brightness++;
+            // brightness++;
             if (brightness == (0x20 << FRAC_BITS))
                 brightness = 0;
+            
+            sleep_ms(2000);
         }
         memset(&states, 0, sizeof(states)); // clear out errors
     }
