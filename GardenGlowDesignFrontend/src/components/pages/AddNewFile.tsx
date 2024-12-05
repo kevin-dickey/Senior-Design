@@ -62,7 +62,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
                 <TextField
                     sx={{mt: 2}}
                     required
-                    label="Lights Width"
+                    label="Lights Width (Divide by 2)"
                     type="number"
                     value={width}
                     onChange={(e) => setWidth(+e.target.value)}
@@ -71,7 +71,7 @@ const AddNewFile: React.FC<AddNewFileProps> = ({folders, onAddFile}) => {
                 <TextField
                     sx={{mt: 2}}
                     required
-                    label="Lights Height"
+                    label="Lights Height (Divide by 2)"
                     type="number"
                     value={height}
                     onChange={(e) => setHeight(+e.target.value)}
