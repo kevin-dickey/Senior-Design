@@ -330,9 +330,9 @@ void setup()
     }
 
     if (show.layouts[0]->isGridLayout()) { // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
-        NUM_LEDS_X = show.layouts[0]->getWidth(); // this returns size of frontend
-        NUM_LEDS_Y = show.layouts[0]->getHeight(); 
-        NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y;
+        NUM_LEDS_X = show.layouts[0]->getWidth(); // this returns size of frontend, SHOULD be 100
+        NUM_LEDS_Y = show.layouts[0]->getHeight(); // SHOULD be 24
+        NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y; // SHOULD be 2400
         kMatrixHeight = NUM_LEDS_Y;  
         kMatrixWidth = NUM_LEDS_X;  
         
@@ -382,6 +382,9 @@ void loop()
 
     generateFrame(showFrame);
 
+    // divide frame up to send to picos
+
+
     delay(33);  // delay(33): approx 30fps (30.3)
 }
 
@@ -423,6 +426,7 @@ void loadImagesFromSD(std::vector<std::string> images) {
             std::cout << "✅ Loaded Image!" << std::endl;
             std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
+            // hard coding the resize to be 24x25, given the field is 24x100. for future fields just always resize img to what user wants/how many times they want it repeated
             // resizing only ghost and pumpkin (or unrecognized file), might just want to recreate them to be right dimensions tbh
             if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg")) {
                 std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
