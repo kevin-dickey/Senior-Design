@@ -393,7 +393,7 @@ void loop()
  * Loads in images from the SD card, images should be a string of the filepath (e.g. "/djibouti.jpg")
  */
 void loadImagesFromSD(std::vector<std::string> images) {
-    for (std::string image : images) {
+    for (const std::string &image : images) {
         try {
             std::cout << "⏳ Loading " << image << "..." << std::endl;
             File jpgFile = fm->getJsonFile(image);
@@ -459,7 +459,7 @@ void loadImagesFromSD(std::vector<std::string> images) {
                 snowmanjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             } else {
-                std::cerr << "Unrecognized jpg supplied: '" << image << "' !" << std::endl;
+                std::cerr << "Unrecognized file supplied (should be a jpg): '" << image << "' !" << std::endl;
             }
         } catch (const std::exception &e) {
             std::cerr << "Error loading image: " << e.what() << std::endl;
@@ -492,7 +492,9 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             drawRainbow(current_millis);
             FastLED.show();
+
             break;
+
         case ripple:
             if (curEffect != 1) {
                 newEffectReset;
@@ -501,7 +503,9 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             FastLED.show();
+
             break;
+
         case pumpkinRainbow:
             if (curEffect != 2) {
                 newEffectReset;
@@ -510,15 +514,16 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             // draw rainbow with pumpkin on top
             drawRainbow(current_millis);
-            
-            // load in pumpkins (update locations!)
+
+            // load in pumpkins (check locations are good)
             bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
 
             shiftLeds(leds, RIGHT); // might make the rainbow effect look v weird, not sure
             break;
+
         case pumpkinRipple:
             if (curEffect != 3) {
                 newEffectReset;
@@ -528,14 +533,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // draw ripple with pumpkin on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
 
-            // need to update locations!
+            // (check locations are good)
             bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
 
             FastLED.show();
             break;
+
         case ghostRainbow:
             if (curEffect != 4) {
                 newEffectReset;
@@ -545,14 +551,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // draw rainbow with ghost on top  
             drawRainbow(current_millis);
 
-            // need to update locations!
+            // (check locations are good)
             bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
 
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
+
         case ghostRipple:
             if (curEffect != 5) {
                 newEffectReset;
@@ -562,14 +569,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // draw ripple with ghost on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
 
-            // need to set locations
+            // (check locations are good)
             bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
 
             FastLED.show();
             break;
+
         case pumpkinGhostRainbow:
             if (curEffect != 6) {
                 newEffectReset;
@@ -579,17 +587,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             // draw rainbow, then pumpkin and ghost
             drawRainbow(current_millis);
 
-            if (!loaded) {
-                // need to set locations
-                bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-                bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-                bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-                bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-                loaded = true;
-            }
+            // need to set locations
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);            
 
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
+
         case pumpkinGhostRipple:
             if (curEffect != 7) {
                 newEffectReset;
@@ -598,74 +604,91 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             // draw ripple, then pumpkin and ghost
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            
-            // need to set locations
+
+            // (check locations are good)
             bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
 
             // shiftLeds(leds, RIGHT); // calls FastLED.show()
             FastLED.show();
             break;
+
         case snowflake:
             if (curEffect != 8) {
                 newEffectReset;
                 curEffect = 8;
             }
 
-            // need to set locations
-            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            if (!loaded) {
+                // need to set locations
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+                loaded = true;
+            }
 
             shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
+
         case snowman:
             if (curEffect != 9) {
                 newEffectReset;
                 curEffect = 9;
             }
 
-            // need to set locations
-            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            if (!loaded) {
+                // (check locations are good)
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+                loaded = true;
+            }
 
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
+
         case christmasTree:
             if (curEffect != 10) {
                 newEffectReset;
                 curEffect = 10;
             }
 
-            // load in christmas tree & pattern onto leds
-            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            if (!loaded) {
+                // load in christmas tree & pattern onto leds
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+                loaded = true;
+            }
 
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
+
         case candyCane:
             if (curEffect != 11) {
                 newEffectReset;
                 curEffect = 11;
             }
 
-            // need to set locations!
-            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            if (!loaded) {
+                // need to set locations!
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+                loaded = true;
+            }
 
             shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
+
         default:
-            curEffect = -1;
+            newEffectReset();
             Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");
             return;
     }
@@ -675,6 +698,7 @@ void newEffectReset() {
     loaded = false;
     prevLeds1 = {0};
     rippleCounter = 0;
+    curEffect = -1;
 
     // might be used? no harm in resetting if not
     count = 0;
