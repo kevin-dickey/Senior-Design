@@ -354,6 +354,8 @@ void setup()
     //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
     // }
     // loadImagesFromSD(std::vector<std::string>); // call this and we'll be good
+    std::vector<std::string> imgs = {"/8bitpumpkin.jpg", "/8bitghost.jpg"};
+    loadImagesFromSD(imgs);
 }
 
 
