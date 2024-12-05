@@ -22,7 +22,7 @@ const bool kMatrixVertical = false;
 
 // #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
 // CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
-// CRGB* const leds( leds_plus_safety_pixel + 1);
+// CRGB* const frame_data( leds_plus_safety_pixel + 1);
 
 // Set 'kMatrixSerpentineLayout' to false if your pixels are
 // laid out all running the same way, like this:

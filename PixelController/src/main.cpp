@@ -153,7 +153,8 @@ CRGB hexToCRGB(const char *hex);
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
-CRGB leds[NUM_LEDS];
+CRGB frame_data[NUM_LEDS];
+CRGB strip_data[][NUM_LEDS];
 
 unsigned char bufferPattern[3][3][3] = {
     {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
@@ -182,10 +183,10 @@ void setup()
     }
 
     // FastLED Initialization
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(frame_data, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    fill_solid(frame_data, NUM_LEDS, CRGB::Black);
     FastLED.show();
     Serial.println("Initialized FastLED...");
 
@@ -264,7 +265,7 @@ void setup()
         // Load the resized ghost
         bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
         fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);
-        rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
+        rearrangeForSerpentine(serpentineArray, frame_data, NUM_LEDS_X, NUM_LEDS_Y);
 
         FastLED.show();
 

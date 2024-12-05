@@ -14,7 +14,7 @@
  * Do NOT adjust them for brightness, JUST COLOR. (nothing bad will happen just won't work as expected)
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
  */
-CRGB* rippleEffect(CRGB *leds, int *num_leds, int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width) {
+CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width) {
     uint8_t maxDistance = 19;  // max(NUM_LEDS_X, NUM_LEDS_Y);
     uint16_t total_leds = num_leds[0] * num_leds[1];
     
@@ -22,7 +22,7 @@ CRGB* rippleEffect(CRGB *leds, int *num_leds, int r, int g, int b, uint8_t cente
     auto *temp = new CRGB[total_leds];
 
     for (int i = 0; i < total_leds; i++) {
-        temp[i] = leds[i];
+        temp[i] = frame_data[i];
     }
 
     // Iterate through the LED matrix
@@ -36,8 +36,8 @@ CRGB* rippleEffect(CRGB *leds, int *num_leds, int r, int g, int b, uint8_t cente
 
             if (prevLeds[xy_val] == 1) {
                 prevLeds[xy_val] = 0;
-                CRGB updatedColor = CRGB(leds[xy_val].r - r, leds[xy_val].g - g, leds[xy_val].b - b);
-                leds[xy_val] = updatedColor;
+                CRGB updatedColor = CRGB(frame_data[xy_val].r - r, frame_data[xy_val].g - g, frame_data[xy_val].b - b);
+                frame_data[xy_val] = updatedColor;
                 continue;
             }
 
