@@ -398,7 +398,7 @@ void loop()
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
     auto showFrame = runner->getNextShowFrame(sensor_states);
-    std::cout << " wahhh!!! " << std::endl;
+    std::cout << " wahhh!!! " << showFrame.effect->name << showFrame.frame << std::endl;
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
         std::cout << " skibidi " << std::endl;
@@ -518,6 +518,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
     // ripple + shifting effects almost surely broken af
     switch (showframe.effect->effectType) {  // set-up the leds[] with the frame based on desired effect
         case rainbow:
+            std::cout << "Generating rainbow frame..." << std::endl;
             if (curEffect != 0) {
                 newEffectReset;
                 curEffect = 0;
@@ -529,6 +530,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case ripple:
+            std::cout << "Generating ripple frame..." << std::endl;
             if (curEffect != 1) {
                 newEffectReset;
                 curEffect = 1;
@@ -540,6 +542,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case pumpkinRainbow:
+            std::cout << "Generating pumpkinRainbow frame..." << std::endl;
             if (curEffect != 2) {
                 newEffectReset;
                 curEffect = 2;
@@ -558,6 +561,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case pumpkinRipple:
+            std::cout << "Generating pumpkinRipple frame..." << std::endl;
             if (curEffect != 3) {
                 newEffectReset;
                 curEffect = 3;
@@ -576,6 +580,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case ghostRainbow:
+            std::cout << "Generating ghostRainbow frame..." << std::endl;
             if (curEffect != 4) {
                 newEffectReset;
                 curEffect = 4;
@@ -594,6 +599,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case ghostRipple:
+            std::cout << "Generating ghostRipple frame..." << std::endl;
             if (curEffect != 5) {
                 newEffectReset;
                 curEffect = 5;
@@ -612,6 +618,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case pumpkinGhostRainbow:
+            std::cout << "Generating pumpkinGhostRainbow frame..." << std::endl;
             if (curEffect != 6) {
                 newEffectReset;
                 curEffect = 6;
@@ -630,6 +637,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case pumpkinGhostRipple:
+            std::cout << "Generating pumpkinGhostRipple frame..." << std::endl;
             if (curEffect != 7) {
                 newEffectReset;
                 curEffect = 7;
@@ -649,6 +657,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case snowflake:
+            std::cout << "Generating snowflake frame..." << std::endl;
             if (curEffect != 8) {
                 newEffectReset;
                 curEffect = 8;
@@ -667,6 +676,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case snowman:
+            std::cout << "Generating snowman frame..." << std::endl;
             if (curEffect != 9) {
                 newEffectReset;
                 curEffect = 9;
@@ -685,6 +695,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case christmasTree:
+            std::cout << "Generating christmasTree frame..." << std::endl;
             if (curEffect != 10) {
                 newEffectReset;
                 curEffect = 10;
@@ -703,6 +714,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             break;
 
         case candyCane:
+            std::cout << "Generating candyCane frame..." << std::endl;
             if (curEffect != 11) {
                 newEffectReset;
                 curEffect = 11;

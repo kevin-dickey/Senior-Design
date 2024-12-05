@@ -201,25 +201,37 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
         std::cout << "Handling effect mode" << std::endl;
         // itterate to fine current effects for cursor time
         for (Effect *e : show.effects) {
+            std::cout << "a" << std::endl;
             if (e->startTimeMs <= effectCursor && effectCursor < e->startTimeMs + e->durationMs) {
+                std::cout << "b" << std::endl;
                 newEffectShowFrame.effect = e;
+                std::cout << "c" << std::endl;
                 if(currentEffectShowFrame.effect != nullptr && currentEffectShowFrame.effect->name ==  newEffectShowFrame.effect->name) {
+                    std::cout << "d" << std::endl;
                     newEffectShowFrame.frame = currentEffectShowFrame.frame + 1;
                 }
                 else {
+                    std::cout << "e" << std::endl;
                     newEffectShowFrame.frame = 1;
                 }
+                std::cout << "f" << std::endl;
                 showFrames.push_back(newEffectShowFrame);
+                std::cout << "g" << std::endl;
             }
         }
 
         if(newEffectShowFrame.frame){
+            std::cout << "h" << std::endl;
             currentEffectShowFrame = newEffectShowFrame;
+            std::cout << "z, " << newEffectShowFrame.effect << ", " << newEffectShowFrame.frame << std::endl;
             return newEffectShowFrame;
         }
         else{
+            std::cout << "i" << std::endl;
             currentEffectShowFrame.effect->name = "no effect" ;
+            std::cout << "j" << std::endl;
             currentEffectShowFrame.frame = -1 ;
+            std::cout << "k" << std::endl;
             return currentEffectShowFrame;
         }
 
