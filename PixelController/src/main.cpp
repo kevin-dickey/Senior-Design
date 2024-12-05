@@ -501,7 +501,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
                 curEffect = 1;
             }
 
-            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             FastLED.show();
 
             break;
@@ -531,7 +531,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple with pumpkin on top
-            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
 
             // (check locations are good)
             bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
@@ -567,7 +567,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple with ghost on top
-            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
 
             // (check locations are good)
             bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
@@ -603,7 +603,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple, then pumpkin and ghost
-            rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
 
             // (check locations are good)
             bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
