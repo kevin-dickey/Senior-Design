@@ -221,10 +221,12 @@ void drawRainbow(unsigned long current_millis);
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ slightly lower brightness for readability of other things on leds (e.g. pumpkin more easily visible)
 void parseBitmapData(const char *hexData);
 uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
+void loadImagesFromSD(std::vector<std::string> images);
 void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
 CRGB hexToCRGB(const char *hex);
 void resetTriggerMarkers(int exception);
+void newEffectReset();
 void generateFrame(ControllerRunner::ShowFrame showframe);
 void shiftLeds(CRGB leds[], ShiftDirection direction);
 
@@ -256,16 +258,27 @@ std::vector<bool> prev_sensor_triggered;
 
 // misc. stuff (effect variables, sensor stuff, running-time)
 int hue;
+int curEffect = -1;
 int count;
 bool goUp;
+bool loaded = false;
 char set_sensors;
 unsigned long current_millis;
 
+FileManager *fm;
+
 // can be loaded using loadHexBitmap
-const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
-const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
-const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
-const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
+// const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
+// const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
+// const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
+// const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
+unsigned char *ghostjpg;
+unsigned char *pumpkinjpg;
+unsigned char *candyCanejpg;
+unsigned char *christmasTreejpg;
+unsigned char *snowflakejpg;
+unsigned char *snowmanjpg;
+
 
 unsigned char bufferPattern[3][3][3] = {
     {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
@@ -285,7 +298,7 @@ void setup()
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
     // SD Card Setup
-    FileManager *fm = new FileManager();
+    fm = new FileManager();
     if (!fm->MountFileSystem())
     {
         std::cout << "Failed to mount file system. Halting..." << std::endl;
@@ -337,87 +350,12 @@ void setup()
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
 
-// MARK: HELP
-//       Load in the images from SD card (or just store them locally on the esp...)
-//       This includes stuff like the candy cane, christmas tree, etc. i think...?
-
-    try
-    {
-        long start_loading_ghost = millis();
-
-        std::cout << "⏳ Loading Ghost..." << std::endl;
-        File ghostBmpFile = fm->getJsonFile("/djibouti.jpg"); // <--
-        std::cout << "✅ Opened Ghost File!" << std::endl;
-
-        std::cout << "Converting to FILE..." << std::endl;
-        size_t fileSize;
-        unsigned char *ghostFileBuf = ImageProcessing::convertFsFileToBuffer(&ghostBmpFile, fileSize);  // <--
-        std::cout << "✅ Converted to FILE!" << std::endl;
-        std::cout << "  File Size: " << fileSize << std::endl;
-        std::cout << "  First 10 bytes: " << ghostFileBuf[0] << ghostFileBuf[1] << ghostFileBuf[2] << ghostFileBuf[3] << ghostFileBuf[4] << ghostFileBuf[5] << ghostFileBuf[6] << ghostFileBuf[7] << ghostFileBuf[8] << ghostFileBuf[9] << std::endl;
-
-        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-        std::cout << "🛑 Closing ghost from file manager..." << std::endl;
-        ghostBmpFile.close();  // <--
-        std::cout << "✅ Closed ghost from file manager!" << std::endl;
-
-        std::cout << "⏳ Getting Image Dimensions..." << std::endl;
-
-        // Get the dimensions of the image and load it
-        ImageProcessing::get_image_dimensions_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);  // <--
-
-        std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
-        std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
-        std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
-
-        unsigned char *ghostFile = ImageProcessing::load_image_from_memory(ghostFileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);  // <--
-        std::cout << "✅ Loaded Image!" << std::endl;
-        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-
-        std::cout << "↔️ Resizing Image..." << std::endl;
-        int newWidth = NUM_LEDS_X;  // <-- 
-        int newHeight = NUM_LEDS_Y;  // <--
-        unsigned char *resizedGhost = ImageProcessing::resize_image(ghostFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);  // <--
-        std::cout << "🕊️ Freeing Image & Buffer..." << std::endl;
-        ImageProcessing::free_image(ghostFile);  // <--
-        free(ghostFileBuf);  // <--
-
-        // DEBUG: Display the loaded image data
-        std::cout << "🖼️ Displaying Image Data..." << std::endl;
-        std::cout << "  New Width: " << newWidth << std::endl;
-        std::cout << "  New Height: " << newHeight << std::endl;
-        ImageProcessing::printImageHex(resizedGhost, newWidth, newHeight, loadedImageChannels); 
-
-        // Log the time taken to load the ghost
-        long end_loading_ghost = millis();
-        std::cout << "⏲️ Time taken to load ghost: " << end_loading_ghost - start_loading_ghost << "ms" << std::endl;
-
-        // Load the resized image into the LED matrix
-        std::cout << "🚦 Loading Image into LED Array..." << std::endl;
-        CRGB *serpentineArray = (CRGB *)calloc(NUM_LEDS, sizeof(CRGB));  // <--
-        // Load the test pattern
-        // bufferToCRGBArray(bufferPtr, 3, 3, 3, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 16, 16, true);
-        // Load the resized ghost
-        bufferToCRGBArray(resizedGhost, newWidth, newHeight, loadedImageChannels, serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);  // <--
-        fillRemainingPixels(serpentineArray, NUM_LEDS_X, NUM_LEDS_Y, CRGB::DarkOliveGreen);  // <--
-        rearrangeForSerpentine(serpentineArray, leds, NUM_LEDS_X, NUM_LEDS_Y);
-
-
-        FastLED.show();
-
-        // TODO: `free` or free_image causes a kernel panic, possibly due to a double free, the large size, or something else.
-        //  Not freeing will cause a memory leak, but it's better than a kernel panic for now.
-        // std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-        // std::cout << "🕊️ Freeing Loaded Image..." << std::endl;
-        // free(resizedGhost);
-        // std::cout << "✅ Freed Image!" << std::endl;
-        free(serpentineArray);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error loading ghost: " << e.what() << std::endl;
-    }
+    // for (effect which uses an image : show) {
+    //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
+    // }
+    // loadImagesFromSD(std::vector<std::string>); // call this and we'll be good
 }
+
 
 /**
  * MARK: Looping
@@ -450,6 +388,86 @@ void loop()
 
 // MARK: Functions
 
+
+/**
+ * Loads in images from the SD card, images should be a string of the filepath (e.g. "/djibouti.jpg")
+ */
+void loadImagesFromSD(std::vector<std::string> images) {
+    for (std::string image : images) {
+        try {
+            std::cout << "⏳ Loading " << image << "..." << std::endl;
+            File jpgFile = fm->getJsonFile(image);
+            std::cout << "✅ Opened " << image << " File!" << std::endl;
+
+            std::cout << "Converting to FILE..." << std::endl;
+            size_t fileSize;
+            unsigned char *fileBuf = ImageProcessing::convertFsFileToBuffer(&jpgFile, fileSize);  // <--
+            std::cout << "✅ Converted to FILE!" << std::endl;
+            std::cout << "  File Size: " << fileSize << std::endl;
+            std::cout << "  First 10 bytes: " << fileBuf[0] << fileBuf[1] << fileBuf[2] << fileBuf[3] << fileBuf[4] << fileBuf[5] << fileBuf[6] << fileBuf[7] << fileBuf[8] << fileBuf[9] << std::endl;
+
+            std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+            std::cout << "🛑 Closing ghost from file manager..." << std::endl;
+            jpgFile.close();
+            std::cout << "✅ Closed ghost from file manager!" << std::endl;
+
+            std::cout << "⏳ Getting Image Dimensions..." << std::endl;
+
+            // Get the dimensions of the image and load it
+            ImageProcessing::get_image_dimensions_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+            std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
+            std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
+            std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
+
+            unsigned char *imageFile = ImageProcessing::load_image_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
+            std::cout << "✅ Loaded Image!" << std::endl;
+            std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+
+            // resizing only ghost and pumpkin, might just want to recreate them to be right dimensions tbh
+            if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg") {
+                std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
+                int newWidth = 25;
+                int newHeight = 24;
+                imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+            }
+
+            std::cout << "🕊️ Freeing File Buffer..." << std::endl;
+            free(fileBuf);
+
+            // DEBUG: Print the loaded image data
+            std::cout << "🖼️ Displaying Image Data..." << std::endl;
+            ImageProcessing::printImageHex(imageFile, 24, 25, loadedImageChannels);
+
+            // Store the image
+            std::cout << "💾 Storing image to the global pointer..." << std::endl;
+            if (image == "/8bitghost.jpg") {
+                ghostjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else if (image == "/8bitpumpkin.jpg") {
+                pumpkinjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else if (image == "/candycane.jpg") {
+                candyCanejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else if (image == "/snowflake.jpg") {
+                snowflakejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else if (image == "/christmastree.jpg") {
+                christmasTreejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else if (image == "/snowman.jpg") {
+                snowmanjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            } else {
+                std::cerr << "Unrecognized jpg supplied: '" << image << "' !" << std::endl;
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error loading image: " << e.what() << std::endl;
+        }
+    }
+}
+
+
 /**
  * Builds frame onto the leds array (CRGB leds[]) based on the provided showframe.
  * 
@@ -466,81 +484,201 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
     // rainbow + shifting effects might look a little goofy, but shouldn't be completely broken i don't think
     // ripple + shifting effects almost surely broken af
     switch (showframe.effect->effectType) {  // set-up the leds[] with the frame based on desired effect
-        case rainbow:            
+        case rainbow:
+            if (curEffect != 0) {
+                newEffectReset;
+                curEffect = 0;
+            }
+
             drawRainbow(current_millis);
+            FastLED.show();
             break;
-        case ripple: 
-            // generate a ripple frame of desired color and size
-                    // MARK: HELP
-                    //       i entered dummy vals for rgb, prevleds, ripplecounter, and width for now. where should i get vals for these?
+        case ripple:
+            if (curEffect != 1) {
+                newEffectReset;
+                curEffect = 1;
+            }
+
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             FastLED.show();
             break;
-        case pumpkinRainbow:       
+        case pumpkinRainbow:
+            if (curEffect != 2) {
+                newEffectReset;
+                curEffect = 2;
+            }
+
             // draw rainbow with pumpkin on top
             drawRainbow(current_millis);
             
-            // load in pumpkin from sd card
-
+            // load in pumpkins (update locations!)
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
 
             shiftLeds(leds, RIGHT); // might make the rainbow effect look v weird, not sure
             break;
         case pumpkinRipple:
+            if (curEffect != 3) {
+                newEffectReset;
+                curEffect = 3;
+            }
+
             // draw ripple with pumpkin on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            
 
+            // need to update locations!
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+
+            FastLED.show();
             break;
         case ghostRainbow:
+            if (curEffect != 4) {
+                newEffectReset;
+                curEffect = 4;
+            }
+
             // draw rainbow with ghost on top  
             drawRainbow(current_millis);
-            
+
+            // need to update locations!
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case ghostRipple:
+            if (curEffect != 5) {
+                newEffectReset;
+                curEffect = 5;
+            }
+
             // draw ripple with ghost on top
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
-            
 
+            // need to set locations
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+
+            FastLED.show();
             break;
-        case pumpkinGhostRainbow: 
-            // draw rainbow, then pumpkin and ghost (maybe chasing, need to see frontend)
+        case pumpkinGhostRainbow:
+            if (curEffect != 6) {
+                newEffectReset;
+                curEffect = 6;
+            }
+
+            // draw rainbow, then pumpkin and ghost
             drawRainbow(current_millis);
 
-            // draw pumpkin & ghost
-            
+            if (!loaded) {
+                // need to set locations
+                bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+                loaded = true;
+            }
+
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case pumpkinGhostRipple:
-            // draw ripple, then pumpkin and ghost (maybe chasing, need to see frontend)
+            if (curEffect != 7) {
+                newEffectReset;
+                curEffect = 7;
+            }
+
+            // draw ripple, then pumpkin and ghost
             rippleEffect(leds, LEDS_SIZE_ARR, 255, 255, 255, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
             
-            // draw pumpkin & ghost
+            // need to set locations
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            // shiftLeds(leds, RIGHT); // calls FastLED.show()
+            FastLED.show();
             break;
         case snowflake:
-            
+            if (curEffect != 8) {
+                newEffectReset;
+                curEffect = 8;
+            }
+
+            // need to set locations
+            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+
             shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
         case snowman:
-            
+            if (curEffect != 9) {
+                newEffectReset;
+                curEffect = 9;
+            }
+
+            // need to set locations
+            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case christmasTree:
+            if (curEffect != 10) {
+                newEffectReset;
+                curEffect = 10;
+            }
+
             // load in christmas tree & pattern onto leds
+            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
 
             shiftLeds(leds, RIGHT); // calls FastLED.show()
             break;
         case candyCane:
-            // load in candycane & pattern onto leds
+            if (curEffect != 11) {
+                newEffectReset;
+                curEffect = 11;
+            }
+
+            // need to set locations!
+            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
+            bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
 
             shiftLeds(leds, DOWN); // calls FastLED.show()
             break;
         default:
+            curEffect = -1;
             Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");
             return;
     }
+}
+
+void newEffectReset() {
+    loaded = false;
+    prevLeds1 = {0};
+    rippleCounter = 0;
+
+    // might be used? no harm in resetting if not
+    count = 0;
+    goUp = true;
 }
 
 
