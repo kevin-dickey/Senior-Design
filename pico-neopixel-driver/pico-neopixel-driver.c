@@ -16,7 +16,7 @@
 #include "ws2812_shift.pio.h"
 
 #define FRAC_BITS 4
-#define NUM_PIXELS 5
+#define NUM_PIXELS 6 
 #define WS2812_PIN_BASE 0
 
 // horrible temporary hack to avoid changing pattern code
@@ -116,7 +116,7 @@ void pattern_solid(uint len, uint t)
     t = 1;
     for (uint i = 0; i < len; ++i)
     {
-        put_pixel(t * 0xFFAABB);
+        put_pixel(t * 0xFFFFFF);
     }
 }
 
@@ -152,15 +152,15 @@ const struct
     const char *name;
 } pattern_table[] = {
     // {pattern_snakes, "Snakes!"},
-    // {pattern_random,  "Random data"},
+    {pattern_random,  "Random data"},
     // {pattern_sparkle, "Sparkles"},
     // {pattern_gradient, "Gradient"},
     // {pattern_greys,   "Greys"},
-           {pattern_solid,  "Solid!"},
+    {pattern_solid,  "Solid!"},
     //        {pattern_fade, "Fade"},
 };
 
-#define VALUE_PLANE_COUNT 5 // (8 + FRAC_BITS)
+#define VALUE_PLANE_COUNT 8 // (8 + FRAC_BITS)
 // we store value (8 bits + fractional bits of a single color (R/G/B/W) value) for multiple
 // strips of pixels, in bit planes. bit plane N has the Nth bit of each strip of pixels.
 // We commented out FRAC_BITS to remove possible variables that are not used.
@@ -177,6 +177,54 @@ typedef struct
     uint frac_brightness; // 256 = *1.0;
 } strip_t;
 
+// Add FRAC_BITS planes of e to s and store in d
+void add_error(value_bits_t *d, const value_bits_t *s, const value_bits_t *e) {
+    uint32_t carry_plane = 0;
+    // add the FRAC_BITS low planes
+    for (int p = VALUE_PLANE_COUNT - 1; p >= 8; p--) {
+        uint32_t e_plane = e->planes[p];
+        uint32_t s_plane = s->planes[p];
+        d->planes[p] = (e_plane ^ s_plane) ^ carry_plane;
+        carry_plane = (e_plane & s_plane) | (carry_plane & (s_plane ^ e_plane));
+    }
+    // then just ripple carry through the non fractional bits
+    for (int p = 7; p >= 0; p--) {
+        uint32_t s_plane = s->planes[p];
+        d->planes[p] = s_plane ^ carry_plane;
+        carry_plane &= s_plane;
+    }
+}
+
+// takes 8 bit color values, multiply by brightness and store in bit planes
+void transform_strips(strip_t **strips, uint num_strips, value_bits_t *values, uint value_length,
+                      uint frac_brightness)
+{
+    for (uint v = 0; v < value_length; v++)
+    {
+        memset(&values[v], 0, sizeof(values[v]));
+        for (uint i = 0; i < num_strips; i++)
+        {
+            if (v < strips[i]->data_len)
+            {
+                // todo clamp?
+                uint32_t value = (strips[i]->data[v] * strips[i]->frac_brightness) >> 8u;
+                // value = (value * frac_brightness) >> 8u;
+                for (int j = 0; j < VALUE_PLANE_COUNT && value; j++, value >>= 1u)
+                {
+                    if (value & 1u)
+                        values[v].planes[VALUE_PLANE_COUNT - 1 - j] |= 1u << i;
+                }
+            }
+        }
+    }
+}
+
+void dither_values(const value_bits_t *colors, value_bits_t *state, const value_bits_t *old_state, uint value_length) {
+    for (uint i = 0; i < value_length; i++) {
+        add_error(state + i, colors + i, old_state + i);
+    }
+}
+
 // requested colors * 4 to allow for RGBW
 static value_bits_t colors[NUM_PIXELS * 4];
 // double buffer the state of the pixel strip, since we update next version in parallel with DMAing out old version
@@ -186,30 +234,6 @@ static value_bits_t states[2][NUM_PIXELS * 4];
 static uint8_t strip0_data[NUM_PIXELS * 3];
 // example - strip 1 is RGBW
 static uint8_t strip1_data[NUM_PIXELS * 3];
-
-static uint8_t example_value_bits1[NUM_PIXELS * 4] = {
-    0x11, 0x22, 0x33, 0x00,
-    0x44, 0x55, 0x66, 0x00,
-    0x77, 0x88, 0x99, 0x00,
-    0xaa, 0xbb, 0xcc, 0x00,
-    0xdd, 0xee, 0xff, 0x00,
-};
-
-static uint8_t example_value_bits2[NUM_PIXELS * 4] = {
-    0x12, 0x23, 0x34, 0x00,
-    0x45, 0x56, 0x67, 0x00,
-    0x78, 0x89, 0x9a, 0x00,
-    0xab, 0xbc, 0xcd, 0x00,
-    0xde, 0xef, 0xf0, 0x00,
-};
-
-static uint8_t example_value_bits3[NUM_PIXELS * 4] = {
-    0x13, 0x24, 0x35, 0x00,
-    0x46, 0x57, 0x68, 0x00,
-    0x79, 0x8a, 0x9b, 0x00,
-    0xac, 0xbd, 0xce, 0x00,
-    0xdf, 0xe0, 0xf1, 0x00,
-};
 
 strip_t strip0 = {
     .data = strip0_data,
@@ -301,34 +325,22 @@ void dma_init(PIO pio, uint sm)
 }
 
 // value_length is the number of bytes needed for one total output frame.
-// 
 void output_strips_dma(value_bits_t *bits, uint value_length)
 {
-    // for (uint i = 0; i < value_length; i++)
-    // {
-    //     // fragment_start[i] wants a uintptr_t, so we cast the bits[i].planes to uintptr_t
-    //     // fragment_start[i] = (uintptr_t)bits[i].planes; // MSB first
-
-    //     // Assign the value of example_data[i] to the address of fragment_start[i]
-    //     fragment_start[i] = (uintptr_t)&example_value_bits1;
-    // }
-
-    fragment_start[0] = (uintptr_t)&example_value_bits2;
-    fragment_start[1] = (uintptr_t)&example_value_bits3;
-    fragment_start[2] = (uintptr_t)&example_value_bits1;
-    fragment_start[3] = (uintptr_t)&example_value_bits1;
-    fragment_start[4] = 0;
-
-    // Print the following
-    // Address of fragment_start [0]
-    // Value Length
-    // value_length values of fragment_start
-    printf("Fragment Start Address: %p\n", (void*)fragment_start);
-    printf("Value Length: %d\n", value_length);
-    for (uint i = 0; i < value_length; i++) {
-        printf("Mem addr at loc %d: %p\n", i, (void*)fragment_start[i]);
-        printf("Value at loc %d: %d\n", i, *(uint8_t*)fragment_start[i]);
+    for (uint i = 0; i < value_length; i++)
+    {
+        // fragment_start[i] wants a uintptr_t, so we cast the bits[i].planes to uintptr_t
+        fragment_start[i] = (uintptr_t)bits[i].planes; // MSB first
     }
+
+    fragment_start[value_length] = 0;
+
+    // printf("Fragment Start Address: %p\n", (void*)fragment_start);
+    // printf("Value Length: %d\n", value_length);
+    // for (uint i = 0; i < value_length; i++) {
+    //     printf("Mem addr at loc %d: %p\n", i, (void*)fragment_start[i]);
+    //     printf("Value at loc %d: %d\n", i, *(uint8_t*)fragment_start[i]);
+    // }
 
     dma_channel_hw_addr(DMA_CB_CHANNEL)->al3_read_addr_trig = (uintptr_t)fragment_start;
 }
@@ -365,9 +377,56 @@ int main()
         for (int i = 0; i < 1000; ++i)
         {
             current_strip_out = strip0.data;            // Modify the strip data at the right strip location (ptr)
-            pattern_table[pat].pat(NUM_PIXELS, t);      // Call the pattern function with the current time to animate the strip.
+            pattern_table[1].pat(NUM_PIXELS, t);      // Call the pattern function with the current time to animate the strip.
             current_strip_out = strip1.data;            // Update to the next location
-            pattern_table[pat].pat(NUM_PIXELS, t);
+            pattern_table[0].pat(NUM_PIXELS, t);
+
+            // print the memory from the un-transformed strip data, and the transformed strip data, both in the form 0xAAAAAA 0xAAAAAA 0xAAAAAA...
+            printf("Un-transformed:\n");
+            printf("Strip 0 Data: %p\n", (void*)strip0.data);
+            for (uint i = 0; i < sizeof(strip0_data); i++) {
+                printf("0x%02x ", strip0.data[i]);
+                if (i % 3 == 2) {
+                    printf("\n");
+                }
+            }
+            printf("Strip 1 Data: %p\n", (void*)strip1.data);
+            for (uint i = 0; i < sizeof(strip1_data); i++) {
+                printf("0x%02x ", strip1.data[i]);
+                if (i % 3 == 2) {
+                    printf("\n");
+                }
+            }
+
+            transform_strips(strips, count_of(strips), colors, NUM_PIXELS * 4, brightness);
+            dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
+
+            // print the memory from the un-transformed strip data, and the transformed strip data, both in the form 0xAAAAAA 0xAAAAAA 0xAAAAAA...
+            printf("Transformed:\n");
+            // Print the transformed data from the colors array
+            for (uint i = 0; i < NUM_PIXELS * 4; i++) {
+                printf("0x%08x ", colors[i].planes[0]);
+                if (i % 3 == 2) {
+                    printf("\n");
+                }
+            }
+            printf("\n");
+
+            for (uint i = 0; i < NUM_PIXELS * 4; i++) {
+                printf("0x%08x ", colors[i].planes[1]);
+                if (i % 3 == 2) {
+                    printf("\n");
+                }
+            }
+            printf("\n");
+
+            for (uint i = 0; i < NUM_PIXELS * 4; i++) {
+                printf("0x%08x ", colors[i].planes[2]);
+                if (i % 3 == 2) {
+                    printf("\n");
+                }
+            }
+            printf("\n");
 
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strips_dma(states[current], NUM_PIXELS * 4); // RGBW support - put_pixel() will write 4 bytes per pixel
