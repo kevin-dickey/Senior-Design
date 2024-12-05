@@ -30,12 +30,10 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
 
     const initialValues = props.show ? {
         showName: props.show.name,
-        durationSeconds: Math.floor(props.show.durationMs / 1000),
         height: grid.height,
         width: grid.width,
         } : {
         showName: '',
-        durationSeconds: 0,
         height: 0,
         width: 0
     };
@@ -45,11 +43,6 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
             .string()
             .label("Show Name")
             .required(),
-        durationSeconds: yup
-            .number()
-            .label("Show Duration")
-            .required()
-            .positive(),
         height: yup
             .number()
             .label("Field Height")
@@ -94,20 +87,9 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
                                     />
                                     <Field
                                         as={TextField}
-                                        id="durationSeconds"
-                                        name="durationSeconds"
-                                        label="Duration (seconds)"
-                                        type="number"
-                                        fullWidth
-                                        margin="dense"
-                                        error={touched.durationSeconds && Boolean(errors.durationSeconds)}
-                                        helperText={touched.durationSeconds && errors.durationSeconds}
-                                    />
-                                    <Field
-                                        as={TextField}
                                         id="height"
                                         name="height"
-                                        label="Height"
+                                        label="Height (Divide by 2)"
                                         type="number"
                                         fullWidth
                                         margin="dense"
@@ -118,7 +100,7 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
                                         as={TextField}
                                         id="width"
                                         name="width"
-                                        label="Width"
+                                        label="Width (Divide by 2)"
                                         type="number"
                                         fullWidth
                                         margin="dense"

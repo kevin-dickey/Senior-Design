@@ -67,9 +67,10 @@ export class Show {
     }
 
     toJSON() {
+        this.durationMs = this.effects[this.effects.length-1].durationMs + this.effects[this.effects.length-1].startTimeMs;
         return {
             name: this.name,
-            duration: this.durationMs,
+            duration: (this.durationMs) ?? 0,
             effects: this.effects.map(effect => effect.toJSON()),
             layouts: this.layouts.map(layout => layout.toJSON())
         };
