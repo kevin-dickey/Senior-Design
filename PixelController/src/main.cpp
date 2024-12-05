@@ -265,7 +265,7 @@ bool loaded = false;
 char set_sensors;
 unsigned long current_millis;
 
-FileManager *fm;
+FileManager *fm = NULL;
 
 // can be loaded using loadHexBitmap
 // const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
@@ -291,6 +291,7 @@ unsigned char *bufferPtr = &bufferPattern[0][0][0];
 int loadedImageHeight, loadedImageWidth, loadedImageChannels;
 unsigned char *loadedImage;
 
+// MARK: Setup
 void setup()
 {
     Serial.begin(115200);                    // for setting up stuff to print to serial monitor
@@ -306,6 +307,35 @@ void setup()
             ;
     }
 
+    std::cout << " we mounted " << ESP.getFreeHeap() << std::endl;
+
+    try {
+        std::cout << "⏳ Loading Show..." << std::endl;
+        File showFile = fm->getJsonFile("/christmas-y.json");
+        show = loadShow(showFile);
+        std::cout << "✅ Loaded Show!" << std::endl;
+        // std::cout << "➡️ Show Name: " << show.name << std::endl;
+        runner = new ControllerRunner(show, millis(), epoch);
+        showFile.close();
+    } catch (const std::exception &e) {
+        std::cerr << "Error loading show: " << e.what() << std::endl;
+    }
+
+    if (show.layouts[0]->isGridLayout()) {          // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
+        NUM_LEDS_X = show.layouts[0]->getWidth();   // this returns size of frontend, SHOULD be 100
+        NUM_LEDS_Y = show.layouts[0]->getHeight();  // SHOULD be 24
+        NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y;         // SHOULD be 2400
+        kMatrixHeight = NUM_LEDS_Y;
+        kMatrixWidth = NUM_LEDS_X;
+
+        leds = new CRGB[NUM_LEDS];
+
+        // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
+        prevLeds1 = new int[NUM_LEDS];
+    } else {
+        // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
+    }
+
     // FastLED Initialization
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050); // setup the LEDs & LED pin for the esp32
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
@@ -315,35 +345,26 @@ void setup()
     Serial.println("Initialized FastLED...");
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
-    try
-    {
-        std::cout << "⏳ Loading Show..." << std::endl;
-        File showFile = fm->getJsonFile("/christmas-y.json");
-        show = loadShow(showFile);
-        std::cout << "✅ Loaded Show!" << std::endl;
-        // std::cout << "➡️ Show Name: " << show.name << std::endl;
-        showFile.close();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error loading show: " << e.what() << std::endl;
-    }
+    // sensor stuff, might need some updating idk
+    Pair_t sensor_pos{0, 0};
+    Pair_t size = {10, 10};
+    std::unique_ptr<Translation_t> translation = std::make_unique<Translation_t>(
+        Translation_t{
+            .end_pos = sensor_pos,
+            .durationMs = 1000.0});
+    Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
+    // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
+    // sensor0 = new Sensor(0, 34, 1000, S_BINARY, sensor_pos, sensorEffect);  // ne
+    sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
+    // sensor2 = new Sensor(2, 32, 1000, S_BINARY, sensor_pos, sensorEffect);  // sw
+    // sensor3 = new Sensor(3, 33, 1000, S_BINARY, sensor_pos, sensorEffect);  // se
+    a_sensors = std::vector<Sensor *>{sensor1};
+    prev_sensor_triggered = std::vector<bool>(a_sensors.size());
+    sensorManager = new SensorManager();
+    sensorManager->setSensors(a_sensors);
+    set_sensors = 'a';
+    Serial.println("Initialized Sensors...");
 
-    if (show.layouts[0]->isGridLayout()) { // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
-        NUM_LEDS_X = show.layouts[0]->getWidth(); // this returns size of frontend, SHOULD be 100
-        NUM_LEDS_Y = show.layouts[0]->getHeight(); // SHOULD be 24
-        NUM_LEDS = NUM_LEDS_X * NUM_LEDS_Y; // SHOULD be 2400
-        kMatrixHeight = NUM_LEDS_Y;  
-        kMatrixWidth = NUM_LEDS_X;  
-        
-        leds = new CRGB[NUM_LEDS];
-
-        // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
-        prevLeds1 = new int[NUM_LEDS];
-    } else {
-        // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
-    }
-    
     hue = 30;
     count = 0;
     rippleCounter = 0;
@@ -356,6 +377,9 @@ void setup()
     // loadImagesFromSD(std::vector<std::string>); // call this and we'll be good
     std::vector<std::string> imgs = {"/8bitpumpkin.jpg", "/8bitghost.jpg"};
     loadImagesFromSD(imgs);
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+    std::cout << pumpkinjpg << std::endl;
+    std::cout << ghostjpg << std::endl;
 }
 
 
@@ -364,15 +388,20 @@ void setup()
  */
 void loop()
 {
+    std::cout << " here!! " << std::endl;
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
+    std::cout << " no here!! " << std::endl;
     current_millis = millis();
+    std::cout << " here...? " << std::endl;
 
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
     auto showFrame = runner->getNextShowFrame(sensor_states);
+    std::cout << " wahhh!!! " << std::endl;
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
+        std::cout << " skibidi " << std::endl;
         // no effect found because we're over the shows duration. reset show
         std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
         Show show = loadShow(filePath);
@@ -382,6 +411,7 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
+    std::cout << " FRAME TIME!!! " << std::endl;
     generateFrame(showFrame);
 
     // divide frame up to send to picos
@@ -471,6 +501,7 @@ void loadImagesFromSD(std::vector<std::string> images) {
             std::cerr << "Error loading image: " << e.what() << std::endl;
         }
     }
+    std::cout << "😁 Done loading images!" << std::endl;
 }
 
 

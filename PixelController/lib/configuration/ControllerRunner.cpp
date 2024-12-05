@@ -226,12 +226,15 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
     }
     else // if (mode == "sensor")
     {
-        std::cout << "Handling sensor mode" << std::endl;
-        ShowFrame newSensorShowFrame{}; 
+        std::cout << "Handling sensor mode for sensor " << activeSensorId << ", do I exist? The code will abort if not!" << std::endl;
+        ShowFrame newSensorShowFrame{};
         Effect *newSensorEffect = show.sensors.at(activeSensorId)->effect;
+        std::cout << "b" << std::endl;
         newSensorShowFrame.effect = newSensorEffect;
+        std::cout << "c" << std::endl;
         if(currentSensorShowFrame.effect != nullptr && currentSensorShowFrame.effect->name ==  newSensorShowFrame.effect->name) {
             newSensorShowFrame.frame = currentSensorShowFrame.frame + 1;
+            std::cout << "d" << std::endl;
         }
         else {
             newSensorShowFrame.frame = 1;

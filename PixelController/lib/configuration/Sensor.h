@@ -58,10 +58,10 @@ public:
         try
         {
             return new Sensor{
-                j["id"],
-                j["pin"],
-                j["type"],
-                j["duration"],
+                j.at("id").get<int>(),
+                j.at("pin").get<int>(),
+                j.at("durationMs").get<unsigned long>(),
+                j.at("type").get<SensorType>(),
                 Pair_t::from_json(j["location"]),
                 Effect::from_json(j["effects"])};
         }
