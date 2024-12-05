@@ -30,7 +30,7 @@ export class Effect {
                 translation?: Translation,
                 id: number = -1,
                 type?: EffectType,
-                speed: number= 1) {
+                speed: number= -1) {
         this.id = id;
         this.name = name;
         this.type = type;

@@ -4,7 +4,7 @@ import {Pair} from "../components/serialization/Pair";
 import {GridLayout} from "../components/serialization/Layout";
 
 export const makeShow = () => {
-    const show = new Show('Basic Show File', 10000);
+    const show = new Show('Basic Show File');
     const effect = RainbowEffect.emptyEffect();
 
     show.addEffect(effect);

@@ -80,7 +80,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                         onClick={() => setIsEffectsOpen(!isEffectsOpen)}
                         sx={{ color: '#fff', justifyContent: 'flex-start' }}
                     >
-                        Effects In Show {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
+                        Current Effects {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
                     </Button>
                     {isEffectsOpen &&
                         <Box sx={{}}>

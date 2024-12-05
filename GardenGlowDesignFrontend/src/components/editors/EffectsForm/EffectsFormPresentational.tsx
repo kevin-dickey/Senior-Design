@@ -20,7 +20,7 @@ export const EffectsFormPresentational: React.FC<EffectFormProps> = ({ effect, o
                     <label htmlFor="speed">Speed</label>
                 </Grid>
                 <Grid item xs={fieldColumns}>
-                    <Field id="speed" name="speed" type="number" />
+                    <Field id="speed" name="speed" type="number" placeholder="Enter value (1-5)" />
                 </Grid>
             </EffectForm>
         </Grid>

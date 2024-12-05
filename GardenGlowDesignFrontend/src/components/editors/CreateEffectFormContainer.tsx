@@ -36,7 +36,7 @@ export const CreateEffectFormContainer: React.FC<CreateEffectFormContainerProps>
             case EffectType.christmasTree:
             case EffectType.candyCane:
                 console.log("case selected");
-                return <CreateEffectsFormContainer effectType={effectType} onSubmit={onSubmit} />;
+                return <CreateEffectsFormContainer effectType={effectType} onSubmit={onSubmit}  />;
             default:
                 return null;
         }

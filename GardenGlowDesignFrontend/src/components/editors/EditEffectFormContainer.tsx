@@ -19,12 +19,14 @@ export const EditEffectFormContainer: React.FC<EditEffectFormContainerProps> =
                     effect={effect as RainbowEffect}
                     onSubmit={onSubmit}
                     onDelete={onDelete}
+                    
                 />;
             case EffectType.ripple:
                 return <EditRippleEffectFormContainer
                     effect={effect as RippleEffect}
                     onSubmit={onSubmit}
                     onDelete={onDelete}
+                    
                 />;
                 case EffectType.pumpkinRainbow:
                 case EffectType.pumpkinRipple:
@@ -40,6 +42,7 @@ export const EditEffectFormContainer: React.FC<EditEffectFormContainerProps> =
                         effect={effect}
                         onSubmit={onSubmit}
                         onDelete={onDelete} 
+                        
                     />
                 // console.warn('Base effect constructor used:', effect);
                 return null;

@@ -41,10 +41,8 @@ export const fieldColumns = 12 - labelColumns;
 export const EffectForm: React.FC<EffectFormProps> = (
     { effect, onSubmit, onDelete, children }
 ) => {
-
-
-
     return (
+
         <Box
             className="effect-form"
             sx={{
@@ -89,7 +87,13 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                 {errors.startTimeMs && touched.startTimeMs ? (
                                     <div>{errors.startTimeMs}</div>
                                 ) : null}
-                                <Field id="startTimeMs" name="startTimeMs" type="number" placeholder="Enter Start Time in MS"/>
+                                <Field
+                                    id="startTimeMs"
+                                    name="startTimeMs"
+                                    type="number"
+                                    placeholder="Enter Start in MS"
+                                    value={values.startTimeMs === -1 ? '' : values.startTimeMs}
+                                />
                             </Grid>
                             <Grid item xs={labelColumns}>
                                 <label htmlFor="duration">Duration</label>
@@ -98,7 +102,13 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                 {errors.durationMs && touched.durationMs ? (
                                     <div>{errors.durationMs}</div>
                                 ) : null}
-                                <Field id="durationMs" name="durationMs" type="number" placeholder="Enter Duration Time in MS"/>
+                                <Field
+                                    id="durationMs"
+                                    name="durationMs"
+                                    type="number"
+                                    placeholder="Enter Duration in MS"
+                                    value={values.durationMs === -1 ? '' : values.durationMs}
+                                />
                             </Grid>
                             {children}
                             {onDelete && (

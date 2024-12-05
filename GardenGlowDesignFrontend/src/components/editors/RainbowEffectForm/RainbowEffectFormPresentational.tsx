@@ -20,7 +20,7 @@ export const RainbowEffectFormPresentational:
             </Grid>
             {/* TODO: Add fields for color */}
             <Grid item xs={fieldColumns}>
-                <Field id="speed" name="speed" type="number"/>
+                <Field id="speed" name="speed" type="number" placeholder="Enter value (1-5)"/>
             </Grid>
         </EffectForm>
     );

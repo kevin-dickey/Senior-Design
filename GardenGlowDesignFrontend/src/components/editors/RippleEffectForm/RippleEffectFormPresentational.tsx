@@ -12,13 +12,15 @@ interface RippleEffectFormProps {
 
 export const RippleEffectFormPresentational:
     React.FC<RippleEffectFormProps> = (props) => {
+    const labelColumns = 7;
+    const fieldColumns = 12 - labelColumns;
     return (
         <EffectForm {...props}>
-            <Grid item xs={4}>
+            <Grid item xs={labelColumns}>
                 <label htmlFor="rippleSpeed">Ripple Speed</label>
             </Grid>
-            <Grid item xs={8}>
-                <Field id="speed" name="speed" type="number"/>
+            <Grid item xs={fieldColumns}>
+                <Field id="speed" name="speed" type="number" placeholder="Enter value (1-5)" />
             </Grid>
         </EffectForm>
     );

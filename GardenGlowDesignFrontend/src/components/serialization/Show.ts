@@ -9,9 +9,9 @@ export class Show {
     effects: Effect[];
     sensors: Sensor[];
 
-    constructor(name: string, duration: number) {
+    constructor(name: string) {
         this.name = name;
-        this.durationMs = duration;
+        this.durationMs = 0;
         this.effects = [];
         this.layouts = [];
         this.sensors = [];
@@ -67,10 +67,12 @@ export class Show {
     }
 
     toJSON() {
-        this.durationMs = this.effects[this.effects.length-1].durationMs + this.effects[this.effects.length-1].startTimeMs;
+        let dur = this.effects[this.effects.length-1].durationMs ?? 0;
+        let start = this.effects[this.effects.length-1].startTimeMs ?? 0;
+        this.durationMs = dur + start; 
         return {
             name: this.name,
-            duration: (this.durationMs) ?? 0,
+            duration: (this.durationMs),
             effects: this.effects.map(effect => effect.toJSON()),
             layouts: this.layouts.map(layout => layout.toJSON())
         };

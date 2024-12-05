@@ -56,10 +56,13 @@ const Configuration: React.FC<ConfigurationProps> = (
     const [showConfigPanelOpen, setShowConfigPanelOpen] = useState(false);
 
     const updateEffect = (submittedEffect: Effect, effectToUpdateId: number) => {
+        submittedEffect.durationMs = submittedEffect.durationMs;
+        submittedEffect.startTimeMs = submittedEffect.startTimeMs;
+
         if (show == null) {
             throw Error("Show must not be null!");
         }
-        const updatedShow = new Show(show.name, show.durationMs);
+        const updatedShow = new Show(show.name);
         updatedShow.setLayouts(show.layouts);
         updatedShow.setEffects(show.effects.map(effect => {
             if (effect.id === effectToUpdateId) {
@@ -75,7 +78,7 @@ const Configuration: React.FC<ConfigurationProps> = (
             throw Error("Show must not be null!");
         }
 
-        const updatedShow = new Show(show.name, show.durationMs);
+        const updatedShow = new Show(show.name);
         updatedShow.setLayouts(show.layouts);
         updatedShow.setSensors(show.sensors);
         updatedShow.setEffects(show.effects.filter(effect => effect.id !== effectId));
@@ -88,7 +91,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                                 gridHeight: number,
                                 gridWidth: number) => {
         console.log("Saving show settings");
-        const newShow = new Show(name, durationSeconds * 1000);
+        const newShow = new Show(name);
         newShow.addLayout(new GridLayout(gridWidth, gridHeight));
 
         if (show) {
@@ -122,7 +125,7 @@ const Configuration: React.FC<ConfigurationProps> = (
         console.log('Width: ' + width);
         console.log('Height: ' + height);
 
-        const newShow = new Show(fileName, show?.durationMs || 0);
+        const newShow = new Show(fileName);
         newShow.addLayout(new GridLayout(width, height));
         newShow.setEffects(show?.effects || []);
         newShow.setSensors(show?.sensors || []);
@@ -254,7 +257,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                                             />
                                         )}
                                         {creatingNewEffect && (
-                                            <CreateEffectFormContainer
+                                            <CreateEffectFormContainer 
                                                 effectType={creatingEffectType}
                                                 onSubmit={(values) => {
                                                     console.log("Creating new effect: " + values);
