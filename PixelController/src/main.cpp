@@ -423,8 +423,8 @@ void loadImagesFromSD(std::vector<std::string> images) {
             std::cout << "✅ Loaded Image!" << std::endl;
             std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
-            // resizing only ghost and pumpkin, might just want to recreate them to be right dimensions tbh
-            if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg") {
+            // resizing only ghost and pumpkin (or unrecognized file), might just want to recreate them to be right dimensions tbh
+            if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg")) {
                 std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
                 int newWidth = 25;
                 int newHeight = 24;
@@ -476,10 +476,6 @@ void loadImagesFromSD(std::vector<std::string> images) {
  *         -- whatever EffectTypes the frontend has.
  */
 void generateFrame(ControllerRunner::ShowFrame showframe) {
-    
-// MARK: TODO
-//       reset rippleCounters and prevLeds of ripple effects not currently in use so they properly work together
-
     // shift directions might be incorrect, need to test on field!
     // rainbow + shifting effects might look a little goofy, but shouldn't be completely broken i don't think
     // ripple + shifting effects almost surely broken af
@@ -694,6 +690,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
     }
 }
 
+// Resets some variables and such for the next effect to run properly
 void newEffectReset() {
     loaded = false;
     prevLeds1 = {0};
