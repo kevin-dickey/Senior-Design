@@ -6,7 +6,8 @@ import {
     FormControl,
     InputLabel,
     MenuItem,
-    Select
+    Select,
+    Typography
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { EffectList } from "../components/editors/EffectList";
@@ -48,7 +49,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
         >
             <Toolbar />
             <Box sx={{ overflow: 'auto' }}>
-            <Divider sx={{ bgcolor: '#444' }} />
+                <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
                     <Button
                         fullWidth onClick={() => setIsShapesOpen(!isShapesOpen)}
@@ -83,12 +84,19 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                     </Button>
                     {isEffectsOpen &&
                         <Box sx={{}}>
+                            <Typography
+                                variant="body2"
+                                sx={{ marginBottom: 1, color: 'gray' }} 
+                            >
+                                ⓘ Click effect to edit or delete
+                            </Typography>
                             <EffectList
                                 effects={props.show.effects}
                                 onEffectSelected={(effectId: number) => {
                                     const finalSelectedId = props.selectedEffectId === effectId ? null : effectId;
                                     props.setSelectedEffectId(finalSelectedId);
-                                }} />
+                                }}
+                            />
                         </Box>}
                 </Box>
                 <Divider sx={{ bgcolor: '#444' }} />
