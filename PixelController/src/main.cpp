@@ -264,6 +264,8 @@ bool goUp;
 bool loaded = false;
 char set_sensors;
 unsigned long current_millis;
+unsigned long end_millis;
+unsigned long frame_runtime; // total time taken to generate the frame
 
 FileManager *fm = NULL;
 
@@ -417,7 +419,9 @@ void loop()
     // divide frame up to send to picos
 
 
-    delay(33);  // delay(33): approx 30fps (30.3)
+    end_millis = millis();
+    frame_runtime = end_millis - current_millis;
+    delay((frame_runtime >= 33) ? 0 : (33 - frame_runtime));  // keep frames coming out as close to 30fps as possible
 }
 
 
