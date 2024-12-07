@@ -540,7 +540,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
                 curEffect = 1;
             }
 
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
             FastLED.show();
 
             break;
@@ -572,15 +572,17 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple with pumpkin on top
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-            // (check locations are good)
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+            // load the images (check locations)                                                                 // v b/c shifting right
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (0 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (25 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (50 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (75 + count) % NUM_LEDS_X, 0, true);
 
-            FastLED.show();
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+            count++;
             break;
 
         case ghostRainbow:
@@ -609,16 +611,17 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
                 curEffect = 5;
             }
 
-            // draw ripple with ghost on top
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-            // (check locations are good)
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+            // load the images (check locations)                                                               // v b/c shifting right
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (0 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (25 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (50 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (75 + count) % NUM_LEDS_X, 0, true);
 
-            FastLED.show();
+            shiftLeds(leds, RIGHT);
+            rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+            count++;
             break;
 
         case pumpkinGhostRainbow:
@@ -648,16 +651,17 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple, then pumpkin and ghost
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter, prevLeds1, 2);
+            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-            // (check locations are good)
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 25, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 50, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, 75, 0, true);
+            // load the images (check locations)                                                                 // v b/c shifting right
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (0 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (25 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (50 + count) % NUM_LEDS_X, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, NUM_LEDS_X, NUM_LEDS_Y, (75 + count) % NUM_LEDS_X, 0, true);
 
-            // shiftLeds(leds, RIGHT); // calls FastLED.show()
-            FastLED.show();
+            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+            count++;
             break;
 
         case snowflake:
@@ -746,7 +750,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 // Resets some variables and such for the next effect to run properly
 void newEffectReset() {
     loaded = false;
-    prevLeds1 = {0};
+    // prevLeds1 = {0}; // commented out b/c not using this anymore (memory issues on esp32), see rippleEffect.cpp for changed implementation
     rippleCounter = 0;
     curEffect = -1;
 
