@@ -241,10 +241,10 @@ uint8_t kMatrixWidth;
 uint8_t kMatrixHeight;
 
 // ripple effect stuff
-int* prevLeds1;
-int* prevLeds2;
-int* prevLeds3;
-int* prevLeds4;
+int* prevLeds1 = NULL;
+// int* prevLeds2;
+// int* prevLeds3;
+// int* prevLeds4;
 int rippleCounter;
 
 // sensor & show stuff
