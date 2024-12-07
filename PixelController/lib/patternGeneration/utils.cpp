@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "utils.h"
+#include <iostream>
 
 /**
  * MARK: Distance calculation
@@ -79,6 +80,22 @@ void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int widt
             int originalIndex = y * width + x;
             int rearrangedIndex = XY(x, y);
             rearrangedArray[rearrangedIndex] = originalArray[originalIndex];
+        }
+    }
+}
+
+void rearrangeForStrips(CRGB* originalArray, CRGB** rearrangedArrays, int width, int height) {
+    if (rearrangedArrays[0] == nullptr) {
+        std::cout << "Error: The rearranged arrays must be initialized before calling this function." << std::endl;
+        return;
+    }
+
+    // Split the original array into rows to display on each strip.
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int originalIndex = y * width + x;
+            int rearrangedIndex = x;
+            rearrangedArrays[y][rearrangedIndex] = originalArray[originalIndex];
         }
     }
 }

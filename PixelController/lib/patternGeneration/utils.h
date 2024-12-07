@@ -3,12 +3,14 @@
 
 #include <stdint.h>
 #include <FastLED.h>
+#include <vector>
 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int width, int height);
+void rearrangeForStrips(CRGB* originalArray, CRGB** rearrangedArrays, int width, int height);
 
 
 /* Variables for XY() and XYsafe() */
