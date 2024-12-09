@@ -26,8 +26,8 @@ typedef struct Show
         Show show;
         try
         {
-            show.name = j["name"];
-            show.duration = j["duration"];
+            show.name = j.at("name").get<std::string>();
+            show.duration = j.at("duration").get<double>(); // might be durationMs? not sure.
 
             std::cout << "Show Name: " << show.name << std::endl;
             std::cout << "Show Duration: " << show.duration << std::endl;

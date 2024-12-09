@@ -70,25 +70,25 @@ public:
                 parsedType = rainbow;
             } else if (effectType == "ripple" || effectType == "RippleEffect") {
                 parsedType = ripple;
-            } else if (effectType == "pumpkin-rainbow") {
+            } else if (effectType == "pumpkinRainbow") {
                 parsedType = pumpkinRainbow;
-            } else if (effectType == "pumpkin-ripple") {
+            } else if (effectType == "pumpkinRipple") {
                 parsedType = pumpkinRipple;
-            } else if (effectType == "ghost-rainbow") {
+            } else if (effectType == "ghostRainbow") {
                 parsedType = ghostRainbow;
-            } else if (effectType == "ghost-ripple") {
+            } else if (effectType == "ghostRipple") {
                 parsedType = ghostRipple;
-            } else if (effectType == "pumpkin-ghost-rainbow") {
+            } else if (effectType == "pumpkinGhostRainbow") {
                 parsedType = pumpkinGhostRainbow;
-            } else if (effectType == "pumpkin-ghost-ripple") {
+            } else if (effectType == "pumpkinGhostRipple") {
                 parsedType = pumpkinGhostRipple;
             } else if (effectType == "snowflake") {
                 parsedType = snowflake;
             } else if (effectType == "snowman") {
                 parsedType = snowman;
-            } else if (effectType == "christmas-tree") {
+            } else if (effectType == "christmasTree") {
                 parsedType = christmasTree;
-            } else if (effectType == "candy-cane") {
+            } else if (effectType == "candyCane") {
                 parsedType = candyCane;
             } else {
                 throw std::invalid_argument("Could not parse effect type: " + effectType);
