@@ -50,7 +50,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
             <Toolbar />
             <Box sx={{ overflow: 'auto' }}>
                 <Divider sx={{ bgcolor: '#444' }} />
-                <Box>
+                {/* <Box>
                     <Button
                         fullWidth onClick={() => setIsShapesOpen(!isShapesOpen)}
                         sx={{ color: '#fff', justifyContent: 'flex-start' }}>
@@ -66,13 +66,13 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                         onClick={() => setIsColorsOpen(!isColorsOpen)}
                         sx={{ color: '#fff', justifyContent: 'flex-start' }}>
                         Colors {isColorsOpen ? <ExpandLess /> : <ExpandMore />}
-                    </Button>
+                    </Button> 
                     {isColorsOpen && (
                         <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
                             <input type="color" value="#9731f2" readOnly={true} />
                         </Box>
                     )}
-                </Box>
+                </Box> */}
                 <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
                     <Button
