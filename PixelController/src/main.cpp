@@ -471,22 +471,22 @@ void loadImagesFromSD(std::vector<std::string> images) {
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/8bitghost.jpg") {
+            if (image == "/8bitpumpkin.png") {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            } else if (image == "/8bitpumpkin.jpg") {
+            } else if (image == "/8bitpumpkin.png") {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            } else if (image == "/candycane.jpg") {
+            } else if (image == "/candycane.png") {
                 candyCanejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            } else if (image == "/snowflake.jpg") {
+            } else if (image == "/snowflake.png") {
                 snowflakejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             } else if (image == "/christmastree.jpg") {
                 christmasTreejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            } else if (image == "/snowman.jpg") {
+            } else if (image == "/snowman.png") {
                 snowmanjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             } else {
