@@ -1,5 +1,7 @@
-import {Effect} from "./Effect";
-import {Layout} from "./Layout";
+import { EffectType } from "../../types";
+import {Effect, RippleEffect} from "./Effect";
+import {GridLayout, Layout} from "./Layout";
+import { Pair } from "./Pair";
 import {Sensor} from "./Sensor";
 
 export class Show {
@@ -45,6 +47,13 @@ export class Show {
     addEffect(effect: Effect) : number {
         if (effect.id === -1) {
             effect.id = this.nextEffectId();
+        }
+        if(effect.type === EffectType.ripple || effect.type === EffectType.ghostRipple || effect.type === EffectType.pumpkinGhostRipple){
+            let o = new Pair(Math.floor((this.layouts[0] as GridLayout).width/2),Math.floor((this.layouts[0] as GridLayout).height/2));
+            effect.origin= (o);
+            if(effect.type === EffectType.ripple){
+                (effect as RippleEffect).ripple_origin=o;
+            }
         }
         this.effects.push(effect);
         return effect.id
