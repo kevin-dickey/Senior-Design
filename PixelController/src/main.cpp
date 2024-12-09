@@ -458,14 +458,17 @@ void loadImagesFromSD(std::vector<std::string> images) {
             std::cout << "✅ Loaded Image!" << std::endl;
             std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
+            
+            // making it always resize for now
+
             // hard coding the resize to be 24x25, given the field is 24x100. for future fields just always resize img to what user wants/how many times they want it repeated
             // resizing only ghost and pumpkin (or unrecognized file), might just want to recreate them to be right dimensions tbh
-            if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg")) {
+            // if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg")) {
                 std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-                int newWidth = 25;
-                int newHeight = 24;
+                int newWidth = NUM_LEDS_X / 4;
+                int newHeight = NUM_LEDS_Y;
                 imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
-            }
+            // }
 
             std::cout << "🕊️ Freeing File Buffer..." << std::endl;
             free(fileBuf);
