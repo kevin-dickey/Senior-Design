@@ -15,6 +15,7 @@ using json = nlohmann::json;
 
 #define FRAMES_PER_SECOND 30 
 #define MAX_BRIGHTNESS 16 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define SKIP_SHOW_INITIALIZATION 0
 
 #if USE_EMULATOR
 #define PROJECT_DIR SOURCE_ROOT
@@ -40,20 +41,12 @@ using json = nlohmann::json;
 
 #endif
 
-
 enum ShiftDirection {
     LEFT,
     RIGHT,
     UP,
     DOWN
 };
-
-namespace std {
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&...args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-}  // namespace std
 
 unsigned long getMillis() {
 #if USE_EMULATOR
@@ -306,6 +299,9 @@ void setup()
     // delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
+#if SKIP_SHOW_INITIALIZATION
+#else
+
     // SD Card Setup
     fm = new FileManager();
     if (!fm->MountFileSystem())
@@ -343,6 +339,7 @@ void setup()
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }
 #pragma endregion // Show Initialization
+#endif
 
 #pragma region FastLED Initialization
     FastLED.addLeds<CHIPSET, STRIP_1_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
@@ -364,13 +361,11 @@ void setup()
 #pragma region Sensor Initialization
     // TODO: Read and configure sensors from the show file
     sensorManager = new SensorManager();
-    sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
-    Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
-
-    sensors = std::vector<Sensor *>{sensor1};
-    sensorManager->setSensors(sensors);
-    set_sensors = 'a';
-    Serial.println("Initialized Sensors...");
+    // sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
+    // Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
+    // sensors = std::vector<Sensor *>{sensor1};
+    // sensorManager->setSensors(sensors);
+    // Serial.println("Initialized Sensors...");
 #pragma endregion // Sensor Initialization
 
     hue = 30;
