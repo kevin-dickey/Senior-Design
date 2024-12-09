@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Box } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { GridLayout } from '../components/serialization/Layout';
 import { Show } from '../components/serialization/Show';
@@ -24,25 +26,29 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
   const [candyCanePositions, setCandyCanePositions] = useState([{ col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }]);
   const [grid, setGrid] = useState<GridLayout | null>(null);
   const [ledGrid, setLedGrid] = useState<number[][]>([]);
-   // Fetch the effects data from JSON file
-   useEffect(() => {
+  const stoppedRef = useRef(false);
+  const intervalsRef = useRef<Set<NodeJS.Timeout>>(new Set()); 
+  const [isRunning, setIsRunning] = useState(false); 
+  
+  // Fetch the effects data from JSON file
+  useEffect(() => {
     const fetchEffectData = async () => {
-        setGrid(show.layouts[0] as GridLayout);
-        setEffectData(show.effects);
+      setGrid(show.layouts[0] as GridLayout);
+      setEffectData(show.effects);
     };
     fetchEffectData();
   }, [show.layouts, show.effects]);
 
   useEffect(() => {
-      const height = grid?.height;
-      const width = grid?.width;
+    const height = grid?.height;
+    const width = grid?.width;
 
-      // Initialize LED grid with height and width from grid
-      setLedGrid(
-        Array(height)
-          .fill(0)
-          .map(() => Array(width).fill(0))
-      );
+    // Initialize LED grid with height and width from grid
+    setLedGrid(
+      Array(height)
+        .fill(0)
+        .map(() => Array(width).fill(0))
+    );
   }, [grid]);
 
   const startEffect = async () => {
@@ -51,9 +57,13 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
       return;
     }
 
+    stoppedRef.current = false; 
+    setIsRunning(true); 
 
     // Loop through each effect and run it for its duration
     for (const effect of show.effects) {
+      if (stoppedRef.current) break;
+
       let offset = 0;
       setEffectType(effect.type);
       // Set the correct pumpkin/ghost positions based on effect
@@ -117,106 +127,117 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
           }
         }
       }, 1000 / effect.speed); //controls the speed
-
+      
+      intervalsRef.current.add(interval);
+      
       // Wait for the effect duration to complete before stopping the interval and moving to the next effect
       await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          clearInterval(interval);
+        const timeout = setTimeout(() => {
+          clearInterval(interval); // Clear interval after duration
+          intervalsRef.current.delete(interval);
           resolve();
         }, effect.durationMs);
+
+        intervalsRef.current.add(timeout); // Track the timeout
+      
       });
     }
+    setIsRunning(false);
   };
 
+  const stopEffect = () => {
+    stoppedRef.current = true;
+    intervalsRef.current.forEach((id) => clearInterval(id)); // Clear all intervals
+    intervalsRef.current.clear(); // Reset the interval tracking
+    setIsRunning(false); 
+    console.log("Effects stopped");
+  };
+
+
   return (
-    <div>
-      <div className="controls">
-        <button onClick={startEffect}>
-          Start Effects
-        </button>
-      </div>
+    <div className="MuiBox-root css-sxr8rl">
 
       <TransformWrapper
         initialScale={1}
         wheel={{ step: 0.5 }}
         centerOnInit={true}
-        minScale={0.5}
-        maxScale={5}
+        minScale={0.1}
+        maxScale={50}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <TransformComponent wrapperClass="react-transform-wrapper">
             <Box flexDirection="column">
-            {ledGrid.map((row, rowIndex) => (
-              <Box key={rowIndex} display="flex" gap={0.3}>
-                {row.map((colorIndex, colIndex) => {
-                  let pumpkinPart: { row: number; col: number; color: string } | undefined;
-                  let ghostPart: { row: number; col: number; color: string } | undefined;
-                  let snowflakePart: { row: number; col: number; color: string } | undefined;
-                  let snowmanPart: { row: number; col: number; color: string } | undefined;
-                  let christmasTreePart: { row: number; col: number; color: string } | undefined;
-                  let candyCanePart: { row: number; col: number; color: string } | undefined;
+              {ledGrid.map((row, rowIndex) => (
+                <Box key={rowIndex} display="flex" gap={0.3}>
+                  {row.map((colorIndex, colIndex) => {
+                    let pumpkinPart: { row: number; col: number; color: string } | undefined;
+                    let ghostPart: { row: number; col: number; color: string } | undefined;
+                    let snowflakePart: { row: number; col: number; color: string } | undefined;
+                    let snowmanPart: { row: number; col: number; color: string } | undefined;
+                    let christmasTreePart: { row: number; col: number; color: string } | undefined;
+                    let candyCanePart: { row: number; col: number; color: string } | undefined;
 
-                  let backgroundColor = '';
+                    let backgroundColor = '';
 
-                  if (grid) {
+                    if (grid) {
 
-                    pumpkinPart = pumpkinShape.find(
-                      (part) => rowIndex === part.row && colIndex === (pumpkinPosition + part.col) % grid.width
-                    );
+                      pumpkinPart = pumpkinShape.find(
+                        (part) => rowIndex === part.row && colIndex === (pumpkinPosition + part.col) % grid.width
+                      );
 
-                    ghostPart = ghostShape.find(
-                      (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % grid.width
-                    );
+                      ghostPart = ghostShape.find(
+                        (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % grid.width
+                      );
 
-                    snowflakePart = snowflakeShape.find((part) =>
-                      snowflakePositions.some(
-                        (position) =>
-                          rowIndex === (position.row + part.row) % grid.height && // Match row
-                          colIndex === (position.col + part.col) % grid.width    // Match column
-                      )
-                    );
+                      snowflakePart = snowflakeShape.find((part) =>
+                        snowflakePositions.some(
+                          (position) =>
+                            rowIndex === (position.row + part.row) % grid.height && // Match row
+                            colIndex === (position.col + part.col) % grid.width    // Match column
+                        )
+                      );
 
-                    snowmanPart = snowmanShape.find(
-                      (part) => rowIndex === part.row && colIndex === (snowmanPosition + part.col) % grid.width
-                    );
+                      snowmanPart = snowmanShape.find(
+                        (part) => rowIndex === part.row && colIndex === (snowmanPosition + part.col) % grid.width
+                      );
 
-                    christmasTreePart = christmasTreeShape.find(
-                      (part) => rowIndex === part.row && colIndex === (christmasTreePosition + part.col) % grid.width
-                    );
+                      christmasTreePart = christmasTreeShape.find(
+                        (part) => rowIndex === part.row && colIndex === (christmasTreePosition + part.col) % grid.width
+                      );
 
-                    candyCanePart = candyCaneShape.find((part) =>
-                      candyCanePositions.some(
-                        (position) =>
-                          rowIndex === (position.row + part.row) % grid.height && // Match row
-                          colIndex === (position.col + part.col) % grid.width    // Match column
-                      )
-                    );
+                      candyCanePart = candyCaneShape.find((part) =>
+                        candyCanePositions.some(
+                          (position) =>
+                            rowIndex === (position.row + part.row) % grid.height && // Match row
+                            colIndex === (position.col + part.col) % grid.width    // Match column
+                        )
+                      );
 
-                    // Handle shape effect
-                    if (effectType === EffectType.pumpkinRainbow || effectType === EffectType.pumpkinRipple) {
-                      backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === EffectType.ghostRainbow || effectType === EffectType.ghostRipple) {
-                      backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === EffectType.pumpkinGhostRainbow || effectType === EffectType.pumpkinGhostRipple) {
-                      backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
-                    } else if (effectType === EffectType.snowflake) {
-                      backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
-                    } else if (effectType === EffectType.snowman) {
-                      backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
-                    } else if (effectType === EffectType.christmasTree) {
-                      backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
-                    } else if (effectType === EffectType.candyCane) {
-                      backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
+                      // Handle shape effect
+                      if (effectType === EffectType.pumpkinRainbow || effectType === EffectType.pumpkinRipple) {
+                        backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
+                      } else if (effectType === EffectType.ghostRainbow || effectType === EffectType.ghostRipple) {
+                        backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
+                      } else if (effectType === EffectType.pumpkinGhostRainbow || effectType === EffectType.pumpkinGhostRipple) {
+                        backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
+                      } else if (effectType === EffectType.snowflake) {
+                        backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
+                      } else if (effectType === EffectType.snowman) {
+                        backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
+                      } else if (effectType === EffectType.christmasTree) {
+                        backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
+                      } else if (effectType === EffectType.candyCane) {
+                        backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
+                      }
+                      else {
+                        backgroundColor = rainbowColors[colorIndex];
+                      }
                     }
-                    else {
-                      backgroundColor = rainbowColors[colorIndex];
-                    }
-                  }
-                  
-                  return (
-                    <div
-                      key={colIndex}
-                      className={`led-circle 
+
+                    return (
+                      <div
+                        key={colIndex}
+                        className={`led-circle 
                     ${pumpkinPart ? 'pumpkin-cell' : ''} 
                     ${ghostPart ? 'ghost-cell' : ''}
                     ${snowflakePart ? 'snowflake-cell' : ''}
@@ -224,18 +245,35 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
                     ${christmasTreePart ? 'christmasTree-cell' : ''}
                     ${candyCanePart ? 'candy-cane-cell' : ''}
                     `}
-                      style={{
-                        backgroundColor,
-                      }}
-                    ></div>
-                  );
-                })}
-              </Box>
-            ))}
+                        style={{
+                          backgroundColor,
+                        }}
+                      ></div>
+                    );
+                  })}
+                </Box>
+              ))}
             </Box>
           </TransformComponent>
         )}
       </TransformWrapper>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          mt: 2,
+          padding:'5px'
+        }}
+        style={{backgroundColor: '#2a2a2a' }}
+      >
+        <button onClick={startEffect} disabled={isRunning} style={{backgroundColor: '#2a2a2a', color:'white', padding:'0px', marginBottom: '0px', width: 'fit-content' }}>
+          <PlayArrowIcon />
+        </button>
+        <button onClick={stopEffect} disabled={!isRunning} style={{ backgroundColor: '#2a2a2a', color:'white', padding:'0px', marginBottom: '0px', width: 'fit-content' }}>
+          <StopIcon />
+        </button>
+      </Box>
     </div>
   );
 };

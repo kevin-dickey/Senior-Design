@@ -1,30 +1,30 @@
 // Main configuration page for the application.
 // This page is where the user can create, edit, and delete effects, as well as
 // saving and loading shows!
-import React, {ChangeEvent, useState} from 'react';
-import {useNavigate} from "react-router-dom"
+import React, { ChangeEvent, useState } from 'react';
+import { useNavigate } from "react-router-dom"
 
-import {Box} from '@mui/material';
-import {ThemeProvider} from '@mui/material/styles';
+import { Box } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 
 import NavBar from "../NavBar";
-import {Show} from "../serialization/Show";
-import {Effect} from "../serialization/Effect";
-import {CreateEffectFormContainer} from "../editors/CreateEffectFormContainer";
-import {EditEffectFormContainer} from "../editors/EditEffectFormContainer";
-import {validateEffects} from "../editors/EffectList";
-import {EntityPalette} from "../../containers/EntityPalette";
-import {TimelineContainer} from "../../containers/TimelineContainer";
+import { Show } from "../serialization/Show";
+import { Effect } from "../serialization/Effect";
+import { CreateEffectFormContainer } from "../editors/CreateEffectFormContainer";
+import { EditEffectFormContainer } from "../editors/EditEffectFormContainer";
+import { validateEffects } from "../editors/EffectList";
+import { EntityPalette } from "../../containers/EntityPalette";
+import { TimelineContainer } from "../../containers/TimelineContainer";
 
 import darkTheme from "../../utils/Theming";
 import "./Configuration.css";
-import {GridLayout} from "../serialization/Layout";
-import {ConfigPanel} from "../../containers/ConfigPanel";
-import {DialogContainer} from "../../containers/DialogContainer";
+import { GridLayout } from "../serialization/Layout";
+import { ConfigPanel } from "../../containers/ConfigPanel";
+import { DialogContainer } from "../../containers/DialogContainer";
 import GridContainer from "../../containers/GridContainer";
 import AddNewFile from "./AddNewFile";
-import {Folder} from "./FoldersOverview";
+import { Folder } from "./FoldersOverview";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -86,10 +86,9 @@ const Configuration: React.FC<ConfigurationProps> = (
     }
 
     const updateShowSettings = (show: Show,
-                                name: string,
-                                durationSeconds: number,
-                                gridHeight: number,
-                                gridWidth: number) => {
+        name: string,
+        gridHeight: number,
+        gridWidth: number) => {
         console.log("Saving show settings");
         const newShow = new Show(name);
         newShow.addLayout(new GridLayout(gridWidth, gridHeight));
@@ -158,7 +157,7 @@ const Configuration: React.FC<ConfigurationProps> = (
 
     return (
         <ThemeProvider theme={darkTheme}>
-            <CssBaseline/>
+            <CssBaseline />
             {show && (
                 <>
                     {saveShowToFolders != null && (
@@ -175,7 +174,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                             </DialogContent>
                         </Dialog>
                     )}
-                    <Box sx={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
                         <NavBar
                             showName={show.name}
                             onClickSettings={() => {
@@ -224,7 +223,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                             >
                                 {/* Grid Container */}
                                 <Box
-                                    id="grid-container"
+                                    id="config-container"
                                     sx={{
                                         flexGrow: 1,
                                         overflow: 'hidden',
@@ -257,7 +256,7 @@ const Configuration: React.FC<ConfigurationProps> = (
                                             />
                                         )}
                                         {creatingNewEffect && (
-                                            <CreateEffectFormContainer 
+                                            <CreateEffectFormContainer
                                                 effectType={creatingEffectType}
                                                 onSubmit={(values) => {
                                                     console.log("Creating new effect: " + values);
@@ -269,14 +268,12 @@ const Configuration: React.FC<ConfigurationProps> = (
                                             />
                                         )}
                                     </ConfigPanel>
-                                    <GridContainer show={show}/>
+                                    <GridContainer show={show} />
                                 </Box>
 
                                 {/* Timeline Container */}
                                 <Box
                                     bgcolor="#2a2a2a"
-                                    paddingTop={1}
-                                    zIndex={1}
                                 >
                                     {/**add better time indicator */}
                                     <TimelineContainer
@@ -298,7 +295,6 @@ const Configuration: React.FC<ConfigurationProps> = (
                         onSubmit={(formValues) => {
                             updateShowSettings(show,
                                 formValues.showName,
-                                formValues.durationSeconds,
                                 formValues.height,
                                 formValues.width);
                         }}
