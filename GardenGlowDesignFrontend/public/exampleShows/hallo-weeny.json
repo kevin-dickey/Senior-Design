@@ -43,7 +43,7 @@
     {
       "id": 3,
       "name": "Scary Pumpkin",
-      "type": "pumpkin-ghost-ripple",
+      "type": "pumpkinGhostRipple",
       "startTimeMs": 4000,
       "durationMs": 2000,
       "origin": {
