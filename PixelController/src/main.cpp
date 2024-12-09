@@ -66,11 +66,16 @@ unsigned long getMillis() {
 }
 
 FileManager *fileManager;
-Show_t show
+Show_t show;
+SensorManager *sensorManager;
+ControllerRunner *runner;
 
 int num_leds_x = 16;
 int num_leds_y = 16;
 int num_leds = num_leds_x * num_leds_y;
+
+CRGB* foreground_frame;
+CRGB** strip_data;          // len(num_leds_x)
 
 #if USE_EMULATOR
 void loadExampleImages(const std::vector<std::string *> &image_paths,
@@ -226,7 +231,7 @@ void fadeToBrightness(int duration, int targetBrightness);
 void drawRainbow(unsigned long current_millis);
 // void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);           // used in drawRainbow
 void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ slightly lower brightness for readability of other things on leds (e.g. pumpkin more easily visible)
-uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
+uint8_t bufferToCRGBArray(unsigned char* buffer, int imgWidth, int imgHeight, int imgChannels, CRGB* foreground_frame, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
 void loadImagesFromSD(std::vector<std::string> images);
 void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
@@ -238,7 +243,6 @@ void shiftLeds(CRGB leds[], ShiftDirection direction);
 
 // MARK: Variables
 // led stuff
-CRGB* leds;
 
 int LEDS_SIZE_ARR[2] = {num_leds_x, num_leds_y};
 uint8_t kMatrixWidth;
@@ -252,8 +256,6 @@ int* prevLeds1 = NULL;
 int rippleCounter;
 
 // sensor & show stuff
-SensorManager *sensorManager;
-ControllerRunner *runner;
 unsigned long showStart = 0;
 std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000> > > epoch;
 Sensor *sensor0, *sensor1, *sensor2, *sensor3;
@@ -273,11 +275,6 @@ unsigned long frame_runtime; // total time taken to generate the frame
 
 FileManager *fm = NULL;
 
-// can be loaded using loadHexBitmap
-// const char *pumpkin = "ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 74401f ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 764322 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff7f15 80431c 74401f ff7f15 ff7f15 ff7f15 ff8017 ffffff ffffff ffffff ffffff ffffff ffffff ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff7f15 ff7f15 ff8623 ffffff ffffff ffffff ffffff ff7f15 de741d ff8c2c 2d1200 2d1200 ff7f15 ff7f15 2d1200 2d1200 ff8c2c f77b15 ff8723 ffffff ffffff ffffff ff8118 ff7f15 ff8c2c 2d1200 863b20 863b20 2d1200 69320a 863b20 863b20 2d1200 ff8118 ff7f15 ff8520 ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 db731d ff7f15 ff7f15 ff7f15 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 ff7f15 f27914 ff7f15 2c1100 2d1200 ff8c2c ff7f15 ff7f15 ff8c2c ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 863b20 ff7f15 f27914 ff7f15 ff7f15 ff7f15 ff8c2c f27914 2d1200 863b20 ff7f15 ff8c2c ffffff ffffff ff7f15 ff7f15 ff7f15 2a1000 f27914 2d1200 2d1200 2d1200 2d1200 f27914 2d1200 ff7f15 ff7f15 ff7f15 ffffff ffffff ff7f15 ff7f15 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 2d1200 2d1200 863b20 cf7022 ff7f15 ffffff ffffff ffffff ffffff ff7f15 f27914 ff7f15 863b20 2d1200 2d1200 2d1200 2d1200 863b20 ff7f15 f27914 ff7f15 ffffff ffffff ffffff ffffff ffffff ff7f15 f27914 f67a14 f27914 f27914 f27914 cc7024 f27914 dc731d ff7f15 ffffff ffffff ffffff ffffff ffffff ffffff ffffff f27914 ed7816 f27914 f27914 f27914 f27914 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff";
-// const char *pumpkin8bit = "000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 000000 267f00 267f00 000000 000000 000000 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000 ff6100 ff6100 ffec1e ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ff6100 ffec1e ff6100 ff6100 ff6100 ffec1e ffec1e ffec1e ffec1e ff6100 ff6100 000000 ff6100 ff6100 ff6100 ff6100 ff6100 ff6100 000000";
-// const char *ghost8bit = "000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 ffffff 000000";
-// const char *skull8bit = "000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000 ffffff ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 ffffff 000000 000000 ffffff 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff ffffff ffffff ffffff ffffff ffffff 000000 000000 000000 000000";
 unsigned char *ghostjpg;
 unsigned char *pumpkinjpg;
 unsigned char *candyCanejpg;
@@ -339,7 +336,7 @@ void setup()
         kMatrixHeight = num_leds_y;
         kMatrixWidth = num_leds_x;
 
-        leds = new CRGB[num_leds];
+        foreground_frame = new CRGB[num_leds];
 
         // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
         prevLeds1 = new int[num_leds];
@@ -359,7 +356,7 @@ void setup()
 
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
-    fill_solid(frame_data, num_leds, CRGB::Black);
+    fill_solid(foreground_frame, num_leds, CRGB::Black);
     FastLED.show();
     Serial.println("Initialized FastLED...");
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
@@ -557,7 +554,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
                 curEffect = 1;
             }
 
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
             FastLED.show();
 
             break;
@@ -573,12 +570,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             drawRainbow(current_millis);
 
             // load in pumpkins (check locations are good)
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-            shiftLeds(leds, RIGHT); // might make the rainbow effect look v weird, not sure
+            shiftLeds(foreground_frame, RIGHT); // might make the rainbow effect look v weird, not sure
             break;
 
         case pumpkinRipple:
@@ -589,15 +586,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple with pumpkin on top
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
             // load the images (check locations)                                                                 // v b/c shifting right
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
             count++;
             break;
@@ -613,12 +610,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             drawRainbow(current_millis);
 
             // (check locations are good)
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             break;
 
         case ghostRipple:
@@ -628,15 +625,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
                 curEffect = 5;
             }
 
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
             // load the images (check locations)                                                               // v b/c shifting right
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-            shiftLeds(leds, RIGHT);
+            shiftLeds(foreground_frame, RIGHT);
             rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
             count++;
             break;
@@ -652,12 +649,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             drawRainbow(current_millis);
 
             // need to set locations
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);            
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);            
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             break;
 
         case pumpkinGhostRipple:
@@ -668,15 +665,15 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
             }
 
             // draw ripple, then pumpkin and ghost
-            rippleEffect(leds, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
             // load the images (check locations)                                                                 // v b/c shifting right
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
-            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (25 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
+            bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
             count++;
             break;
@@ -690,14 +687,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             if (!loaded) {
                 // need to set locations
-                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+                bufferToCRGBArray(snowflakejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
                 loaded = true;
             }
 
-            shiftLeds(leds, DOWN); // calls FastLED.show()
+            shiftLeds(foreground_frame, DOWN); // calls FastLED.show()
             break;
 
         case snowman:
@@ -709,14 +706,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             if (!loaded) {
                 // (check locations are good)
-                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+                bufferToCRGBArray(snowmanjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
                 loaded = true;
             }
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             break;
 
         case christmasTree:
@@ -728,14 +725,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             if (!loaded) {
                 // load in christmas tree & pattern onto leds
-                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+                bufferToCRGBArray(christmasTreejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
                 loaded = true;
             }
 
-            shiftLeds(leds, RIGHT); // calls FastLED.show()
+            shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
             break;
 
         case candyCane:
@@ -747,14 +744,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe) {
 
             if (!loaded) {
                 // need to set locations!
-                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 0, 0, true);
-                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 25, 0, true);
-                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 50, 0, true);
-                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, leds, num_leds_x, num_leds_y, 75, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 25, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+                bufferToCRGBArray(candyCanejpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
                 loaded = true;
             }
 
-            shiftLeds(leds, DOWN); // calls FastLED.show()
+            shiftLeds(foreground_frame, DOWN); // calls FastLED.show()
             break;
 
         default:
@@ -999,7 +996,7 @@ void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8) {
         uint8_t pixelHue = lineStartHue;
         for (uint8_t x = 0; x < kMatrixWidth; x++) {
             pixelHue += xHueDelta8;
-            leds[XY(x, y)] = CHSV(pixelHue, 255, 255);
+            foreground_frame[XY(x, y)] = CHSV(pixelHue, 255, 255);
         }
     }
 }
@@ -1015,7 +1012,7 @@ void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHue
         uint8_t pixelHue = lineStartHue;
         for (uint8_t x = 0; x < kMatrixWidth; x++) {
             pixelHue += xHueDelta8;
-            leds[XY(x, y)] = CHSV(pixelHue * 5 / 6, 255 * 5 / 6, 255 * 5 / 6);
+            foreground_frame[XY(x, y)] = CHSV(pixelHue * 5 / 6, 255 * 5 / 6, 255 * 5 / 6);
         }
     }
 }

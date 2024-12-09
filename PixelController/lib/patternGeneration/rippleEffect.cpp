@@ -26,7 +26,7 @@ CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t
     }
 
     if (prevLeds == NULL) {
-        fill_solid(leds, total_leds, CRGB::Black);
+        fill_solid(frame_data, total_leds, CRGB::Black);
     }
 
     // Iterate through the LED matrix
