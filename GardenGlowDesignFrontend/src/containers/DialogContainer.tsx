@@ -89,7 +89,7 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
                                         as={TextField}
                                         id="height"
                                         name="height"
-                                        label="Height (Divide by 2)"
+                                        label="Height"
                                         type="number"
                                         fullWidth
                                         margin="dense"
@@ -100,7 +100,7 @@ export const DialogContainer: React.FC<DialogContainerProps> = (props) => {
                                         as={TextField}
                                         id="width"
                                         name="width"
-                                        label="Width (Divide by 2)"
+                                        label="Width"
                                         type="number"
                                         fullWidth
                                         margin="dense"
