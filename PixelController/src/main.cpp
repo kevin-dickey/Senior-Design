@@ -315,8 +315,7 @@ void setup()
             ;
     }
 
-    std::cout << " we mounted " << ESP.getFreeHeap() << std::endl;
-
+#pragma region Show Initialization
     try {
         std::cout << "⏳ Loading Show..." << std::endl;
         File showFile = fm->getJsonFile("/christmas-y.json");
@@ -343,8 +342,9 @@ void setup()
     } else {
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }
+#pragma endregion // Show Initialization
 
-    // FastLED Initialization
+#pragma region FastLED Initialization
     FastLED.addLeds<CHIPSET, STRIP_1_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
     FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[1], num_leds_x).setCorrection(TypicalSMD5050);
     FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[2], num_leds_x).setCorrection(TypicalSMD5050);
@@ -352,7 +352,6 @@ void setup()
     FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[4], num_leds_x).setCorrection(TypicalSMD5050);
     FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[5], num_leds_x).setCorrection(TypicalSMD5050);
     FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[6], num_leds_x).setCorrection(TypicalSMD5050);
-    // FastLED.addLeds<CHIPSET, STRIP_8_PIN, COLOR_ORDER>(strip_data[7], NUM_LEDS_X).setCorrection(TypicalSMD5050);
 
     FastLED.setBrightness(MAX_BRIGHTNESS);                                                        // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);                                                                 // setup the built-in LED for the esp32
@@ -360,26 +359,19 @@ void setup()
     FastLED.show();
     Serial.println("Initialized FastLED...");
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+#pragma endregion // FastLED Initialization
 
-    // sensor stuff, might need some updating idk
-    Pair_t sensor_pos{0, 0};
-    Pair_t size = {10, 10};
-    std::unique_ptr<Translation_t> translation = std::make_unique<Translation_t>(
-        Translation_t{
-            .end_pos = sensor_pos,
-            .durationMs = 1000.0});
-    Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
-    // TODO: Figure out the 0-indexing. Need to have same behavior on both sides
-    // sensor0 = new Sensor(0, 34, 1000, S_BINARY, sensor_pos, sensorEffect);  // ne
-    sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
-    // sensor2 = new Sensor(2, 32, 1000, S_BINARY, sensor_pos, sensorEffect);  // sw
-    // sensor3 = new Sensor(3, 33, 1000, S_BINARY, sensor_pos, sensorEffect);  // se
-    a_sensors = std::vector<Sensor *>{sensor1};
-    prev_sensor_triggered = std::vector<bool>(a_sensors.size());
+#pragma region Sensor Initialization
+    // TODO: Read and configure sensors from the show file
     sensorManager = new SensorManager();
-    sensorManager->setSensors(a_sensors);
+    sensor1 = new Sensor(1, 35, 1000, S_BINARY, sensor_pos, sensorEffect);  // nw
+    Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
+
+    sensors = std::vector<Sensor *>{sensor1};
+    sensorManager->setSensors(sensors);
     set_sensors = 'a';
     Serial.println("Initialized Sensors...");
+#pragma endregion // Sensor Initialization
 
     hue = 30;
     count = 0;
@@ -398,26 +390,20 @@ void setup()
     std::cout << ghostjpg << std::endl;
 }
 
-
 /**
  * MARK: Looping
  */
 void loop()
 {
-    std::cout << " here!! " << std::endl;
     // gets the current state of every sensor, the state automatically resets after it's viewed
     auto sensor_states = sensorManager->getSensorStates(true);
-    std::cout << " no here!! " << std::endl;
     current_millis = millis();
-    std::cout << " here...? " << std::endl;
 
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
     auto showFrame = runner->getNextShowFrame(sensor_states);
-    std::cout << " wahhh!!! " << showFrame.effect->name << showFrame.frame << std::endl;
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
-        std::cout << " skibidi " << std::endl;
         // no effect found because we're over the shows duration. reset show
         std::string filePath = "C:/Users/Eleen/Desktop/Senior Design/sddec24-15/sddec24-15/PixelController/data/show.json";
         Show show = loadShow(filePath);
@@ -427,11 +413,9 @@ void loop()
         showFrame = runner->getNextShowFrame(sensor_states);
     }
 
-    std::cout << " FRAME TIME!!! " << std::endl;
     generateFrame(showFrame);
 
-    // divide frame up to send to picos
-
+    // TODO: divide frame up to send to picos
 
     end_millis = millis();
     frame_runtime = end_millis - current_millis;
@@ -440,8 +424,6 @@ void loop()
 
 
 // MARK: Functions
-
-
 /**
  * Loads in images from the SD card, images should be a string of the filepath (e.g. "/djibouti.jpg")
  */
