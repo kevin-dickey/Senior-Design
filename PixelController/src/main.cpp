@@ -63,8 +63,8 @@ Show_t show;
 SensorManager *sensorManager;
 ControllerRunner *runner;
 
-int num_leds_x = 16;
-int num_leds_y = 16;
+int num_leds_x = 100;
+int num_leds_y = 7;
 int num_leds = num_leds_x * num_leds_y;
 
 CRGB* foreground_frame;
@@ -324,6 +324,7 @@ void setup()
         std::cerr << "Error loading show: " << e.what() << std::endl;
     }
 
+    std::cout << "Deserializing layout:" << std::endl;
     if (show.layouts[0]->isGridLayout()) {          // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
         num_leds_x = show.layouts[0]->getWidth();   // this returns size of frontend, SHOULD be 100
         num_leds_y = show.layouts[0]->getHeight();  // SHOULD be 24
@@ -331,7 +332,14 @@ void setup()
         kMatrixHeight = num_leds_y;
         kMatrixWidth = num_leds_x;
 
+        std::cout << "Set width/height to: " << num_leds_x << "x" << num_leds_y << std::endl;
+
         foreground_frame = new CRGB[num_leds];
+        strip_data = new CRGB*[num_leds_y];
+        for (int i = 0; i < num_leds_y; i++) {
+        // Allocate space for each width of the strip
+            strip_data[i] = new CRGB[num_leds_x];
+        }
 
         // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
         prevLeds1 = new int[num_leds];
