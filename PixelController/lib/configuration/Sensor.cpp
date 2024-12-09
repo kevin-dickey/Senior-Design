@@ -6,6 +6,11 @@ std::vector<long> interruptReadMillis;
 
 void SensorManager::setSensors(std::vector<Sensor *> sensors)
 {
+#if USE_EMULATOR
+    std::cout << "🛑 Skipping sensor setup in emulator." << std::endl;
+    std::cout << "   All sensors will be set to never trigger." << std::endl;
+    return;
+#else
     // TODO: Set up a better logging system which redirects cout to the serial monitor.
     Serial.println("Setting up " + String(sensors.size()) + " sensors");
 
@@ -22,6 +27,7 @@ void SensorManager::setSensors(std::vector<Sensor *> sensors)
     interruptReadMillis.assign(sensors.size(), 0);
 
     this->addSensorInterrupts(this->sensors);
+#endif
 }
 
 void SensorManager::removeSensorInterrupts(std::vector<Sensor *> sensors)
@@ -58,6 +64,11 @@ std::vector<Sensor *> SensorManager::getSensors()
 
 std::vector<bool> SensorManager::getSensorStates(bool reset)
 {
+#if USE_EMULATOR
+    // Make a vector with the correct size. We currently don't set the number of sensors in the emulator.
+    std::cout << "🛑 Skipping sensor state retrieval in emulator." << std::endl;
+    return std::vector<bool>{};
+#else
     auto states = triggeredInterrupts;
 
     // If the last triggered time is greater than the debounce time, reset the sensor state
@@ -84,4 +95,5 @@ std::vector<bool> SensorManager::getSensorStates(bool reset)
     }
 
     return states;
+#endif
 }
