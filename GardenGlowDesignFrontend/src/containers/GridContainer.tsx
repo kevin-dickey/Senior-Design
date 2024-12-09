@@ -73,10 +73,10 @@ const GridContainer: React.FC<GridContainerProps> = ({ show }) => {
       } else {
         setPumpkinPosition(0);
         setGhostPosition(0);
-        setSnowflakePositions([{ col: 0, row: 0 }, { col: 10, row: 0 }, { col: 20, row: 0 }, { col: 30, row: 0 }, { col: 40, row: 0 }, { col: 50, row: 0 }]);
+        setSnowflakePositions([{ col: 0, row: 0 }, { col: 10, row: 0 }, { col: 20, row: 0 }, { col: 30, row: 0 }, { col: 40, row: 0 }, { col: 50, row: 0 },{ col: 60, row: 0 }, { col: 70, row: 0 }, { col: 80, row: 0 }, { col: 90, row: 0 }, { col: 100, row: 0 }, { col: 110, row: 0 }]);
         setSnowmanPosition(0);
         setChristmasTreePosition(0);
-        setCandyCanePositions([{ col: 0, row: 0 }, { col: 10, row: 0 }, { col: 20, row: 0 }, { col: 30, row: 0 }, { col: 40, row: 0 }, { col: 50, row: 0 }]);
+        setCandyCanePositions([{ col: 0, row: 0 }, { col: 10, row: 0 }, { col: 20, row: 0 }, { col: 30, row: 0 }, { col: 40, row: 0 }, { col: 50, row: 0 },{ col: 60, row: 0 }, { col: 70, row: 0 }, { col: 80, row: 0 }, { col: 90, row: 0 }, { col: 100, row: 0 }, { col: 110, row: 0 }]);
       }
       console.log(effect);
       // Start the interval for this effect

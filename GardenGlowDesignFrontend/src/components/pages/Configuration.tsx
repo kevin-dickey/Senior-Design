@@ -29,8 +29,6 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import { EffectType } from '../../types';
-
-
 export interface ConfigurationProps {
     show: Show | null;
     setShow: (show: Show) => void;
