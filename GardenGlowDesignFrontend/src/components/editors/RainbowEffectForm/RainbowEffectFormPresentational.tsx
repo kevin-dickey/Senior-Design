@@ -24,7 +24,7 @@ export const RainbowEffectFormPresentational:
                 <Field id="speed" 
                 name="speed" 
                 type="number" 
-                placeholder="Enter value (1-5)"
+                placeholder="(1-5)"
                 min="1" 
                 max="5"
                 step="1" 
