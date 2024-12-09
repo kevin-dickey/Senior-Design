@@ -15,7 +15,7 @@
  * If you want to adjust the brightness of the LEDs, adjust MAX_BRIGHTNESS accordingly.
  */
 CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width) {
-    uint8_t maxDistance = 19;  // max(NUM_LEDS_X, NUM_LEDS_Y);
+    uint8_t maxDistance = 19;  // max(num_leds_x, num_leds_y);
     uint16_t total_leds = num_leds[0] * num_leds[1];
     
     // Shallow copy of the LED array

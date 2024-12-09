@@ -26,7 +26,7 @@ uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t
  */
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
     // uint8_t delta = abs(rippleCounter - distance);
-    // uint8_t maxDistance = NUM_LEDS / 2;
+    // uint8_t maxDistance = num_leds / 2;
     // uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
     // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
     // return brightness > MAX_BRIGHTNESS ? 0 : brightness;
