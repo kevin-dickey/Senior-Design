@@ -331,9 +331,6 @@ void setup()
         kMatrixWidth = NUM_LEDS_X;
 
         leds = new CRGB[NUM_LEDS];
-
-        // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
-        prevLeds1 = new int[NUM_LEDS];
     } else {
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }
