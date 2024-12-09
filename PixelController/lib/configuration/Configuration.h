@@ -10,14 +10,16 @@
 #include "Effect.h"
 #include "Layout.h"
 #include "Sensor.h"
+#include <fstream>
 
 typedef struct Show
 {
     std::string name;
     double duration;
-    std::vector<std::unique_ptr<Layout>> layouts;
-    std::vector<std::unique_ptr<Effect>> effects;
-    std::vector<std::unique_ptr<Sensor>> sensors;
+    std::vector<Layout*> layouts;
+    std::vector<Effect*> effects;
+    std::vector<Sensor*> sensors;
+
 
     static Show from_json(const nlohmann::json &j)
     {
@@ -25,19 +27,19 @@ typedef struct Show
         try
         {
             show.name = j.at("name").get<std::string>();
-            show.duration = j.at("duration").get<double>();
+            show.duration = j.at("duration").get<double>(); // might be durationMs? not sure.
 
             std::cout << "Show Name: " << show.name << std::endl;
             std::cout << "Show Duration: " << show.duration << std::endl;
 
-            for (const auto &effect : j.at("effects"))
+            for (const auto &effect : j["effects"])
             {
                 try
                 {
                     std::cout << "Parsing Effect: " << effect << std::endl;
                     auto effectObj = Effect::from_json(effect);
                     std::cout << "Effect Name: " << effectObj->name << std::endl;
-                    show.effects.push_back(std::unique_ptr<Effect>(effectObj));
+                    show.effects.push_back(effectObj);
                 }
                 catch (const std::exception &e)
                 {
@@ -48,7 +50,7 @@ typedef struct Show
 
             std::cout << "Number of effects: " << show.effects.size() << std::endl;
 
-            for (const auto &layout : j.at("layouts"))
+            for (const auto &layout : j["layouts"])
             {
                 try
                 {
@@ -60,14 +62,14 @@ typedef struct Show
                     case LayoutType::GRID:
                     {
                         std::cout << "Grid Layout!" << std::endl;
-                        show.layouts.push_back(std::unique_ptr<GridLayout>(GridLayout::from_json(layout)));
+                        show.layouts.push_back(GridLayout::from_json(layout));
                         break;
                     }
                     default:
                         {
                         std::cout << "Custom Layout!" << std::endl;
                         // std::cout << "Layout ID: " << layout.at("id").get<int>() << std::endl;
-                        show.layouts.push_back(std::unique_ptr<Layout>(Layout::from_json(layout)));
+                        show.layouts.push_back(Layout::from_json(layout));
                         break;
                         }
                     }
@@ -79,12 +81,12 @@ typedef struct Show
                 }
             }
 
-            for (const auto &sensor : j.at("sensors"))
+            for (const auto &sensor : j["sensors"])
             {
                 try
                 {
                     std::cout << "Sensor ID: " << sensor.at("id").get<int>() << std::endl;
-                    show.sensors.push_back(std::unique_ptr<Sensor>(Sensor::from_json(sensor)));
+                    show.sensors.push_back(Sensor::from_json(sensor));
                 }
                 catch (const std::exception &e)
                 {
@@ -104,54 +106,7 @@ typedef struct Show
     }
 } Show_t;
 
-Show_t loadShow(File sdFile)
-{
-    // Check if the file is open
-    if (!sdFile)
-    {
-        throw std::runtime_error("Failed to open file");
-    }
-
-    // Determine the size of the file
-    size_t fileSize = sdFile.size();
-    std::cout << "File size: " << fileSize << " bytes" << std::endl;
-
-    // Allocate a buffer to hold the file contents
-    std::vector<uint8_t> buffer(fileSize);
-
-    // Read the file into the buffer
-    size_t bytesRead = sdFile.read(buffer.data(), fileSize);
-    if (bytesRead != fileSize)
-    {
-        throw std::runtime_error("Failed to read the entire file");
-    }
-
-    std::cout << "Read " << bytesRead << " bytes" << std::endl;
-
-    // Parse the buffer with the JSON library
-    nlohmann::json data;
-    try
-    {
-        data = nlohmann::json::parse(buffer.begin(), buffer.end());
-        std::cout << "Parsed JSON: " << data.dump(4) << std::endl;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-        throw;
-    }
-
-    Show_t show;
-    try
-    {
-        show = Show::from_json(data);
-        return show;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error deserializing show: " << e.what() << std::endl;
-        throw;
-    }
-}
+Show_t loadShow(File sdFile);
+Show_t loadShow(const std::string& filename);
 
 #endif // CONFIGURATION_H

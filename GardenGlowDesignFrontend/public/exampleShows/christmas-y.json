@@ -5,8 +5,8 @@
   "effects": [
     {
       "id": 1,
-      "name": "candy-cane",
-      "type": "candy-cane",
+      "name": "candyCane",
+      "type": "candyCane",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -18,12 +18,12 @@
         "y": 20
       },
       "colors": [],
-      "speed": 1
+      "speed": 10
     },
     {
       "id": 2,
-      "name": "christmas-tree",
-      "type": "christmas-tree",
+      "name": "christmasTree",
+      "type": "christmasTree",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -107,8 +107,8 @@
     },
     {
       "id": 7,
-      "name": "pumpkin-rainbow",
-      "type": "pumpkin-rainbow",
+      "name": "pumpkinRainbow",
+      "type": "pumpkinRainbow",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -124,8 +124,8 @@
     },
     {
       "id": 8,
-      "name": "pumpkin-ripple",
-      "type": "pumpkin-ripple",
+      "name": "pumpkinRipple",
+      "type": "pumpkinRipple",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -141,8 +141,8 @@
     },
     {
       "id": 9,
-      "name": "ghost-rainbow",
-      "type": "ghost-rainbow",
+      "name": "ghostRainbow",
+      "type": "ghostRainbow",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -158,8 +158,8 @@
     },
     {
       "id": 10,
-      "name": "ghost-ripple",
-      "type": "ghost-ripple",
+      "name": "ghostRipple",
+      "type": "ghostRipple",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -175,8 +175,8 @@
     },
     {
       "id": 11,
-      "name": "pumpkin-ghost-rainbow",
-      "type": "pumpkin-ghost-rainbow",
+      "name": "pumpkinGhostRainbow",
+      "type": "pumpkinGhostRainbow",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -192,8 +192,8 @@
     },
     {
       "id": 12,
-      "name": "pumpkin-ghost-ripple",
-      "type": "pumpkin-ghost-ripple",
+      "name": "pumpkinGhostRipple",
+      "type": "pumpkinGhostRipple",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {

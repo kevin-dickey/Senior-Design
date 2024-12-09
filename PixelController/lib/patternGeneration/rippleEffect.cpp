@@ -25,6 +25,10 @@ CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t
         temp[i] = frame_data[i];
     }
 
+    if (prevLeds == NULL) {
+        fill_solid(leds, total_leds, CRGB::Black);
+    }
+
     // Iterate through the LED matrix
     for (uint8_t x = 0; x < num_leds[0]; x++) {
         for (uint8_t y = 0; y < num_leds[1]; y++) {
@@ -34,20 +38,20 @@ CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t
             uint8_t brightness;
             uint16_t xy_val = XY(x, y);
 
-            if (prevLeds[xy_val] == 1) {
-                prevLeds[xy_val] = 0;
-                CRGB updatedColor = CRGB(frame_data[xy_val].r - r, frame_data[xy_val].g - g, frame_data[xy_val].b - b);
-                frame_data[xy_val] = updatedColor;
-                continue;
-            }
+            // if (prevLeds[xy_val] == 1) { // too memory intensive for esp32 for now, instead just fully clearing. ripple won't work w/ every effect so keep in mind!
+            //     prevLeds[xy_val] = 0;
+            //     CRGB updatedColor = CRGB(leds[xy_val].r - r, leds[xy_val].g - g, leds[xy_val].b - b);
+            //     leds[xy_val] = updatedColor;
+            //     continue;
+            // }
 
             // Determine brightness based on distance from center and rippleCounter
             if (rippleDistance <= width) {
                 brightness = 255;
-                prevLeds[xy_val] = 1;
+                // prevLeds[xy_val] = 1;
             } else {
                 brightness = 0;  // Dim brightness value outside the ripple's ring
-                prevLeds[xy_val] = 0;
+                // prevLeds[xy_val] = 0;
             }
 
             // Create a CRGB object with the calculated color and brightness

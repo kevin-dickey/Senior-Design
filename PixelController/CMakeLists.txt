@@ -30,6 +30,8 @@ add_library(ConfigurationLib
         lib/configuration/Sensor.h
         lib/configuration/Configuration.h
         lib/configuration/Configuration.cpp
+        lib/configuration/ControllerRunner.h
+        lib/configuration/ControllerRunner.cpp
         lib/configuration/FileManager.h
         lib/configuration/FileManager.cpp
 )

@@ -1,13 +1,13 @@
 {
   "name": "Basic Show File",
-  "duration": 10000,
+  "duration": 200,
   "effects": [
     {
       "id": 1,
-      "name": "Save me!",
+      "name": "Effect 1",
       "type": "rainbow",
-      "startTimeMs": 10,
-      "durationMs": 900,
+      "startTimeMs": 0,
+      "durationMs": 100,
       "origin": {
         "x": 5,
         "y": 5
@@ -37,7 +37,7 @@
     },
     {
       "id": 2,
-      "name": "Crazy Train",
+      "name": "Effect 2",
       "type": "rainbow",
       "origin": {
         "x": 5,
@@ -47,8 +47,8 @@
         "x": 10,
         "y": 10
       },
-      "startTimeMs": 1000,
-      "durationMs": 1000
+      "startTimeMs": 100,
+      "durationMs": 100
     }
   ],
   "layouts": [
@@ -66,7 +66,41 @@
         "x": 20,
         "y": -2
       },
-      "pin": 13
+      "pin": 13,
+      "duration": 30,
+      "effects": {
+        "id": 1,
+        "name": "Sensor Effect 0!",
+        "type": "rainbow",
+        "startTimeMs": 10,
+        "durationMs": 100,
+        "origin": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "x": 10,
+          "y": 10
+        },
+        "colors": [
+          {
+            "r": 255,
+            "g": 0,
+            "b": 0
+          },
+          {
+            "r": 0,
+            "g": 255,
+            "b": 0
+          },
+          {
+            "r": 0,
+            "g": 0,
+            "b": 255
+          }
+        ],
+        "speed": 10
+      }
     },
     {
       "id": 2,
@@ -75,7 +109,41 @@
         "x": 5,
         "y": -2
       },
-      "pin": 14
+      "pin": 14,
+      "duration": 5,
+      "effects": {
+        "id": 1,
+        "name": "Sensor Effect!",
+        "type": "rainbow",
+        "startTimeMs": 10,
+        "durationMs": 900,
+        "origin": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {
+          "x": 10,
+          "y": 10
+        },
+        "colors": [
+          {
+            "r": 255,
+            "g": 0,
+            "b": 0
+          },
+          {
+            "r": 0,
+            "g": 255,
+            "b": 0
+          },
+          {
+            "r": 0,
+            "g": 0,
+            "b": 255
+          }
+        ],
+        "speed": 10
+      }
     }
   ]
 }

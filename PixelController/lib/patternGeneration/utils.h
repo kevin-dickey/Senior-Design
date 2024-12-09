@@ -15,10 +15,10 @@ void rearrangeForStrips(CRGB* originalArray, CRGB** rearrangedArrays, int width,
 
 /* Variables for XY() and XYsafe() */
 // Params for width and height
-const uint8_t kMatrixWidth = 16;
-const uint8_t kMatrixHeight = 16;
+extern uint8_t kMatrixWidth; 
+extern uint8_t kMatrixHeight;
 // Param for different pixel layouts
-const bool kMatrixSerpentineLayout = true;
+const bool kMatrixSerpentineLayout = false; // <-- this should be passed thru json file :)
 const bool kMatrixVertical = false;
 /***********************************************************************************************************/
 
