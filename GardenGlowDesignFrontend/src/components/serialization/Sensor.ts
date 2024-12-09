@@ -12,14 +12,14 @@ export class Sensor {
     type: SensorType;
     location: Pair;
     pin: number | null;
-    effects: Effect;
+    effect: Effect;
     duration: number;
-    constructor(type: SensorType, location: Pair, id: number = -1, pin: number | null = null, effects: Effect, duration: number) {
+    constructor(type: SensorType, location: Pair, id: number = -1, pin: number | null = null, effect: Effect, duration: number) {
         this.id = id;
         this.type = type;
         this.location = location;
         this.pin = pin;
-        this.effects = effects;
+        this.effect = effect;
         this.duration = duration;
     }
 
@@ -29,7 +29,7 @@ export class Sensor {
             type: this.type,
             location: this.location,
             pin: this.pin,
-            effects: this.effects,
+            effects: this.effect,
             duration: this.duration
         };
     }

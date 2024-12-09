@@ -35,9 +35,9 @@ export const CreateEffectFormContainer: React.FC<CreateEffectFormContainerProps>
             case EffectType.snowman:
             case EffectType.christmasTree:
             case EffectType.candyCane:
-                console.log("case selected");
                 return <CreateEffectsFormContainer effectType={effectType} onSubmit={onSubmit}  />;
             default:
+                console.warn('Base effect constructor used:', effectType);
                 return null;
         }
     };

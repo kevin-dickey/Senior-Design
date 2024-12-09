@@ -67,12 +67,17 @@ export class Show {
     }
 
     toJSON() {
-        let dur = this.effects[this.effects.length-1].durationMs ?? 0;
-        let start = this.effects[this.effects.length-1].startTimeMs ?? 0;
-        this.durationMs = dur + start; 
+        if(this.effects.length > 0){
+            let dur = this.effects[this.effects.length-1].durationMs ?? 0;
+            let start = this.effects[this.effects.length-1].startTimeMs ?? 0;
+            this.durationMs = dur + start;     
+        }
+        else{
+            this.durationMs = 0; 
+        }
         return {
             name: this.name,
-            duration: (this.durationMs),
+            duration: this.durationMs,
             effects: this.effects.map(effect => effect.toJSON()),
             layouts: this.layouts.map(layout => layout.toJSON())
         };
