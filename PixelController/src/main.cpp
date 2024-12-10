@@ -426,7 +426,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = 0;
         }
 
-        drawRainbow(current_millis);
+        drawRainbow(foreground_frame, current_millis);
         FastLED.show();
 
         break;
@@ -453,7 +453,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         }
 
         // draw rainbow with pumpkin on top
-        drawRainbow(current_millis);
+        drawRainbow(foreground_frame, current_millis);
 
         // load in pumpkins (check locations are good)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
@@ -461,7 +461,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // might make the rainbow effect look v weird, not sure
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // might make the rainbow effect look v weird, not sure
         break;
 
     case pumpkinRipple:
@@ -481,7 +481,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // calls FastLED.show()
         rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
@@ -495,7 +495,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         }
 
         // draw rainbow with ghost on top
-        drawRainbow(current_millis);
+        drawRainbow(foreground_frame, current_millis);
 
         // (check locations are good)
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
@@ -503,7 +503,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // calls FastLED.show()
         break;
 
     case ghostRipple:
@@ -522,7 +522,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         rippleCounter++;  // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
@@ -536,7 +536,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         }
 
         // draw rainbow, then pumpkin and ghost
-        drawRainbow(current_millis);
+        drawRainbow(foreground_frame, current_millis);
 
         // need to set locations
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
@@ -544,7 +544,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         break;
 
     case pumpkinGhostRipple:
@@ -564,7 +564,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // calls FastLED.show()
         rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
@@ -587,7 +587,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, DOWN);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);  // calls FastLED.show()
         break;
 
     case snowman:
@@ -608,7 +608,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // calls FastLED.show()
         break;
 
     case christmasTree:
@@ -629,7 +629,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // calls FastLED.show()
         break;
 
     case candyCane:
@@ -650,7 +650,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, DOWN);  // calls FastLED.show()
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);  // calls FastLED.show()
         break;
 
     default:
@@ -673,41 +673,7 @@ void newEffectReset()
     goUp = true;
 }
 
-/**
- * Draws a single frame of the rainbow effect
- */
-void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
-{
-    uint8_t lineStartHue = startHue8;
-    for (uint8_t y = 0; y < kMatrixHeight; y++)
-    {
-        lineStartHue += yHueDelta8;
-        uint8_t pixelHue = lineStartHue;
-        for (uint8_t x = 0; x < kMatrixWidth; x++)
-        {
-            pixelHue += xHueDelta8;
-            foreground_frame[XY(x, y)] = CHSV(pixelHue, 255, 255);
-        }
-    }
-}
 
-/**
- * Draws a single frame of the rainbow effect @ reduced brightness
- */
-void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
-{
-    uint8_t lineStartHue = startHue8;
-    for (uint8_t y = 0; y < kMatrixHeight; y++)
-    {
-        lineStartHue += yHueDelta8;
-        uint8_t pixelHue = lineStartHue;
-        for (uint8_t x = 0; x < kMatrixWidth; x++)
-        {
-            pixelHue += xHueDelta8;
-            foreground_frame[XY(x, y)] = CHSV(pixelHue * 5 / 6, 255 * 5 / 6, 255 * 5 / 6);
-        }
-    }
-}
 
 /**
  * Resets every index in prev_sensor_triggered to false except for the specified index.
