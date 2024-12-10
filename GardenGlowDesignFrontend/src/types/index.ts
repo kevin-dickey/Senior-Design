@@ -1,13 +1,14 @@
-export type EffectType = 
-  | 'rainbow'
-  | 'ripple'
-  | 'pumpkin-rainbow'
-  | 'pumpkin-ripple'
-  | 'ghost-rainbow'
-  | 'ghost-ripple'
-  | 'pumpkin-ghost-rainbow'
-  | 'pumpkin-ghost-ripple'
-  | 'snowflake'
-  | 'snowman'
-  | 'christmas-tree'
-  | 'candy-cane';
+export enum EffectType {
+  rainbow = "rainbow",
+  ripple = "ripple",
+  pumpkinRainbow = "pumpkinRainbow",
+  pumpkinRipple = "pumpkinRipple",
+  ghostRainbow = "ghostRainbow",
+  ghostRipple = "ghostRipple",
+  pumpkinGhostRainbow = "pumpkinGhostRainbow",
+  pumpkinGhostRipple = "pumpkinGhostRipple",
+  snowflake = "snowflake",
+  snowman = "snowman",
+  christmasTree = "christmasTree",
+  candyCane = "candyCane",
+}

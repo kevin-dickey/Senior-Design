@@ -6,20 +6,22 @@ import {
     FormControl,
     InputLabel,
     MenuItem,
-    Select
+    Select,
+    Typography
 } from "@mui/material";
-import {ExpandLess, ExpandMore} from "@mui/icons-material";
-import {EffectList} from "../components/editors/EffectList";
-import React, {useState} from "react";
-import {Show} from "../components/serialization/Show";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { EffectList } from "../components/editors/EffectList";
+import React, { useState } from "react";
+import { Show } from "../components/serialization/Show";
 import Toolbar from "@mui/material/Toolbar";
+import { EffectType } from "../types";
 
 export interface EntityPaletteProps {
     show: Show;
     selectedEffectId: number | null;
     setSelectedEffectId: (id: number | null) => void;
-    createEffectType: string;
-    setCreateEffectType: (effectType: string) => void;
+    createEffectType: EffectType;
+    setCreateEffectType: (effectType: EffectType) => void;
     creatingNewEffect: boolean;
     setCreatingNewEffect: (creatingNewEffect: boolean) => void;
     handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -30,10 +32,10 @@ export interface EntityPaletteProps {
 const drawerWidth = 240;
 
 export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
-    const [isShapesOpen, setIsShapesOpen] = useState(true);
-    const [isEffectsOpen, setIsEffectsOpen] = useState(true);
-    const [isColorsOpen, setIsColorsOpen] = useState(true);
-    const [isEffectsListOpen, setIsEffectsListOpen] = useState(true);
+    const [isShapesOpen, setIsShapesOpen] = useState(false);
+    const [isEffectsOpen, setIsEffectsOpen] = useState(false);
+    const [isColorsOpen, setIsColorsOpen] = useState(false);
+    const [isEffectsListOpen, setIsEffectsListOpen] = useState(false);
 
     return (
         <Drawer
@@ -42,81 +44,97 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
             sx={{
                 width: drawerWidth,
                 flexShrink: 0,
-                [`& .MuiDrawer-paper`]: {width: drawerWidth, boxSizing: 'border-box'},
+                [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
             }}
         >
             <Toolbar />
-            <Box sx={{overflow: 'auto'}}>
-                <Box>
+            <Box sx={{ overflow: 'auto' }}>
+                <Divider sx={{ bgcolor: '#444' }} />
+                {/* <Box>
                     <Button
                         fullWidth onClick={() => setIsShapesOpen(!isShapesOpen)}
-                        sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                        Shapes {isShapesOpen ? <ExpandLess/> : <ExpandMore/>}
+                        sx={{ color: '#fff', justifyContent: 'flex-start' }}>
+                        Sensors {isShapesOpen ? <ExpandLess /> : <ExpandMore />}
                     </Button>
                     {isShapesOpen &&
-                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Shapes content</Box>}
+                        <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>Shapes content</Box>}
                 </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
-                <Box>
-                    <Button
-                        fullWidth
-                        onClick={() => setIsEffectsOpen(!isEffectsOpen)}
-                        sx={{color: '#fff', justifyContent: 'flex-start'}}
-                    >
-                        Effects {isEffectsOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
-                    {isEffectsOpen &&
-                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>Effects content</Box>}
-                </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
+                <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
                     <Button
                         fullWidth
                         onClick={() => setIsColorsOpen(!isColorsOpen)}
-                        sx={{color: '#fff', justifyContent: 'flex-start'}}>
-                        Colors {isColorsOpen ? <ExpandLess/> : <ExpandMore/>}
-                    </Button>
+                        sx={{ color: '#fff', justifyContent: 'flex-start' }}>
+                        Colors {isColorsOpen ? <ExpandLess /> : <ExpandMore />}
+                    </Button> 
                     {isColorsOpen && (
-                        <Box sx={{bgcolor: '#3a3a3a', p: 2}}>
-                            <input type="color" value="#9731f2" readOnly={true}/>
+                        <Box sx={{ bgcolor: '#3a3a3a', p: 2 }}>
+                            <input type="color" value="#9731f2" readOnly={true} />
                         </Box>
                     )}
-                </Box>
-                <Divider sx={{bgcolor: '#444'}}/>
+                </Box> */}
+                <Divider sx={{ bgcolor: '#444' }} />
                 <Box>
                     <Button
                         fullWidth
-                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
-                        sx={{color: '#fff', justifyContent: 'flex-start'}}
+                        onClick={() => setIsEffectsOpen(!isEffectsOpen)}
+                        sx={{ color: '#fff', justifyContent: 'flex-start' }}
                     >
-                        Effects in Show {isEffectsListOpen ? <ExpandLess/> : <ExpandMore/>}
+                        Current Effects {isEffectsOpen ? <ExpandLess /> : <ExpandMore />}
                     </Button>
-                    {isEffectsListOpen && (
-                        <div>
+                    {isEffectsOpen &&
+                        <Box sx={{}}>
+                            <Typography
+                                variant="body2"
+                                sx={{ marginBottom: 1, color: 'gray' }} 
+                            >
+                                ⓘ Click effect to edit or delete
+                            </Typography>
                             <EffectList
                                 effects={props.show.effects}
                                 onEffectSelected={(effectId: number) => {
                                     const finalSelectedId = props.selectedEffectId === effectId ? null : effectId;
                                     props.setSelectedEffectId(finalSelectedId);
-                                }}/>
+                                }}
+                            />
+                        </Box>}
+                </Box>
+                <Divider sx={{ bgcolor: '#444' }} />
+                <Box>
+                    <Button
+                        fullWidth
+                        onClick={() => setIsEffectsListOpen(!isEffectsListOpen)}
+                        sx={{ color: '#fff', justifyContent: 'flex-start' }}
+                    >
+                        Add Effect {isEffectsListOpen ? <ExpandLess /> : <ExpandMore />}
+                    </Button>
+                    {isEffectsListOpen && (
+                        <div>
                             <FormControl fullWidth>
-                                <InputLabel id="effect-type-label">Effect Type</InputLabel>
                                 <Select
                                     labelId="effect-type-label"
                                     id="effect-type"
-                                    value={props.createEffectType}
-                                    label="Effect Type"
-                                    onChange={(e) => props.setCreateEffectType(e.target.value)}
-                                    variant='outlined'
+                                    value={props.createEffectType} // Default value
+                                    onChange={(e) => props.setCreateEffectType(e.target.value as EffectType)}
+                                    displayEmpty
                                 >
-                                    <MenuItem value="RainbowEffect">Rainbow
-                                        Effect</MenuItem>
-                                    <MenuItem value="RippleEffect">Ripple Effect</MenuItem>
+                                    <MenuItem value="rainbow">Rainbow</MenuItem>
+                                    <MenuItem value="ripple">Ripple</MenuItem>
+                                    <MenuItem value="pumpkinRainbow">Pumpkin Rainbow</MenuItem>
+                                    <MenuItem value="pumpkinRipple">Pumpkin Ripple</MenuItem>
+                                    <MenuItem value="ghostRainbow">Ghost Rainbow</MenuItem>
+                                    <MenuItem value="ghostRipple">Ghost Ripple</MenuItem>
+                                    <MenuItem value="pumpkinGhostRainbow">Pumpkin Ghost Rainbow</MenuItem>
+                                    <MenuItem value="pumpkinGhostRipple">Pumpkin Ghost Ripple</MenuItem>
+                                    <MenuItem value="snowflake">Snowflake</MenuItem>
+                                    <MenuItem value="snowman">Snowman</MenuItem>
+                                    <MenuItem value="christmasTree">Christmas Tree</MenuItem>
+                                    <MenuItem value="candyCane">Candy Cane</MenuItem>
                                 </Select>
                             </FormControl>
                             <Button
                                 onClick={() => {
-                                    if (props.createEffectType === '') {
+                                    if (!props.createEffectType) {
                                         // TODO: Display a warning that the effect type must
                                         //   be selected. Maybe use formik for this
                                         return;
@@ -130,6 +148,7 @@ export const EntityPalette: React.FC<EntityPaletteProps> = (props) => {
                         </div>
                     )}
                 </Box>
+                <Divider sx={{ bgcolor: '#444' }} />
             </Box>
         </Drawer>
     );

@@ -41,7 +41,7 @@
       "id": 3,
       "name": "snowman",
       "type": "snowman",
-      "startTimeMs": 0,
+      "startTimeMs": 20000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -58,7 +58,7 @@
       "id": 4,
       "name": "snowflake",
       "type": "snowflake",
-      "startTimeMs": 0,
+      "startTimeMs": 30000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -75,7 +75,7 @@
       "id": 5,
       "name": "rainbow",
       "type": "rainbow",
-      "startTimeMs": 0,
+      "startTimeMs": 40000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -92,7 +92,7 @@
       "id": 6,
       "name": "ripple",
       "type": "ripple",
-      "startTimeMs": 0,
+      "startTimeMs": 50000,
       "durationMs": 10000,
       "origin": {
         "x": 0,

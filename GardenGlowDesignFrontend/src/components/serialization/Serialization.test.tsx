@@ -18,7 +18,7 @@ test('serializes basic rainbow effect', () => {
 
 test('serializes show file containing rainbow', () => {
     const grid = new GridLayout(10, 10);
-    const show = new Show('test', 10000);
+    const show = new Show('test');
     show.addEffect(effect);
     show.addLayout(grid);
     const json = JSON.stringify(show);

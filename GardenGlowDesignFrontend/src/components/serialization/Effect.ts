@@ -30,7 +30,7 @@ export class Effect {
                 translation?: Translation,
                 id: number = -1,
                 type?: EffectType,
-                speed: number= 1) {
+                speed: number= -1) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -45,7 +45,7 @@ export class Effect {
     }
 
     static emptyEffect() {
-        return new Effect('', new Pair(0, 0), new Pair(16, 16), -1, -1, undefined, -1, 'rainbow', 1);
+        return new Effect('', new Pair(0, 0), new Pair(16, 16), -1, -1, undefined, -1, EffectType.rainbow, 1);
     }
 
     toJSON() {
@@ -91,7 +91,7 @@ export class RainbowEffect extends Effect {
         name: string = 'rainbow',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, undefined, id, 'rainbow');
+        super(name, origin, size, startTimeMs, durationMs, undefined, id, EffectType.rainbow);
         this.colors = colors;
         this.speed = speed;
     }
@@ -145,7 +145,7 @@ export class RippleEffect extends Effect {
         name: string = 'ripple',
         id: number = -1
     ) {
-        super(name, origin, size, startTimeMs, durationMs, translation, id, 'ripple');
+        super(name, origin, size, startTimeMs, durationMs, translation, id, EffectType.ripple);
         this.ripple_origin = ripple_origin;
         this.speed = speed;
     }

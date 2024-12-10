@@ -107,7 +107,7 @@ const TimelineEditor: React.FC<TimelineEditorProps> = (
             onClickActionOnly={onClickActionOnly}
             editorData={timelineRows}
             effects={timelineEffects}
-            scale={1}
+            scale={5}
             // TODO: This is a hack to make the scale render nicely. Need interactive resizing!
             scaleWidth={50}
             gridSnap={true}
@@ -180,7 +180,7 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
                 onChangeTimelineRows={onChangeTimelineRows}
                 onClickActionOnly={handleClickActionOnly}
             />
-            <Box
+            {/* <Box
                 sx={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -206,7 +206,7 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = (props) => {
                 <IconButton aria-label="Skip Next" sx={{color: '#fff'}}>
                     <SkipNext/>
                 </IconButton>
-            </Box>
+            </Box> */}
         </Box>
     )
 }

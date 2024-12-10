@@ -8,7 +8,7 @@ import { Layout } from "../components/serialization/Layout";
 import { Sensor } from "../components/serialization/Sensor";
 
 export const deserializeShow = (data: any): Show => {
-  const show = new Show(data.name, data.durationMs);
+  const show = new Show(data.name);
 
   // Create the effects array from the data. Use different constructors for effects based on
   // their 'type' parameter such as 'RainbowEffect' or 'RippleEffect'.
@@ -22,16 +22,16 @@ export const deserializeShow = (data: any): Show => {
         return Effect.fromJSON(effectData);
       case "rainbow":
       case "ripple":
-      case "pumpkin-rainbow":
-      case "pumpkin-ripple":
-      case "ghost-rainbow":
-      case "ghost-ripple":
-      case "pumpkin-ghost-rainbow":
-      case "pumpkin-ghost-ripple":
+      case "pumpkinRainbow":
+      case "pumpkinRipple":
+      case "ghostRainbow":
+      case "ghostRipple":
+      case "pumpkinGhostRainbow":
+      case "pumpkinGhostRipple":
       case "snowflake":
       case "snowman":
-      case "christmas-tree":
-      case "candy-cane":
+      case "christmasTree":
+      case "candyCane":
         return Effect.fromJSON(effectData);
 
       default:

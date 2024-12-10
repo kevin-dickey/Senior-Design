@@ -1,5 +1,7 @@
-import {Effect} from "./Effect";
-import {Layout} from "./Layout";
+import { EffectType } from "../../types";
+import {Effect, RippleEffect} from "./Effect";
+import {GridLayout, Layout} from "./Layout";
+import { Pair } from "./Pair";
 import {Sensor} from "./Sensor";
 
 export class Show {
@@ -9,9 +11,9 @@ export class Show {
     effects: Effect[];
     sensors: Sensor[];
 
-    constructor(name: string, duration: number) {
+    constructor(name: string) {
         this.name = name;
-        this.durationMs = duration;
+        this.durationMs = 0;
         this.effects = [];
         this.layouts = [];
         this.sensors = [];
@@ -46,6 +48,13 @@ export class Show {
         if (effect.id === -1) {
             effect.id = this.nextEffectId();
         }
+        if(effect.type === EffectType.ripple || effect.type === EffectType.ghostRipple || effect.type === EffectType.pumpkinGhostRipple){
+            let o = new Pair(Math.floor((this.layouts[0] as GridLayout).width/2),Math.floor((this.layouts[0] as GridLayout).height/2));
+            effect.origin= (o);
+            if(effect.type === EffectType.ripple){
+                (effect as RippleEffect).ripple_origin=o;
+            }
+        }
         this.effects.push(effect);
         return effect.id
     }
@@ -67,6 +76,14 @@ export class Show {
     }
 
     toJSON() {
+        if(this.effects.length > 0){
+            let dur = this.effects[this.effects.length-1].durationMs ?? 0;
+            let start = this.effects[this.effects.length-1].startTimeMs ?? 0;
+            this.durationMs = dur + start;     
+        }
+        else{
+            this.durationMs = 0; 
+        }
         return {
             name: this.name,
             duration: this.durationMs,
