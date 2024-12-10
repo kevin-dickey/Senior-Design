@@ -395,7 +395,7 @@ void setup()
     // }
     // loadImagesFromSD(std::vector<std::string>); // call this and we'll be good
     std::vector<std::string> imgs = {"/8bitpumpkin.jpg", "/8bitghost.jpg"};
-    loadImagesFromSD(imgs);
+    loadImagesFromSD(imgs, show.layouts[0]->getHeight(), show.layouts[0]->getWidth());
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
     std::cout << pumpkinjpg << std::endl;
     std::cout << ghostjpg << std::endl;
