@@ -36,19 +36,12 @@ using json = nlohmann::json;
 #include <Configuration.h>
 #include <ControllerRunner.h>
 #include <ImageProcessing.h>
+#include <effects.h>
 #include <rippleEffect.h>
 #include <Sensor.h>
 #include <utils.h>
 
 #endif
-
-enum ShiftDirection
-{
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN
-};
 
 unsigned long getMillis()
 {
@@ -217,24 +210,8 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
 }
 
 #else
-
-/**
- * MARK: Prototypes
- */
-void fadeToBlack(int duration);
-void fadeToBrightness(int duration, int targetBrightness);
-void drawRainbow(unsigned long current_millis);
-// void DrawOneFrame(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8);           // used in drawRainbow
-void DrawOneFrameReducedBright(uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8); // ^ @ slightly lower brightness for readability of other things on leds (e.g. pumpkin more easily visible)
-uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *foreground_frame, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
-void loadImagesFromSD(std::vector<std::string> images, int maxHeight, int maxWidth);
-void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
-void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
-CRGB hexToCRGB(const char *hex);
-void resetTriggerMarkers(int exception);
 void newEffectReset();
 void generateFrame(ControllerRunner::ShowFrame showframe);
-void shiftLeds(CRGB leds[], ShiftDirection direction);
 
 // MARK: Variables
 // led stuff
@@ -276,11 +253,6 @@ unsigned char *candyCanejpg;
 unsigned char *christmasTreejpg;
 unsigned char *snowflakejpg;
 unsigned char *snowmanjpg;
-
-void printCRGB(const CRGB &color)
-{
-    std::cout << "(" << (int)color.r << ", " << (int)color.g << ", " << (int)color.b << ")";
-}
 
 // Array of the LEDs. Should be accessed using the XY functions (translation to 2D array, which is not done directly b/c
 //                                                               of different possible layouts of the LEDs (serpentine n such))
@@ -396,10 +368,8 @@ void setup()
     // }
     // loadImagesFromSD(std::vector<std::string>); // call this and we'll be good
     std::vector<std::string> imgs = {"/8bitpumpkin.jpg", "/8bitghost.jpg"};
-    loadImagesFromSD(imgs, show.layouts[0]->getHeight(), show.layouts[0]->getWidth());
+    loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-    std::cout << pumpkinjpg << std::endl;
-    std::cout << ghostjpg << std::endl;
 }
 
 /**
@@ -432,114 +402,6 @@ void loop()
     end_millis = millis();
     frame_runtime = end_millis - current_millis;
     delay((frame_runtime >= 33) ? 0 : (33 - frame_runtime)); // keep frames coming out as close to 30fps as possible
-}
-
-// MARK: Functions
-/**
- * Loads in images from the SD card, images should be a string of the filepath (e.g. "/djibouti.jpg")
- * TODO: Refactor to only load assets when needed in an effect. Don't load all assets at once.
- */
-void loadImagesFromSD(std::vector<std::string> images, int maxHeight, int maxWidth)
-{
-    for (const std::string &image : images)
-    {
-        try
-        {
-            File jpgFile = fm->getJsonFile(image);
-            std::cout << "✅ Opened " << image << " File!" << std::endl;
-
-            size_t fileSize;
-            unsigned char *fileBuf = ImageProcessing::convertFsFileToBuffer(&jpgFile, fileSize); // <--
-            std::cout << "✅ Converted to FILE!" << std::endl;
-
-#if DEBUG_MODE
-            std::cout << "  File Size: " << fileSize << std::endl;
-            std::cout << "  First 10 bytes: " << fileBuf[0] << fileBuf[1] << fileBuf[2] << fileBuf[3] << fileBuf[4] << fileBuf[5] << fileBuf[6] << fileBuf[7] << fileBuf[8] << fileBuf[9] << std::endl;
-
-            std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-            std::cout << "🛑 Closing image from file manager..." << std::endl;
-#endif // DEBUG_MODE
-
-            jpgFile.close();
-            std::cout << "✅ Closed image from file manager!" << std::endl;
-
-            // Get the dimensions of the image and load it
-            ImageProcessing::get_image_dimensions_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
-
-#if DEBUG_MODE
-            std::cout << "  Image Width: " << loadedImageWidth << std::dec << std::endl;
-            std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
-            std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
-#endif // DEBUG_MODE
-
-            unsigned char *imageFile = ImageProcessing::load_image_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
-            std::cout << "✅ Loaded Image!" << std::endl;
-
-#if DEBUG_MODE
-            std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
-#endif // DEBUG_MODE
-
-            // hard coding the resize to be 24x25, given the field is 24x100. for future fields just always resize img to what user wants/how many times they want it repeated
-            // resizing only ghost and pumpkin (or unrecognized file), might just want to recreate them to be right dimensions tbh
-            if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg"))
-            {
-                std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-                imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, maxWidth, maxHeight, true);
-            }
-            std::cout << "✅ Resized Image!" << std::endl;
-
-            free(fileBuf);
-            std::cout << "✅ Freed File Buffer!" << std::endl;
-
-            #if DEBUG_MODE
-            std::cout << "🖨️ Image Data:" << std::endl;
-            // DEBUG: Print the loaded image data
-            ImageProcessing::printImageHex(imageFile, 24, 25, loadedImageChannels);
-            #endif // DEBUG_MODE
-
-            // Store the image
-            std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/8bitpumpkin.png")
-            {
-                ghostjpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else if (image == "/8bitpumpkin.png")
-            {
-                pumpkinjpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else if (image == "/candycane.png")
-            {
-                candyCanejpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else if (image == "/snowflake.png")
-            {
-                snowflakejpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else if (image == "/christmastree.jpg")
-            {
-                christmasTreejpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else if (image == "/snowman.png")
-            {
-                snowmanjpg = imageFile;
-                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-            }
-            else
-            {
-                std::cerr << "Unrecognized file supplied (should be a jpg): '" << image << "' !" << std::endl;
-            }
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "Error loading image: " << e.what() << std::endl;
-        }
-    }
-    std::cout << "😁 Done loading images!" << std::endl;
 }
 
 /**
@@ -599,7 +461,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT); // might make the rainbow effect look v weird, not sure
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // might make the rainbow effect look v weird, not sure
         break;
 
     case pumpkinRipple:
@@ -619,8 +481,8 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
-        rippleCounter++;                    // increment again to account for the shift (if it looks weird just remove this)
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -641,7 +503,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
         break;
 
     case ghostRipple:
@@ -660,8 +522,8 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT);
-        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);
+        rippleCounter++;  // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -702,8 +564,8 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         bufferToCRGBArray(pumpkinjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         bufferToCRGBArray(ghostjpg, 25, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
-        rippleCounter++;                    // increment again to account for the shift (if it looks weird just remove this)
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
+        rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -725,7 +587,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, DOWN); // calls FastLED.show()
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, DOWN);  // calls FastLED.show()
         break;
 
     case snowman:
@@ -746,7 +608,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
         break;
 
     case christmasTree:
@@ -767,7 +629,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, RIGHT); // calls FastLED.show()
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, RIGHT);  // calls FastLED.show()
         break;
 
     case candyCane:
@@ -788,7 +650,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             loaded = true;
         }
 
-        shiftLeds(foreground_frame, DOWN); // calls FastLED.show()
+        shiftLeds(foreground_frame, NUM_LEDS_X, NUM_LEDS_Y, DOWN);  // calls FastLED.show()
         break;
 
     default:
@@ -809,243 +671,6 @@ void newEffectReset()
     // might be used? no harm in resetting if not
     count = 0;
     goUp = true;
-}
-
-// current_millis isn't a LiveData (see android studio), so should be ok to pass (don't need to though, it's relatively global)
-void drawRainbow(unsigned long current_millis)
-{
-    int32_t yHueDelta32 = ((int32_t)cos16(current_millis * (27 / 1)) * (350 / kMatrixWidth));
-    int32_t xHueDelta32 = ((int32_t)cos16(current_millis * (39 / 1)) * (310 / kMatrixHeight));
-    DrawOneFrameReducedBright(current_millis / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-}
-
-// Function to load an 8x8 bitmap from a hex string
-// startX and startY specify the position of the top-right of the bitmap to load in
-void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth)
-{
-    for (uint8_t y = 0; y < bitmapHeight; y++)
-    {
-        for (uint8_t x = 0; x < bitmapWidth; x++)
-        {
-            // Calculate the position in the string
-            int index = (y * bitmapWidth + x) * 7; // 6 for color + 1 for space
-
-            // Extract the hex color (6 characters)
-            char hexColor[7]; // 6 for color + 1 for null terminator
-            strncpy(hexColor, &bitmap[index], 6);
-            hexColor[6] = '\0'; // Null-terminate the string
-
-            // Only load if within bounds
-            if (startX + x < kMatrixWidth && startY + y < kMatrixHeight)
-            {
-                CRGB color = hexToCRGB(hexColor);
-                if (color != (CRGB::Black))
-                { // black color is interpreted as intending to be transparent
-                    leds[XY(startX + x, startY + y)] = color;
-                }
-            }
-        }
-    }
-    FastLED.show();
-}
-
-// cant remember if these were moved somewhere else in main, keepin here will remove if nedded
-void shiftLeds(CRGB leds[], ShiftDirection direction)
-{
-    CRGB temp[num_leds_x * num_leds_y];
-
-    // Copy current state to temp array
-    for (int i = 0; i < num_leds_x * num_leds_y; i++)
-    {
-        temp[i] = leds[i];
-    }
-
-    switch (direction)
-    {
-    case RIGHT: // if you look closely right and left might look flipped, and you're right!
-                // don't ask me why, it just works :)
-        for (int y = 0; y < num_leds_y; y++)
-        {
-            for (int x = 0; x < num_leds_x; x++)
-            {
-                int newX = (x - 1 + num_leds_x) % num_leds_x;
-                leds[XY(newX, y)] = temp[XY(x, y)];
-            }
-        }
-        break;
-
-    case LEFT:
-        for (int y = 0; y < num_leds_y; y++)
-        {
-            for (int x = 0; x < num_leds_x; x++)
-            {
-                int newX = (x + 1) % num_leds_x;
-                leds[XY(newX, y)] = temp[XY(x, y)];
-            }
-        }
-        break;
-
-    case UP:
-        for (int x = 0; x < num_leds_x; x++)
-        {
-            for (int y = 0; y < num_leds_y; y++)
-            {
-                int newY = (y - 1 + num_leds_y) % num_leds_y;
-                leds[XY(x, newY)] = temp[XY(x, y)];
-            }
-        }
-        break;
-
-    case DOWN:
-        for (int x = 0; x < num_leds_x; x++)
-        {
-            for (int y = 0; y < num_leds_y; y++)
-            {
-                int newY = (y + 1) % num_leds_y;
-                leds[XY(x, newY)] = temp[XY(x, y)];
-            }
-        }
-        break;
-    }
-
-    FastLED.show(); // Update the LED display
-}
-
-/**
- * duration is given in seconds.
- *
- * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
- *
- * If you want to use it on a specific subset of LEDs, will have to provide
- * that subset as well as somehow keeping track of what the LEDs previously were.
- */
-void fadeToBlack(int duration)
-{
-    uint8_t initialBrightness = FastLED.getBrightness();
-    if (initialBrightness == 0)
-        return;
-
-    int updatesPerSec = initialBrightness / duration;
-
-    for (int i = initialBrightness; i > 0; i--)
-    {
-        FastLED.setBrightness(i);
-        FastLED.show();
-        delay(1000 / updatesPerSec);
-    }
-
-    // Ensure the brightness is fully set to 0 at the end
-    FastLED.setBrightness(0);
-    FastLED.show();
-}
-
-/**
- * Slowly and "smoothly" transitions the brightness of all LEDs to the targetBrightness over the given duration.
- *
- * duration is given in seconds.
- * targetBrightness should generally not be set beyond 32 (64 likely maximum for safety/consistent power delivery)
- *
- * Uses FastLED's builtin for setting brightness, so it'll modify every LED.
- *
- * If you want to use it on a specific subset of LEDs, will have to provide
- * that subset as well as somehow keeping track of what the LEDs previously were.
- */
-void fadeToBrightness(int duration, int targetBrightness)
-{
-    uint8_t curBrightness = FastLED.getBrightness();
-    if (curBrightness == targetBrightness)
-        return;
-
-    int updatesPerSec;
-    if (targetBrightness > curBrightness)
-    { // increase brightness to target
-        updatesPerSec = (targetBrightness - curBrightness) / duration;
-        for (int i = curBrightness; i < targetBrightness; i++)
-        {
-            FastLED.setBrightness(i);
-            FastLED.show();
-            delay(1000 / updatesPerSec);
-        }
-    }
-    else
-    { // decrease brightness to target
-        updatesPerSec = (curBrightness - targetBrightness) / duration;
-        for (int i = curBrightness; i > targetBrightness; i--)
-        {
-            FastLED.setBrightness(i);
-            FastLED.show();
-            delay(1000 / updatesPerSec);
-        }
-    }
-
-    FastLED.setBrightness(targetBrightness); // just in case it doesnt fully work lol
-    FastLED.show();
-}
-
-// Function to convert a 6-character hex string to CRGB
-CRGB hexToCRGB(const char *hex)
-{
-    uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
-    uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
-    uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
-    return CRGB(r, g, b);
-}
-
-uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap)
-{
-    // int startX = (matrixWidth - imgWidth) / 2;
-    // int startY = (matrixHeight - imgHeight) / 2;
-    if (startX < 0 || startY < 0)
-    {
-        return 1;
-    }
-
-    if (startX >= matrixWidth || startY >= matrixHeight)
-    {
-        return 1;
-    }
-
-    for (int y = 0; y < imgHeight; ++y)
-    {
-        for (int x = 0; x < imgWidth; ++x)
-        {
-            int bufferIndex = (y * imgWidth + x) * imgChannels;
-            uint8_t matrixIndex = 0;
-            if (wrap)
-            {
-                matrixIndex = ((startY + y) % matrixHeight) * matrixWidth + ((startX + x) % matrixWidth);
-            }
-            else
-            {
-                matrixIndex = (startY + y) * matrixWidth + (startX + x);
-            }
-
-            if (imgChannels == 3)
-            { // RGB
-                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
-            }
-            else if (imgChannels == 4)
-            { // RGBA
-                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
-            }
-        }
-    }
-    return 0;
-}
-
-void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor)
-{
-    for (int y = 0; y < matrixHeight; ++y)
-    {
-        for (int x = 0; x < matrixWidth; ++x)
-        {
-            int index = y * matrixWidth + x;
-            if (leds[index] == CRGB::Black)
-            {
-                leds[index] = backgroundColor;
-            }
-        }
-    }
 }
 
 /**
