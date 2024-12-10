@@ -36,7 +36,7 @@ const FoldersOverviewContainer: React.FC = () => {
         //  then the save show logic would handle the rest.
         // TODO: Pre-set duration. Allow changing in the UI & First setting it in the
         //  configurator if not already set.
-        const show = new Show(fileName, 5000);
+        const show = new Show(fileName);
         const layout = new GridLayout(width, height);
         show.addLayout(layout);
         storageManager.saveShow(`${folderName}/${fileName.replace(/ /g, '_')}`, show);

@@ -83,7 +83,7 @@ const NavBar: React.FC<NavBarProps> = (props) => {
                             </Typography>
                             <Chip
                                 color='primary'
-                                label='Unsaved Changes'
+                                label='Save before leaving'
                                 variant='filled'
                                 sx={{
                                     borderRadius: '5px',

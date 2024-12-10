@@ -1,14 +1,14 @@
 import React from 'react';
 
-import {Formik, Form, Field} from 'formik';
+import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 
-import {Effect} from '../serialization/Effect';
+import { Effect } from '../serialization/Effect';
 
-import {Box, Button} from "@mui/material";
+import { Box, Button } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
-import {Delete, Save} from '@mui/icons-material';
+import { Delete, Save } from '@mui/icons-material';
 
 interface EffectFormProps {
     effect: Effect;
@@ -39,12 +39,10 @@ export const labelColumns = 7;
 export const fieldColumns = 12 - labelColumns;
 
 export const EffectForm: React.FC<EffectFormProps> = (
-    {effect, onSubmit, onDelete, children}
+    { effect, onSubmit, onDelete, children }
 ) => {
-
-
-
     return (
+
         <Box
             className="effect-form"
             sx={{
@@ -62,7 +60,7 @@ export const EffectForm: React.FC<EffectFormProps> = (
                     onSubmit(values);
                 }}
             >
-                {({values, errors, touched}) => (
+                {({ values, errors, touched }) => (
                     <Form>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
@@ -78,7 +76,7 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                 <Field
                                     id="name"
                                     name="name"
-                                    placeholder="Effect Name"
+                                    placeholder="Enter Effect Name"
                                     type="text"
                                 />
                             </Grid>
@@ -89,7 +87,13 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                 {errors.startTimeMs && touched.startTimeMs ? (
                                     <div>{errors.startTimeMs}</div>
                                 ) : null}
-                                <Field id="startTimeMs" name="startTimeMs" type="number"/>
+                                <Field
+                                    id="startTimeMs"
+                                    name="startTimeMs"
+                                    type="number"
+                                    placeholder="Enter Start in MS"
+                                    value={values.startTimeMs === -1 ? '' : values.startTimeMs}
+                                />
                             </Grid>
                             <Grid item xs={labelColumns}>
                                 <label htmlFor="duration">Duration</label>
@@ -98,7 +102,13 @@ export const EffectForm: React.FC<EffectFormProps> = (
                                 {errors.durationMs && touched.durationMs ? (
                                     <div>{errors.durationMs}</div>
                                 ) : null}
-                                <Field id="durationMs" name="durationMs" type="number"/>
+                                <Field
+                                    id="durationMs"
+                                    name="durationMs"
+                                    type="number"
+                                    placeholder="Enter Duration in MS"
+                                    value={values.durationMs === -1 ? '' : values.durationMs}
+                                />
                             </Grid>
                             {children}
                             {onDelete && (

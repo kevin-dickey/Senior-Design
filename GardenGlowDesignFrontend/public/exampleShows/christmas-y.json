@@ -6,7 +6,7 @@
     {
       "id": 1,
       "name": "candy-cane",
-      "type": "candy-cane",
+      "type": "candyCane",
       "startTimeMs": 0,
       "durationMs": 10000,
       "origin": {
@@ -23,8 +23,8 @@
     {
       "id": 2,
       "name": "christmas-tree",
-      "type": "christmas-tree",
-      "startTimeMs": 0,
+      "type": "christmasTree",
+      "startTimeMs": 10000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -41,7 +41,7 @@
       "id": 3,
       "name": "snowman",
       "type": "snowman",
-      "startTimeMs": 0,
+      "startTimeMs": 20000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -58,7 +58,7 @@
       "id": 4,
       "name": "snowflake",
       "type": "snowflake",
-      "startTimeMs": 0,
+      "startTimeMs": 30000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -75,7 +75,7 @@
       "id": 5,
       "name": "rainbow",
       "type": "rainbow",
-      "startTimeMs": 0,
+      "startTimeMs": 40000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -92,7 +92,7 @@
       "id": 6,
       "name": "ripple",
       "type": "ripple",
-      "startTimeMs": 0,
+      "startTimeMs": 50000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -108,8 +108,8 @@
     {
       "id": 7,
       "name": "pumpkin-rainbow",
-      "type": "pumpkin-rainbow",
-      "startTimeMs": 0,
+      "type": "pumpkinRainbow",
+      "startTimeMs": 60000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -125,8 +125,8 @@
     {
       "id": 8,
       "name": "pumpkin-ripple",
-      "type": "pumpkin-ripple",
-      "startTimeMs": 0,
+      "type": "pumpkinRipple",
+      "startTimeMs": 70000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -142,8 +142,8 @@
     {
       "id": 9,
       "name": "ghost-rainbow",
-      "type": "ghost-rainbow",
-      "startTimeMs": 0,
+      "type": "ghostRainbow",
+      "startTimeMs": 80000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -159,8 +159,8 @@
     {
       "id": 10,
       "name": "ghost-ripple",
-      "type": "ghost-ripple",
-      "startTimeMs": 0,
+      "type": "ghostRipple",
+      "startTimeMs": 90000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -176,8 +176,8 @@
     {
       "id": 11,
       "name": "pumpkin-ghost-rainbow",
-      "type": "pumpkin-ghost-rainbow",
-      "startTimeMs": 0,
+      "type": "pumpkinGhostRainbow",
+      "startTimeMs": 100000,
       "durationMs": 10000,
       "origin": {
         "x": 0,
@@ -193,8 +193,8 @@
     {
       "id": 12,
       "name": "pumpkin-ghost-ripple",
-      "type": "pumpkin-ghost-ripple",
-      "startTimeMs": 0,
+      "type": "pumpkinGhostRipple",
+      "startTimeMs": 110000,
       "durationMs": 10000,
       "origin": {
         "x": 0,

@@ -11,7 +11,7 @@ const LEDGrid: React.FC = () => {
   const [effectData, setEffectData] = useState<any[]>([]);
   const [, setColorOffset] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [effectType, setEffectType] = useState<EffectType>('rainbow');
+  const [effectType, setEffectType] = useState<EffectType>();
   const [pumpkinPosition, setPumpkinPosition] = useState(-1);
   const [ghostPosition, setGhostPosition] = useState(-1);
   const [snowflakePositions, setSnowflakePositions] = useState([{ col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }, { col: -1, row: -1 }]);
@@ -21,7 +21,7 @@ const LEDGrid: React.FC = () => {
   const [grid, setGrid] = useState<GridLayout | null>(null);
   const [ledGrid, setLedGrid] = useState<number[][]>([]); // LED grid
 
-  // Fetch the effects data from JSON file
+  // Todo Eleen: pass show from configuration to here and remove this block
   useEffect(() => {
     const fetchEffectData = async () => {
       try {
@@ -148,7 +148,16 @@ const LEDGrid: React.FC = () => {
         <select
           id="effect-select"
           value={effectType}
-          onChange={(e) => setEffectType(e.target.value as EffectType)}
+          onChange={(e) => {
+            const value = e.target.value;
+            const effectType = EffectType[value as keyof typeof EffectType]; // Maps string to enum value
+            if (effectType !== undefined) {
+              setEffectType(effectType);
+            } else {
+              setEffectType(undefined);
+            }
+
+          }}
         >
           {effectData.map((effect) => (
             <option key={effect.type} value={effect.type}>
@@ -175,77 +184,77 @@ const LEDGrid: React.FC = () => {
         {({ zoomIn, zoomOut, resetTransform }) => (
           <TransformComponent wrapperClass="react-transform-wrapper">
             <Box flexDirection="column">
-            {ledGrid.map((row, rowIndex) => (
-              <Box key={rowIndex} display="flex" gap={0.3}>
-                {row.map((colorIndex, colIndex) => {
-                  let pumpkinPart: { row: number; col: number; color: string } | undefined;
-                  let ghostPart: { row: number; col: number; color: string } | undefined;
-                  let snowflakePart: { row: number; col: number; color: string } | undefined;
-                  let snowmanPart: { row: number; col: number; color: string } | undefined;
-                  let christmasTreePart: { row: number; col: number; color: string } | undefined;
-                  let candyCanePart: { row: number; col: number; color: string } | undefined;
+              {ledGrid.map((row, rowIndex) => (
+                <Box key={rowIndex} display="flex" gap={0.3}>
+                  {row.map((colorIndex, colIndex) => {
+                    let pumpkinPart: { row: number; col: number; color: string } | undefined;
+                    let ghostPart: { row: number; col: number; color: string } | undefined;
+                    let snowflakePart: { row: number; col: number; color: string } | undefined;
+                    let snowmanPart: { row: number; col: number; color: string } | undefined;
+                    let christmasTreePart: { row: number; col: number; color: string } | undefined;
+                    let candyCanePart: { row: number; col: number; color: string } | undefined;
 
-                  let backgroundColor = '';
+                    let backgroundColor = '';
 
-                  if (grid) {
+                    if (grid) {
 
-                    pumpkinPart = pumpkinShape.find(
-                      (part) => rowIndex === part.row && colIndex === (pumpkinPosition + part.col) % grid.width
-                    );
+                      pumpkinPart = pumpkinShape.find(
+                        (part) => rowIndex === part.row && colIndex === (pumpkinPosition + part.col) % grid.width
+                      );
 
-                    ghostPart = ghostShape.find(
-                      (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % grid.width
-                    );
+                      ghostPart = ghostShape.find(
+                        (part) => rowIndex === part.row && colIndex === (ghostPosition + part.col) % grid.width
+                      );
 
-                    snowflakePart = snowflakeShape.find((part) =>
-                      snowflakePositions.some(
-                        (position) =>
-                          rowIndex === (position.row + part.row) % grid.height && // Match row
-                          colIndex === (position.col + part.col) % grid.width    // Match column
-                      )
-                    );
+                      snowflakePart = snowflakeShape.find((part) =>
+                        snowflakePositions.some(
+                          (position) =>
+                            rowIndex === (position.row + part.row) % grid.height && // Match row
+                            colIndex === (position.col + part.col) % grid.width    // Match column
+                        )
+                      );
 
-                    snowmanPart = snowmanShape.find(
-                      (part) => rowIndex === part.row && colIndex === (snowmanPosition + part.col) % grid.width
-                    );
+                      snowmanPart = snowmanShape.find(
+                        (part) => rowIndex === part.row && colIndex === (snowmanPosition + part.col) % grid.width
+                      );
 
-                    christmasTreePart = christmasTreeShape.find(
-                      (part) => rowIndex === part.row && colIndex === (christmasTreePosition + part.col) % grid.width
-                    );
+                      christmasTreePart = christmasTreeShape.find(
+                        (part) => rowIndex === part.row && colIndex === (christmasTreePosition + part.col) % grid.width
+                      );
 
-                    candyCanePart = candyCaneShape.find((part) =>
-                      candyCanePositions.some(
-                        (position) =>
-                          rowIndex === (position.row + part.row) % grid.height && // Match row
-                          colIndex === (position.col + part.col) % grid.width    // Match column
-                      )
-                    );
+                      candyCanePart = candyCaneShape.find((part) =>
+                        candyCanePositions.some(
+                          (position) =>
+                            rowIndex === (position.row + part.row) % grid.height && // Match row
+                            colIndex === (position.col + part.col) % grid.width    // Match column
+                        )
+                      );
 
-                    // Handle shape effect
-                    if (effectType === 'pumpkin-rainbow' || effectType === 'pumpkin-ripple') {
-                      backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === 'ghost-rainbow' || effectType === 'ghost-ripple') {
-                      backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
-                    } else if (effectType === 'pumpkin-ghost-rainbow' || effectType === 'pumpkin-ghost-ripple') {
-                      backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
-                    } else if (effectType === 'snowflake') {
-                      backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
-                    } else if (effectType === 'snowman') {
-                      backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
-                    } else if (effectType === 'christmas-tree') {
-                      backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
-                    } else if (effectType === 'candy-cane') {
-                      backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
+                      // Handle shape effect
+                      if (effectType === EffectType.pumpkinRainbow || effectType === EffectType.pumpkinRipple) {
+                        backgroundColor = pumpkinPart ? pumpkinPart.color : rainbowColors[colorIndex];
+                      } else if (effectType === EffectType.ghostRainbow || effectType === EffectType.ghostRipple) {
+                        backgroundColor = ghostPart ? ghostPart.color : rainbowColors[colorIndex];
+                      } else if (effectType === EffectType.pumpkinGhostRainbow || effectType === EffectType.pumpkinGhostRipple) {
+                        backgroundColor = pumpkinPart ? pumpkinPart.color : (ghostPart ? ghostPart.color : rainbowColors[colorIndex]);
+                      } else if (effectType === EffectType.snowflake) {
+                        backgroundColor = snowflakePart ? snowflakePart.color : christmasColors[colorIndex];
+                      } else if (effectType === EffectType.snowman) {
+                        backgroundColor = snowmanPart ? snowmanPart.color : christmasColors[colorIndex];
+                      } else if (effectType === EffectType.christmasTree) {
+                        backgroundColor = christmasTreePart ? christmasTreePart.color : christmasColors2[colorIndex];
+                      } else if (effectType === EffectType.candyCane) {
+                        backgroundColor = candyCanePart ? candyCanePart.color : christmasColors2[colorIndex];
+                      }
+                      else {
+                        backgroundColor = rainbowColors[colorIndex];
+                      }
                     }
-                    else {
-                      backgroundColor = rainbowColors[colorIndex];
-                    }
-                  }
-                  
-                  return (
-                    <div
-                      key={colIndex}
-                      className={`led-circle 
+
+                    return (
+                      <div
+                        key={colIndex}
+                        className={`led-circle 
                     ${pumpkinPart ? 'pumpkin-cell' : ''} 
                     ${ghostPart ? 'ghost-cell' : ''}
                     ${snowflakePart ? 'snowflake-cell' : ''}
@@ -253,14 +262,14 @@ const LEDGrid: React.FC = () => {
                     ${christmasTreePart ? 'christmasTree-cell' : ''}
                     ${candyCanePart ? 'candy-cane-cell' : ''}
                     `}
-                      style={{
-                        backgroundColor,
-                      }}
-                    ></div>
-                  );
-                })}
-              </Box>
-            ))}
+                        style={{
+                          backgroundColor,
+                        }}
+                      ></div>
+                    );
+                  })}
+                </Box>
+              ))}
             </Box>
           </TransformComponent>
         )}

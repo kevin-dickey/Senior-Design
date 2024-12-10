@@ -13,6 +13,8 @@ export class Layout {
         if (data.type === 'grid') {
             return GridLayout.fromJSON(data); 
         }
+        data.width = data.width;
+        data.height = data.height;
         const layout = new Layout();
         Object.assign(layout, data);
         return layout;
@@ -41,6 +43,8 @@ export class GridLayout extends Layout {
     
     static fromJSON(data: any): GridLayout {
         const layout = new GridLayout(data.width, data.height);
+        data.width = data.width;
+        data.height = data.height;
         Object.assign(layout, data);
         return layout;
     }
