@@ -37,7 +37,9 @@ Show_t loadShow(File sdFile)
     try
     {
         data = nlohmann::json::parse(buffer.begin(), buffer.end());
+#if DEBUG_MODE
         std::cout << "Parsed JSON: " << data.dump(4) << std::endl;
+#endif
     }
     catch (const std::exception &e)
     {
@@ -58,7 +60,8 @@ Show_t loadShow(File sdFile)
     }
 }
 
-Show_t loadShow(const std::string& filename) {
+Show_t loadShow(const std::string &filename)
+{
     std::ifstream f3(filename);
     nlohmann::json data3 = nlohmann::json::parse(f3);
     Show show = Show::from_json(data3);

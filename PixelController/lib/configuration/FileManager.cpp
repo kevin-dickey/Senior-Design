@@ -38,9 +38,11 @@ bool FileManager::MountFileSystem()
 
     root = SD.open("/");
 
+    #if DEBUG_MODE
     printCardInformation();
     std::cout << "  SD Card Files:" << std::endl;
     printDirectory(root, 1);
+    #endif
 
     std::cout << "✅ File Manager Mounted SD Card." << std::endl;
 #endif

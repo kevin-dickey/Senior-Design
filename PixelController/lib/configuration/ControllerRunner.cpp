@@ -37,7 +37,9 @@ ControllerRunner::ControllerRunner(const Show &newShow, const unsigned long show
     : show(newShow), effectCursor(0), sensorCursor(0), showStartTimeMS(showStartTimeMS), totalSensorsRuntime(0), epoch(epoch),activeSensorId(-1),sensorCursorStart(0), currentEffectShowFrame(), currentSensorShowFrame()
         {
     mode = "effect";
+    #if DEBUG_MODE
     std::cout << "ControllerRunner initialized with effect cursor set to: " << effectCursor << ". Sensor Cursor set to: " << sensorCursor << ". Mode set to: " << mode << std::endl;
+    #endif
 }
 
 unsigned long ControllerRunner::getMillis() const {
@@ -48,7 +50,9 @@ unsigned long ControllerRunner::getMillis() const {
 void ControllerRunner::setEffectCursor()
 {
     effectCursor = getMillis() -showStartTimeMS-  totalSensorsRuntime;
+    #if DEBUG_MODE
     std::cout << "Cursor updated to " << effectCursor << std::endl;
+    #endif
 }
 
 unsigned long ControllerRunner::getEffectCursor() const
@@ -59,19 +63,25 @@ unsigned long ControllerRunner::getEffectCursor() const
 void ControllerRunner::setSensorCursorStart()
 {
     sensorCursorStart = getMillis() -showStartTimeMS -  totalSensorsRuntime;
+    #if DEBUG_MODE
     std::cout << "Sensor Cursor start updated to " << sensorCursorStart << std::endl;
+    #endif
 }
 
 void ControllerRunner::setSensorCursor()
 {
     sensorCursor = getMillis() -showStartTimeMS- sensorCursorStart;
+    #if DEBUG_MODE
     std::cout << "Sensor Cursor updated to " << sensorCursor << std::endl;
+    #endif
 }
 
 void ControllerRunner::setMode(const std::string &newMode)
 {
     mode = newMode;
+    #if DEBUG_MODE
     std::cout << "Mode updated to " << mode << std::endl;
+    #endif
 }
 
 std::string ControllerRunner::getMode() const
@@ -82,7 +92,9 @@ std::string ControllerRunner::getMode() const
 void ControllerRunner::setActiveSensorId(int newActiveSensorId)
 {
     activeSensorId = newActiveSensorId;
+    #if DEBUG_MODE
     std::cout << "ActiveSensorId updated to " << activeSensorId << std::endl;
+    #endif
 }
 
 int ControllerRunner::getActiveSensorId() const
@@ -93,7 +105,9 @@ int ControllerRunner::getActiveSensorId() const
 void ControllerRunner::setTotalSensorRuntime(unsigned long runtime)
 {
     totalSensorsRuntime += runtime;
+    #if DEBUG_MODE
     std::cout << "Total sensor runtime updated to " << totalSensorsRuntime << std::endl;
+    #endif
 }
 unsigned long ControllerRunner::getTotalSensorRuntime() const
 {
@@ -103,6 +117,7 @@ unsigned long ControllerRunner::getTotalSensorRuntime() const
 void ControllerRunner::setSensors(std::vector<bool> sensor_states)
 {
     sensorsStates = sensor_states;
+    #if DEBUG_MODE
     std::cout << "Sensor States: [";
     for (size_t i = 0; i < sensorsStates.size(); ++i)
     {
@@ -113,6 +128,7 @@ void ControllerRunner::setSensors(std::vector<bool> sensor_states)
         }
     }
     std::cout << "]" << std::endl;
+    #endif
 }
 
 std::vector<bool> ControllerRunner::getSensors() const
@@ -198,55 +214,45 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
     {
         ShowFrame newEffectShowFrame;
 
+        #if DEBUG_MODE
         std::cout << "Handling effect mode" << std::endl;
+        #endif
+
         // itterate to fine current effects for cursor time
         for (Effect *e : show.effects) {
-            std::cout << "a" << std::endl;
             if (e->startTimeMs <= effectCursor && effectCursor < e->startTimeMs + e->durationMs) {
-                std::cout << "b" << std::endl;
                 newEffectShowFrame.effect = e;
-                std::cout << "c" << std::endl;
                 if(currentEffectShowFrame.effect != nullptr && currentEffectShowFrame.effect->name ==  newEffectShowFrame.effect->name) {
-                    std::cout << "d" << std::endl;
                     newEffectShowFrame.frame = currentEffectShowFrame.frame + 1;
                 }
                 else {
-                    std::cout << "e" << std::endl;
                     newEffectShowFrame.frame = 1;
                 }
-                std::cout << "f" << std::endl;
                 showFrames.push_back(newEffectShowFrame);
-                std::cout << "g" << std::endl;
             }
         }
 
         if(newEffectShowFrame.frame){
-            std::cout << "h" << std::endl;
             currentEffectShowFrame = newEffectShowFrame;
-            std::cout << "z, " << newEffectShowFrame.effect << ", " << newEffectShowFrame.frame << std::endl;
             return newEffectShowFrame;
         }
         else{
-            std::cout << "i" << std::endl;
             currentEffectShowFrame.effect->name = "no effect" ;
-            std::cout << "j" << std::endl;
             currentEffectShowFrame.frame = -1 ;
-            std::cout << "k" << std::endl;
             return currentEffectShowFrame;
         }
 
     }
     else // if (mode == "sensor")
     {
+        #if DEBUG_MODE
         std::cout << "Handling sensor mode for sensor " << activeSensorId << ", do I exist? The code will abort if not!" << std::endl;
+        #endif
         ShowFrame newSensorShowFrame{};
         Effect *newSensorEffect = show.sensors.at(activeSensorId)->effect;
-        std::cout << "b" << std::endl;
         newSensorShowFrame.effect = newSensorEffect;
-        std::cout << "c" << std::endl;
         if(currentSensorShowFrame.effect != nullptr && currentSensorShowFrame.effect->name ==  newSensorShowFrame.effect->name) {
             newSensorShowFrame.frame = currentSensorShowFrame.frame + 1;
-            std::cout << "d" << std::endl;
         }
         else {
             newSensorShowFrame.frame = 1;
