@@ -16,10 +16,9 @@ typedef struct Show
 {
     std::string name;
     double duration;
-    std::vector<Layout*> layouts;
-    std::vector<Effect*> effects;
-    std::vector<Sensor*> sensors;
-
+    std::vector<Layout *> layouts;
+    std::vector<Effect *> effects;
+    std::vector<Sensor *> sensors;
 
     static Show from_json(const nlohmann::json &j)
     {
@@ -36,7 +35,6 @@ typedef struct Show
             {
                 try
                 {
-                    std::cout << "Parsing Effect: " << effect << std::endl;
                     auto effectObj = Effect::from_json(effect);
                     std::cout << "Effect Name: " << effectObj->name << std::endl;
                     show.effects.push_back(effectObj);
@@ -66,12 +64,12 @@ typedef struct Show
                         break;
                     }
                     default:
-                        {
+                    {
                         std::cout << "Custom Layout!" << std::endl;
                         // std::cout << "Layout ID: " << layout.at("id").get<int>() << std::endl;
                         show.layouts.push_back(Layout::from_json(layout));
                         break;
-                        }
+                    }
                     }
                 }
                 catch (const std::exception &e)
@@ -107,6 +105,6 @@ typedef struct Show
 } Show_t;
 
 Show_t loadShow(File sdFile);
-Show_t loadShow(const std::string& filename);
+Show_t loadShow(const std::string &filename);
 
 #endif // CONFIGURATION_H
