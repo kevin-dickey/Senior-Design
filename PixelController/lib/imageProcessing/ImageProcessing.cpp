@@ -74,9 +74,16 @@ unsigned char *ImageProcessing::load_image(const char *filename, int *width, int
 
 unsigned char *ImageProcessing::load_image_from_memory(unsigned char *buffer, size_t &len, int *width, int *height, int *channels)
 {
-    unsigned char *imgData = stbi_load_from_memory(buffer, len, width, height, channels, 0);
+    unsigned char *imgData = new unsigned char[len];
     if (!imgData)
     {
+        std::cerr << "Error allocating memory for image data" << std::endl;
+        return nullptr;
+    }
+    imgData = stbi_load_from_memory(buffer, len, width, height, channels, 0);
+    if (!imgData)
+    {
+        delete[] imgData;
         std::cerr << "Error loading image from memory" << std::endl;
         std::cerr << "Error: " << stbi_failure_reason() << std::endl;
     }
