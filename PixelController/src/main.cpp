@@ -3,8 +3,6 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-#include <FileManager.h>
-
 #define STRIP_1_PIN 32
 #define STRIP_2_PIN 33
 #define STRIP_3_PIN 25
@@ -22,22 +20,25 @@ using json = nlohmann::json;
 
 // TODO: Gotta do this for anything in lib while using CMake. PlatformIO automatically adds the include path for lib
 //  so that we can include the headers directly (<Configuration.h>). This is a workaround for CMake.
-#include "configuration/Configuration.h"
 #include "configuration/FileManager.h"
+#include "configuration/Configuration.h"
+#include "configuration/ControllerRunner.h"
 #include "imageProcessing/ImageProcessing.h"
+#include "patternGeneration/rippleEffect.h"
+#include "patternGeneration/utils.h"
 
 #else
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
-#include "Configuration.h"
-#include "ControllerRunner.h"
-#include "Sensor.h"
-#include "ControllerRunner.h"
+#include <FileManager.h>
+#include <Configuration.h>
+#include <ControllerRunner.h>
 #include <ImageProcessing.h>
-#include "rippleEffect.h"
-#include "utils.h"
+#include <rippleEffect.h>
+#include <Sensor.h>
+#include <utils.h>
 
 #endif
 
