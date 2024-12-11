@@ -15,23 +15,6 @@ uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t
 }
 
 /**
- * Scales the brightness of the LEDs based on the distance from the center of the actual ripple in the frame
- * For example, if the width of the ripple is 3 pixels wide, the center would be brightest and the 2 outside
- * pixels would be dimmed slightly.
- *
- * (Not sure if it's actually working as intended to be hoenst :D)
- * (Effectively Depricated)
- */
-uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter) {
-    // uint8_t delta = abs(rippleCounter - distance);
-    // uint8_t maxDistance = num_leds / 2;
-    // uint8_t brightness = map(delta, 0, maxDistance, 0, MAX_BRIGHTNESS);
-    // return (brightness <= 0) ? 0 : (brightness > 2) ? 2 : brightness; // ensures 0 <= brightness <= 16
-    // return brightness > MAX_BRIGHTNESS ? 0 : brightness;
-    return 0;
-}
-
-/**
  * Calculates the (x, y) position of a grid of LEDs.
  * This is required over just creating a 2D array as it depends whether the LEDs
  * are setup in a serpentine manner, and if they're setup ordered in a vertical manner or not.
@@ -119,6 +102,7 @@ extern int loadedImageHeight, loadedImageWidth, loadedImageChannels;
 
 /**
  * Loads in images from the SD card, images should be a string of the filepath (e.g. "/djibouti.jpg")
+ * TODO: This shouldn't be in the patternGeneration library. We should move this and other File-related things to a new library.
  */
 void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds_x, int leds_y) {
     for (const std::string &image : images) {
