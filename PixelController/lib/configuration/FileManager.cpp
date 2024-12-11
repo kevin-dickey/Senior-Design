@@ -22,7 +22,8 @@ bool FileManager::MountFileSystem()
 // Running on the emulator
 #else
     // Running on the ESP32
-    std::cout << "  Running on the ESP32... Initializing SD via SPI on pins:" << std::endl;
+    std::cout << "  Running on the ESP32..." << std::endl;
+    std::cout << "  Initializing SD via SPI on pins:" << std::endl;
     std::cout << "    MISO: " << SPI_MISO_PIN << std::endl;
     std::cout << "    MOSI: " << SPI_MOSI_PIN << std::endl;
     std::cout << "    SCK: " << SPI_SCK_PIN << std::endl;

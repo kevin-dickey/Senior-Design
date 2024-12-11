@@ -80,7 +80,9 @@ unsigned char *ImageProcessing::load_image_from_memory(unsigned char *buffer, si
         std::cerr << "Error allocating memory for image data" << std::endl;
         return nullptr;
     }
+    std::cout << "Loading..." << std::endl;
     imgData = stbi_load_from_memory(buffer, len, width, height, channels, 0);
+    std::cout << "Loaded!" << std::endl;
     if (!imgData)
     {
         delete[] imgData;

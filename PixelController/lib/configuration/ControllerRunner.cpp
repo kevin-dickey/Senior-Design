@@ -203,7 +203,7 @@ ControllerRunner::ShowFrame ControllerRunner::getNextShowFrame(std::vector<bool>
     if(show.duration <= effectCursor) {
         Effect* e = show.effects[0];
         currentEffectShowFrame.effect = e;
-        currentEffectShowFrame.effect->name = "no effect" ;
+        currentEffectShowFrame.effect->name = "no effect";
         currentEffectShowFrame.frame = -1 ;
         return currentEffectShowFrame;
     }
