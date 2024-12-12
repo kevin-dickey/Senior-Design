@@ -416,7 +416,9 @@ void loop()
     // TODO: divide frame up to send to picos
     // fill_solid(foreground_frame, num_leds, CRGB::Black);
     generateFrame(showFrame);
-    rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
+   // rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
+    int groupSize = 4
+    rearrangeForGroupedSerpentine(foreground_frame, strip_data, num_leds_x, num_leds_y, int groupSize)
     FastLED.show();
 
     end_millis = millis();
