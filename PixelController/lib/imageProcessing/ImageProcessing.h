@@ -5,7 +5,10 @@
 #ifndef PIXELCONTROLLER_IMAGEPROCESSING_H
 #define PIXELCONTROLLER_IMAGEPROCESSING_H
 
+#if USE_EMULATOR
+#else
 #include <FS.h>
+#endif
 
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
@@ -22,7 +25,10 @@ public:
         int channels;
     } ImageData_t;
 
+#if USE_EMULATOR
+#else
     static unsigned char *convertFsFileToBuffer(fs::File *fsFile, size_t &fileSize);
+#endif
 
     static int get_image_dimensions(const char *filename, int *width, int *height, int *channels);
 

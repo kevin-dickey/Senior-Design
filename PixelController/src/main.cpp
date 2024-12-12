@@ -46,17 +46,6 @@ using json = nlohmann::json;
 
 #endif
 
-unsigned long getMillis()
-{
-#if USE_EMULATOR
-    auto now = std::chrono::high_resolution_clock ::now();
-    auto mseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - epoch).count();
-    return mseconds;
-#else
-    return millis();
-#endif
-}
-
 FileManager *fileManager;
 Show_t show;
 SensorManager *sensorManager;
@@ -67,8 +56,22 @@ int num_leds_y = 6;
 int num_groups = 2; // number of groups of strips. This should be the height of all pixels divided by the number of strands.
 int num_leds = num_leds_x * num_leds_y;
 
+unsigned long showStart = 0;
+std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000>>> epoch;
+
 CRGB *foreground_frame;
 CRGB **strip_data; // len(num_leds_x)
+
+unsigned long getMillis()
+{
+#if USE_EMULATOR
+    auto now = std::chrono::system_clock::now();
+    auto mseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - epoch).count();
+    return mseconds;
+#else
+    return millis();
+#endif
+}
 
 #if USE_EMULATOR
 void loadExampleImages(const std::vector<std::string *> &image_paths,
@@ -130,7 +133,7 @@ int main()
             delete runner;
             runner = nullptr;
             showStart = getMillis();
-            epoch = std::chrono::high_resolution_clock::from_time_t(0);
+            epoch = std::chrono::system_clock::from_time_t(0);
             runner = new ControllerRunner(show, showStart, epoch);
         }
 
@@ -146,7 +149,7 @@ int main()
             delete runner;
             runner = nullptr;
             showStart = getMillis();
-            epoch = std::chrono::high_resolution_clock::from_time_t(0);
+            epoch = std::chrono::system_clock::from_time_t(0);
             runner = new ControllerRunner(show, showStart, epoch);
         }
     }
@@ -214,7 +217,13 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
 }
 
 #else
-SET_LOOP_TASK_STACK_SIZE(16 * 1024); // 16KB
+SET_LOOP_TASK_STACK_SIZE(32 * 1024); // 16KB
+
+#ifdef DEBUG_MODE
+#include "esp_system.h"
+#include "esp_heap_caps.h"
+esp_err_t err;
+#endif
 
 void newEffectReset();
 void generateFrame(ControllerRunner::ShowFrame showframe);
@@ -234,8 +243,6 @@ int *prevLeds1 = NULL;
 int rippleCounter;
 
 // sensor & show stuff
-unsigned long showStart = 0;
-std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<long long, std::ratio<1, 1000000000>>> epoch;
 Sensor *sensor0, *sensor1, *sensor2, *sensor3;
 std::vector<Sensor *> a_sensors;
 std::vector<bool> prev_sensor_triggered;
@@ -243,7 +250,7 @@ std::vector<bool> prev_sensor_triggered;
 // misc. stuff (effect variables, sensor stuff, running-time)
 int hue;
 int curEffect = -1;
-int effect_spacing = 12; // TODO: Give this a better name - it's the spacing between images in our moving effects.
+int effect_spacing = 10; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 int count;
 bool goUp;
 bool loaded = false;
@@ -274,12 +281,31 @@ unsigned char *bufferPtr = &bufferPattern[0][0][0];
 int loadedImageHeight, loadedImageWidth, loadedImageChannels;
 unsigned char *loadedImage;
 
+void clearStrips(CRGB **strip_data, int num_leds_x, int num_leds_y)
+{
+    for (int i = 0; i < num_leds_y / num_groups; i++)
+    {
+        fill_solid(strip_data[i], num_leds_x * num_groups, CRGB::Black);
+    }
+    FastLED.clear();
+}
+
 // MARK: Setup
 void setup()
 {
     Serial.begin(115200); // for setting up stuff to print to serial monitor
     // delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
+
+    // err = heap_caps_enable_stack_check(CONFIG_COMPILER_STACK_CHECK_MODE_NORM);
+    // if (err != ESP_OK) {
+    //     std::cerr << "Failed to enable stack check: " << esp_err_to_name(err) << std::endl;
+    // }
+
+    // err = heap_caps_enable_heap_poisoning(CONFIG_HEAP_POISONING_LIGHT);
+    // if (err != ESP_OK) {
+    //     std::cerr << "Failed to enable heap poisoning: " << esp_err_to_name(err) << std::endl;
+    // }
 
 #if SKIP_SHOW_INITIALIZATION
 #else
@@ -320,12 +346,12 @@ void setup()
         std::cout << "Set width/height to: " << num_leds_x << "x" << num_leds_y << std::endl;
 
         foreground_frame = new CRGB[num_leds];
-        // strip_data = new CRGB *[num_leds_y / num_groups]; // Number of strips
-        strip_data = new CRGB *[num_leds_y]; // Number of strips
-        for (int i = 0; i < num_leds_y; i++)
+        uint8_t num_strips = num_leds_y / num_groups;
+        strip_data = new CRGB *[num_strips]; // Number of strips
+        for (int i = 0; i < num_strips; i++)
         {
             // Allocate space for each width of the strip
-            strip_data[i] = new CRGB[num_leds_x];
+            strip_data[i] = new CRGB[num_leds_x * num_groups];
         }
 
         // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
@@ -341,18 +367,23 @@ void setup()
     showStart = getMillis();
 
 #pragma region FastLED Initialization
-    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], num_leds_x).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], num_leds_x).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], num_leds_x).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
+    // TODO: Set length from number of rows
+    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * 2).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * 2).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * 2).setCorrection(TypicalSMD5050);
+    // FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x).setCorrection(TypicalSMD5050);
+    // FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x).setCorrection(TypicalSMD5050);
+    // FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
     // FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[6], num_leds_x).setCorrection(TypicalSMD5050);
 
     FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);          // setup the built-in LED for the esp32
     fill_solid(foreground_frame, num_leds, CRGB::Black);
-    rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
+    std::cout << "Rearranging..." << std::endl;
+
+    // rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
+    clearStrips(strip_data, num_leds_x, num_leds_y);
+    rearrangeForGroupedSerpentine(foreground_frame, strip_data, num_leds_x, num_leds_y, 3, false);
     FastLED.show();
     Serial.println("Initialized FastLED...");
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
@@ -365,21 +396,25 @@ void setup()
     // Effect *sensorEffect = new Effect(1, rainbow, "BasicEffect", sensor_pos, size, 0.0, 500.0, std::move(translation));
     // sensors = std::vector<Sensor *>{sensor1};
     // sensorManager->setSensors(sensors);
-    // Serial.println("Initialized Sensors...");
+    Serial.println("Initialized Sensors...");
 #pragma endregion // Sensor Initialization
+
+    // Get the largest free block of heap memory
+    std::cout << "Largest free heap block: " << ESP.getMaxAllocHeap() << std::endl;
+
+    // for (effect which uses an image : show) {
+    //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
+    // }
+    std::vector<std::string> imgs = {"/blue.png", "/candycane.png", "/snowman.png", "/orb.png"};
+    loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
+    std::cout << "😁 Done loading images!" << std::endl;
+    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
     hue = 30;
     count = 0;
     rippleCounter = 0;
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
-
-    // for (effect which uses an image : show) {
-    //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
-    // }
-    std::vector<std::string> imgs = {"/orb.png", "/candycane.png", "/snowman.png"};
-    loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
-    std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
     delay(3000); // delay for 3 seconds to give time to open the serial monitor
 }
@@ -408,7 +443,7 @@ void loop()
         newEffectReset();
 
         showStart = getMillis();
-        epoch = std::chrono::high_resolution_clock::from_time_t(0);
+        epoch = std::chrono::system_clock::from_time_t(0);
         runner = new ControllerRunner(show, showStart, epoch);
         showFrame = runner->getNextShowFrame(sensor_states);
 
@@ -418,9 +453,10 @@ void loop()
     // TODO: divide frame up to send to picos
     // fill_solid(foreground_frame, num_leds, CRGB::Black);
     generateFrame(showFrame);
-    rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
+    // rearrangeForStrips(foreground_frame, strip_data, num_leds_x, num_leds_y);
     int groupSize = 3;
-    // rearrangeForGroupedSerpentine(foreground_frame, strip_data, num_leds_x, num_leds_y, int groupSize)
+    clearStrips(strip_data, num_leds_x, num_leds_y);
+    rearrangeForGroupedSerpentine(foreground_frame, strip_data, num_leds_x, num_leds_y, groupSize, false);
     FastLED.show();
 
     end_millis = millis();
@@ -543,16 +579,29 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         fill_solid(foreground_frame, num_leds, CRGB::Black);
         // rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-        for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
-        {
-            bufferToCRGBArray(ghostjpg,
-                              12, 12,
-                              3,
-                              foreground_frame,
-                              num_leds_x, num_leds_y,
-                              x, start_y,
-                              false);
-        }
+        // for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+        // {
+        //     bufferToCRGBArray(ghostjpg,
+        //                       6, 6,
+        //                       4,
+        //                       foreground_frame,
+        //                       num_leds_x, num_leds_y,
+        //                       x, start_y,
+        //                       false);
+        //     // break;
+        // }
+
+        // Fill the first 6 pixels of the first row with red
+        // Fill the first 6 pixels of the second row with green
+        // Fill the first 6 pixels of the third row with blue
+        fill_solid(foreground_frame, 6, CRGB::Red);
+        fill_solid(foreground_frame + num_leds_x, 6, CRGB::Green);
+        fill_solid(foreground_frame + 2 * num_leds_x, 6, CRGB::Blue);
+
+        // Repeat for rows 4-6
+        fill_solid(foreground_frame + 3 * num_leds_x, 6, CRGB::Yellow);
+        fill_solid(foreground_frame + 4 * num_leds_x, 6, CRGB::Purple);
+        fill_solid(foreground_frame + 5 * num_leds_x, 6, CRGB::Orange);
 
         // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
@@ -586,16 +635,16 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         }
 
         // draw ripple, then pumpkin and ghost
-        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        // rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
         // load the images (check locations)                                                                 // v b/c shifting right
-        bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, false);
-        bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (10 + count) % num_leds_x, 0, false);
+        // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, false);
+        // bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (10 + count) % num_leds_x, 0, false);
         // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (50 + count) % num_leds_x, 0, true);
         // bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+        // rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -620,6 +669,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         break;
 
     case snowman:
+    {
         // if (curEffect != snowman)
         // {
         //     newEffectReset;
@@ -638,12 +688,86 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         fill_solid(foreground_frame, num_leds, CRGB::Black);
+
+        uint16_t frame_increment = showframe.frame / 50;
         for (int x = 0; x < num_leds_x; x += effect_spacing)
         {
-            bufferToCRGBArray(bufferPtr, 3, 3, 3, foreground_frame, num_leds_x, num_leds_y, x, 2, false);
+            bufferToCRGBArray(bufferPtr, 
+            3, 3, 3, 
+            foreground_frame, 
+            num_leds_x, num_leds_y, 
+            x + frame_increment, 0 + frame_increment, 
+            false);
         }
         break;
+    }
 
+    case pumpkin:
+    {
+        int start_x = 0; // showframe.effect->origin.x;
+        int start_y = 0; // showframe.effect->origin.y;
+        uint8_t frames_per_shift = 5;
+        uint8_t max_shifts = 20;
+
+        if (curEffect != pumpkin)
+        {
+            newEffectReset;
+            curEffect = pumpkin;
+
+            std::cout << "Setting up pumpkin effect..." << std::endl;
+        }
+
+        if (!loaded)
+        {
+            for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+            {
+                bufferToCRGBArray(pumpkinjpg, // candyCanejpg,
+                                            //   showframe.effect->size.x, showframe.effect->size.y,
+                                  6, 6,
+                                  4,
+                                  foreground_frame,
+                                  num_leds_x, num_leds_y,
+                                  x, start_y,
+                                  false);
+                // break;
+            }
+            loaded = true;
+        }
+
+        // Only shift the candy cane if the frame is divisible by 5
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        }
+
+        // Reset the loaded flag if the frame is divisible by 20
+        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
+        {
+            loaded = false;
+            std::cout << "Resetting pumpkin effect..." << std::endl;
+        }
+
+        break;
+    }
+
+        if (curEffect != pumpkin)
+        {
+            newEffectReset;
+            curEffect = pumpkin;
+        }
+
+        if (!loaded)
+        {
+            // load in pumpkins (check locations are good)
+            bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+            bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 10, 0, false);
+            // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
+            // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
+            loaded = true;
+        }
+
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        break;
     case christmasTree:
         if (curEffect != christmasTree)
         {
@@ -679,30 +803,34 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             std::cout << "Setting up candyCane effect..." << std::endl;
         }
 
-        fill_solid(foreground_frame, num_leds, CRGB::Black);
-        for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+        if (!loaded)
         {
-            // bufferToCRGBArray(bufferPtr, 3, 3, 3, foreground_frame, num_leds_x, num_leds_y, x, start_y, false);
-            bufferToCRGBArray(candyCanejpg,
-                              //   showframe.effect->size.x, showframe.effect->size.y,
-                              12, 12,
-                              loadedImageChannels,
-                              foreground_frame,
-                              num_leds_x, num_leds_y,
-                              x, start_y,
-                              false);
+            for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+            {
+                bufferToCRGBArray(ghostjpg, // candyCanejpg,
+                                            //   showframe.effect->size.x, showframe.effect->size.y,
+                                  6, 6,
+                                  4,
+                                  foreground_frame,
+                                  num_leds_x, num_leds_y,
+                                  x, start_y,
+                                  false);
+                // break;
+            }
+            loaded = true;
         }
 
         // Only shift the candy cane if the frame is divisible by 5
         if (showframe.frame % frames_per_shift == 0)
         {
-            // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         }
 
         // Reset the loaded flag if the frame is divisible by 20
         if (showframe.frame % (max_shifts * frames_per_shift) == 0)
         {
-            // loaded = false;
+            loaded = false;
+            std::cout << "Resetting candyCane effect..." << std::endl;
         }
 
         break;

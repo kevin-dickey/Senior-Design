@@ -2,15 +2,23 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#include <FS.h>
 #include <fstream>
 #include <string>
 #include "json.hpp"
-#include "Spatials.h"
-#include "Effect.h"
-#include "Layout.h"
-#include "Sensor.h"
-#include <fstream>
+
+#if USE_EMULATOR
+#include "configuration/Effect.h"
+#include "configuration/Layout.h"
+#include "configuration/Spatials.h"
+#include "configuration/Sensor.h"
+#else
+#include <FS.h>
+
+#include <Effect.h>
+#include <Layout.h>
+#include <Spatials.h>
+#include <Sensor.h>
+#endif
 
 typedef struct Show
 {
@@ -104,7 +112,10 @@ typedef struct Show
     }
 } Show_t;
 
-Show_t loadShow(File sdFile);
+#if USE_EMULATOR
 Show_t loadShow(const std::string &filename);
+#else
+Show_t loadShow(File sdFile);
+#endif
 
 #endif // CONFIGURATION_H

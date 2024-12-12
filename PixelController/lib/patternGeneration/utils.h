@@ -3,14 +3,30 @@
 
 #include <cmath>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
-#include <FastLED.h>
+#if USE_EMULATOR
+#include "configuration/Effect.h"
+#include "configuration/FileManager.h"
+#include "imageProcessing/ImageProcessing.h"
 
+struct CRGB
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+
+    CRGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
+    CRGB() : r(0), g(0), b(0) {}
+};
+#else
+#include <FastLED.h>
 #include <effects.h>
 #include <ImageProcessing.h>
 #include <FileManager.h>
+#endif
+
 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
