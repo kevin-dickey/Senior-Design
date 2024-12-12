@@ -1,5 +1,6 @@
 
 #include "utils.h"
+#include "config.h"
 
 /**
  * MARK: Distance calculation
@@ -141,7 +142,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             unsigned char *fileBuf = ImageProcessing::convertFsFileToBuffer(&jpgFile, fileSize); // <--
             std::cout << "✅ Converted to FILE!" << std::endl;
 
-#if DEBUG_MODE
+#ifdef DEBUG_MODE
             std::cout << "  File Size: " << fileSize << std::endl;
             std::cout << "  First 10 bytes: " << fileBuf[0] << fileBuf[1] << fileBuf[2] << fileBuf[3] << fileBuf[4] << fileBuf[5] << fileBuf[6] << fileBuf[7] << fileBuf[8] << fileBuf[9] << std::endl;
 #endif
@@ -161,11 +162,11 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             // making it always resize for now
 
             std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-            int newWidth = leds_x / 4;
-            int newHeight = leds_y;
+            int newWidth = 100;
+            int newHeight = leds_y * 2;
             imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
-#if DEBUG_MODE
+#ifdef DEBUG_MODE
             std::cout << "🖼️ Resized Image:" << std::endl;
             std::cout << "   Image Width: " << newWidth << std::endl;
             std::cout << "   Image Height: " << newHeight << std::endl;
@@ -176,9 +177,9 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             free(fileBuf);
 
 // DEBUG: Print the loaded image data
-#if DEBUG_MODE
+#ifdef DEBUG_MODE
             std::cout << "🖼️ Displaying Image Data..." << std::endl;
-            ImageProcessing::printImageHex(imageFile, 24, 25, loadedImageChannels);
+            ImageProcessing::printImageHex(imageFile, newWidth, newHeight, loadedImageChannels);
 #endif
 
             // Store the image
@@ -193,7 +194,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/blue.png")
+            else if (image == "/candycane-old.png")
             {
                 candyCanejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
@@ -295,5 +296,30 @@ void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB bac
                 leds[index] = backgroundColor;
             }
         }
+    }
+}
+
+// Print a CRGB pixel as a hex string
+void printCRGBPixel(CRGB pixel)
+{
+    std::cout << "0x"
+              << std::hex << std::setw(2) << std::setfill('0') << (int)pixel.r
+              << std::setw(2) << std::setfill('0') << (int)pixel.g
+              << std::setw(2) << std::setfill('0') << (int)pixel.b
+              << std::dec;
+}
+
+void print_crgb_frame(CRGB *leds, int matrixWidth, int matrixHeight)
+{
+    uint8_t channels = 3;
+
+    for (int y = 0; y < matrixHeight; ++y)
+    {
+        for (int x = 0; x < matrixWidth; ++x)
+        {
+            printCRGBPixel(leds[y * matrixWidth + x]);
+            std::cout << " ";
+        }
+        std::cout << std::endl;
     }
 }

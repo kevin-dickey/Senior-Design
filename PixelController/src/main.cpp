@@ -14,7 +14,6 @@ using json = nlohmann::json;
 #define FRAMES_PER_SECOND 10
 #define MAX_BRIGHTNESS 32 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 #define SKIP_SHOW_INITIALIZATION 0
-#define DEBUG_MODE 1
 
 #if USE_EMULATOR
 #define PROJECT_DIR SOURCE_ROOT
@@ -27,9 +26,10 @@ using json = nlohmann::json;
 #include "imageProcessing/ImageProcessing.h"
 #include "patternGeneration/rippleEffect.h"
 #include "patternGeneration/utils.h"
+#include "config.h"
 
 #else
-#define COLOR_ORDER GRB
+#define COLOR_ORDER RGB
 #define CHIPSET WS2812B
 
 #include <FastLED.h>
@@ -41,6 +41,8 @@ using json = nlohmann::json;
 #include <rippleEffect.h>
 #include <Sensor.h>
 #include <utils.h>
+
+#include "config.h"
 
 #endif
 
@@ -211,6 +213,8 @@ void resizeImages(const std::vector<ImageProcessing::ImageData_t> &loadedImages,
 }
 
 #else
+SET_LOOP_TASK_STACK_SIZE(16 * 1024); // 16KB
+
 void newEffectReset();
 void generateFrame(ControllerRunner::ShowFrame showframe);
 
@@ -238,7 +242,7 @@ std::vector<bool> prev_sensor_triggered;
 // misc. stuff (effect variables, sensor stuff, running-time)
 int hue;
 int curEffect = -1;
-int effect_spacing = 8; // TODO: Give this a better name - it's the spacing between images in our moving effects.
+int effect_spacing = 20; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 int count;
 bool goUp;
 bool loaded = false;
@@ -371,7 +375,7 @@ void setup()
     // for (effect which uses an image : show) {
     //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
     // }
-    std::vector<std::string> imgs = {"/blue.png"}; // "/8bitpumpkin.png", "/8bitghost.png", "/candycane.png", "/snowflake.png", "/christmastree.png", "/snowman.png"};
+    std::vector<std::string> imgs = {"/candycane-old.png"}; // "/8bitpumpkin.png", "/8bitghost.png", "/candycane.png", "/snowflake.png", "/christmastree.png", "/snowman.png"};
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
@@ -642,33 +646,52 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         break;
 
     case candyCane:
+    {
+        int start_x = showframe.effect->origin.x;
+        int start_y = showframe.effect->origin.y;
+        uint8_t frames_per_shift = 5;
+        uint8_t max_shifts = 20;
+
         if (curEffect != candyCane)
         {
             newEffectReset;
             curEffect = candyCane;
+
+            std::cout << "Setting up candyCane effect..." << std::endl;
         }
 
         if (!loaded)
         {
-            int start_x = showframe.effect->origin.x;
-            int start_y = showframe.effect->origin.y;
 
             for (; start_x < num_leds_x; start_x += effect_spacing)
             {
-                bufferToCRGBArray(candyCanejpg, 
-                showframe.effect->size.x, showframe.effect->size.y,
-                loadedImageChannels, 
-                foreground_frame, 
-                num_leds_x, num_leds_y, 
-                start_x, start_y, 
-                false);
+                bufferToCRGBArray(candyCanejpg,
+                                  //   showframe.effect->size.x, showframe.effect->size.y,
+                                  12, 12,
+                                  loadedImageChannels,
+                                  foreground_frame,
+                                  num_leds_x, num_leds_y,
+                                  0, 0,
+                                  false);
             }
             loaded = true;
+            print_crgb_frame(foreground_frame, num_leds_x, num_leds_y);
         }
 
-        // shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
-        break;
+        // Only shift the candy cane if the frame is divisible by 5
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        }
 
+        // Reset the loaded flag if the frame is divisible by 20
+        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
+        {
+            loaded = false;
+        }
+
+        break;
+    }
     default:
         newEffectReset();
         Serial.println("  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend).");

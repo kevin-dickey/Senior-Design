@@ -23,6 +23,7 @@ uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, in
 void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds_x, int leds_y);
 void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);
 void loadHexBitmap(CRGB *leds, const char *bitmap, uint8_t startX, uint8_t startY, int bitmapHeight, int bitmapWidth);
+void print_crgb_frame(CRGB *leds, int matrixWidth, int matrixHeight);
 CRGB hexToCRGB(const char *hex);
 void resetTriggerMarkers(int exception);
 

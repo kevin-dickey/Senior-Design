@@ -1,0 +1,10 @@
+//
+// Created by Nick Vazquez on 10/15/24.
+//
+
+#ifndef PIXELCONTROLLER_CONFIG_H
+#define PIXELCONTROLLER_CONFIG_H
+
+#define DEBUG_MODE
+
+#endif //PIXELCONTROLLER_CONFIG_H
