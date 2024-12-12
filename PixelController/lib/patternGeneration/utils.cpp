@@ -85,6 +85,22 @@ void rearrangeForSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int widt
     }
 }
 
+/**
+ * @brief 
+ * 
+ * Expects rearrangedArray to be height / groupSize in length.
+ * @param originalArray 
+ * @param rearrangedArray 
+ * @param width 
+ * @param height 
+ * @param groupSize 
+ */
+// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int width, int height, int groupSize)
+// {
+
+
+// }
+
 void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int width, int height, int groupSize)
 {
     int numGroups = height / groupSize;
@@ -95,26 +111,26 @@ void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, i
         int groupIndex = strand / groupSize;
 
         // Flip odd
-        bool isFlipped = (groupIndex % 2 != 0);
+        // bool isFlipped = (groupIndex % 2 != 0);
 
         // Calculate the rearranged strand position
         int rearrangedStrand;
 
-            if (isFlipped)
-            {
-                // Starting strand of the current group
-                int groupStartStrand = groupIndex * groupSize;
+            // if (isFlipped)
+            // {
+            //     // Starting strand of the current group
+            //     int groupStartStrand = groupIndex * groupSize;
 
-                // Ending strand of the current group
-                int groupEndStrand = groupStartStrand + groupSize - 1;
+            //     // Ending strand of the current group
+            //     int groupEndStrand = groupStartStrand + groupSize - 1;
 
-                // Reverse the strand
-                rearrangedStrand = groupEndStrand - (strand % groupSize);
-            }
-            else
-            {
+            //     // Reverse the strand
+            //     rearrangedStrand = groupEndStrand - (strand % groupSize);
+            // }
+            // else
+            // {
                 rearrangedStrand = strand;
-            }
+            // }
 
         // Copy all elements in this strand (row)
         for (int col = 0; col < width; ++col)
@@ -210,12 +226,12 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             int newHeight = leds_y * 2;
             imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
-#ifdef DEBUG_MODE
+// #ifdef DEBUG_MODE
             std::cout << "🖼️ Resized Image:" << std::endl;
             std::cout << "   Image Width: " << newWidth << std::endl;
             std::cout << "   Image Height: " << newHeight << std::endl;
             std::cout << "   Image Channels: " << loadedImageChannels << std::endl;
-#endif
+// #endif
 
             std::cout << "🕊️ Freeing File Buffer..." << std::endl;
             free(fileBuf);
@@ -228,7 +244,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/8bitghost.png")
+            if (image == "/orb.png")
             {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
@@ -238,7 +254,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/candycane-old.png")
+            else if (image == "/candycane.png")
             {
                 candyCanejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
@@ -248,7 +264,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
                 snowflakejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/christmastree.png")
+            else if (image == "/christmastree.jpg")
             {
                 christmasTreejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
