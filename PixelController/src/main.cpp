@@ -329,10 +329,10 @@ void setup()
     {
         // custom layout, not gonna bother with this rn but you'll have to set the same variables in some way (there aren't height and width params passed)
     }
-
-    showStart = getMillis();
 #pragma endregion // Show Initialization
 #endif
+
+    showStart = getMillis();
 
 #pragma region FastLED Initialization
     FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
@@ -399,7 +399,9 @@ void loop()
         // no effect found because we're over the shows duration. reset show
         File showFile = fm->getJsonFile("/christmas-y.json");
         show = loadShow(showFile);
-        
+
+        newEffectReset();
+
         showStart = getMillis();
         epoch = std::chrono::high_resolution_clock::from_time_t(0);
         runner = new ControllerRunner(show, showStart, epoch);
@@ -683,6 +685,7 @@ void newEffectReset()
     // prevLeds1 = {0}; // commented out b/c not using this anymore (memory issues on esp32), see rippleEffect.cpp for changed implementation
     rippleCounter = 0;
     curEffect = -1;
+    fill_solid(foreground_frame, num_leds, CRGB::Black);
 
     // might be used? no harm in resetting if not
     count = 0;
