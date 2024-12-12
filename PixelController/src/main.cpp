@@ -371,7 +371,7 @@ void setup()
     // for (effect which uses an image : show) {
     //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
     // }
-    std::vector<std::string> imgs = { "/blue.png" }; // "/8bitpumpkin.png", "/8bitghost.png", "/candycane.png", "/snowflake.png", "/christmastree.png", "/snowman.png"};
+    std::vector<std::string> imgs = {"/blue.png"}; // "/8bitpumpkin.png", "/8bitghost.png", "/candycane.png", "/snowflake.png", "/christmastree.png", "/snowman.png"};
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
@@ -390,9 +390,8 @@ void loop()
     // sets the active sensors so that the runner is constanly checking sensor state and determining what to display
     // get showFrame
     auto showFrame = runner->getNextShowFrame(sensor_states);
-    
-    std::cout << "Got here!" << std::endl;
-    std::cout << "Show Frame: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
+
+    // std::cout << "Show Frame: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
 
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
@@ -407,8 +406,7 @@ void loop()
         runner = new ControllerRunner(show, showStart, epoch);
         showFrame = runner->getNextShowFrame(sensor_states);
 
-        std::cout << "Jemima, I'm back!" << std::endl;
-        std::cout << "New frame after rest: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
+        std::cout << "New frame after reset: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
     }
 
     // TODO: divide frame up to send to picos
@@ -419,7 +417,7 @@ void loop()
 
     end_millis = millis();
     frame_runtime = end_millis - current_millis;
-    delay((frame_runtime >= (1000 / FRAMES_PER_SECOND)) ? 0 : ((1000 / FRAMES_PER_SECOND) - frame_runtime)); 
+    delay((frame_runtime >= (1000 / FRAMES_PER_SECOND)) ? 0 : ((1000 / FRAMES_PER_SECOND) - frame_runtime));
 }
 
 /**
@@ -500,7 +498,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
+        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -539,7 +537,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++;  // increment again to account for the shift (if it looks weird just remove this)
+        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -579,7 +577,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (75 + count) % num_leds_x, 0, true);
 
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++;                            // increment again to account for the shift (if it looks weird just remove this)
+        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
 
@@ -691,8 +689,6 @@ void newEffectReset()
     count = 0;
     goUp = true;
 }
-
-
 
 /**
  * Resets every index in prev_sensor_triggered to false except for the specified index.
