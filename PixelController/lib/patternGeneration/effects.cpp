@@ -67,7 +67,7 @@ void shiftLeds(CRGB leds[], int leds_x, int leds_y, ShiftDirection direction)
 
     switch (direction)
     {
-    case RIGHT: // if you look closely right and left might look flipped, and you're right!
+    case LEFT: // if you look closely right and left might look flipped, and you're right!
                 // don't ask me why, it just works :)
         for (int y = 0; y < leds_y; y++)
         {
@@ -79,7 +79,7 @@ void shiftLeds(CRGB leds[], int leds_x, int leds_y, ShiftDirection direction)
         }
         break;
 
-    case LEFT:
+    case RIGHT:
         for (int y = 0; y < leds_y; y++)
         {
             for (int x = 0; x < leds_x; x++)
