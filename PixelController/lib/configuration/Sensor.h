@@ -55,21 +55,13 @@ public:
 
     static Sensor *from_json(const nlohmann::json &j)
     {
-        try
-        {
-            return new Sensor{
-                j.at("id").get<int>(),
-                j.at("pin").get<int>(),
-                j.at("durationMs").get<unsigned long>(),
-                j.at("type").get<SensorType>(),
-                Pair_t::from_json(j["location"]),
-                Effect::from_json(j["effects"])};
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "Error parsing sensor: " << e.what() << std::endl;
-            throw e;
-        }
+        return new Sensor{
+            j.at("id").get<int>(),
+            j.at("pin").get<int>(),
+            j.at("durationMs").get<unsigned long>(),
+            j.at("type").get<SensorType>(),
+            Pair_t::from_json(j["location"]),
+            Effect::from_json(j["effects"])};
     }
 };
 
@@ -79,18 +71,18 @@ public:
     SensorManager() = default;
     ~SensorManager() = default;
 
-        void setSensors(std::vector<Sensor *> sensors);
+    void setSensors(std::vector<Sensor *> sensors);
 
-        std::vector<Sensor *> getSensors();
-    
+    std::vector<Sensor *> getSensors();
+
     std::vector<bool> getSensorStates(bool reset = false);
 
-    private:
-        std::vector<Sensor *> sensors;
+private:
+    std::vector<Sensor *> sensors;
 
-        void removeSensorInterrupts(std::vector<Sensor *> sensors);
-    
+    void removeSensorInterrupts(std::vector<Sensor *> sensors);
+
     void addSensorInterrupts(std::vector<Sensor *> sensors);
-    };
+};
 
 #endif // PIXELCONTROLLER_SENSOR_H

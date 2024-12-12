@@ -102,13 +102,13 @@ public:
             }
 
             return new Effect(
-                    j["id"].get<int>(),
+                    j.at("id").get<int>(),
                     parsedType,
-                    j["name"].get<std::string>(),
+                    j.at("name").get<std::string>(),
                     Pair_t::from_json(j["origin"]),
                     Pair_t::from_json(j["size"]),
-                    j["startTimeMs"].get<double>(),
-                    j["durationMs"].get<double>(),
+                    j.at("startTimeMs").get<double>(),
+                    j.at("durationMs").get<double>(),
                     std::move(translation)
             );
         } catch (const std::exception &e) {
