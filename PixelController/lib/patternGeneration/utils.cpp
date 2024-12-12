@@ -84,6 +84,50 @@ void rearrangeForSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int widt
     }
 }
 
+void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int width, int height, int groupSize)
+{
+    int numGroups = height / groupSize;
+
+    for (int strand = 0; strand < height; ++strand)
+    {
+        // Number of groups in the matrix, where each group contains groupSize rows (strands)
+        int groupIndex = strand / groupSize;
+
+        // Flip odd
+        bool isFlipped = (groupIndex % 2 != 0);
+
+        // Calculate the rearranged strand position
+        int rearrangedStrand;
+
+            if (isFlipped)
+            {
+                // Starting strand of the current group
+                int groupStartStrand = groupIndex * groupSize;
+
+                // Ending strand of the current group
+                int groupEndStrand = groupStartStrand + groupSize - 1;
+
+                // Reverse the strand
+                rearrangedStrand = groupEndStrand - (strand % groupSize);
+            }
+            else
+            {
+                rearrangedStrand = strand;
+            }
+
+        // Copy all elements in this strand (row)
+        for (int col = 0; col < width; ++col)
+        {
+            int originalIndex = strand * width + col;
+            int rearrangedIndex = rearrangedStrand * width + col;
+
+            rearrangedArray[rearrangedIndex] = originalArray[originalIndex];
+        }
+    }
+}
+
+
+
 void rearrangeForStrips(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height)
 {
     if (rearrangedArrays[0] == nullptr)
