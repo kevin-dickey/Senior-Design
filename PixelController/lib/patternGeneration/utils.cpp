@@ -160,138 +160,140 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             std::cout << "✅ Loaded Image!" << std::endl;
             // making it always resize for now
 
-            // hard coding the resize to be 24x25, given the field is 24x100. for future fields just always resize img to what user wants/how many times they want it repeated
-            // resizing only ghost and pumpkin (or unrecognized file), might just want to recreate them to be right dimensions tbh
-            // if (image == "/8bitghost.jpg" || "/8bitpumpkin.jpg" || !("/candycane.jpg" || "/snowflake.jpg" || "/christmastree.jpg" || "/snowman.jpg"))
-            // {
-                std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-                int newWidth = leds_x / 4;
-                int newHeight = leds_y;
-                imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+            std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
+            int newWidth = leds_x / 4;
+            int newHeight = leds_y;
+            imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
 #if DEBUG_MODE
-                std::cout << "🖼️ Resized Image:" << std::endl;
-                std::cout << "   Image Width: " << newWidth << std::endl;
-                std::cout << "   Image Height: " << newHeight << std::endl;
-                std::cout << "   Image Channels: " << loadedImageChannels << std::endl;
+            std::cout << "🖼️ Resized Image:" << std::endl;
+            std::cout << "   Image Width: " << newWidth << std::endl;
+            std::cout << "   Image Height: " << newHeight << std::endl;
+            std::cout << "   Image Channels: " << loadedImageChannels << std::endl;
 #endif
 
-                std::cout << "🕊️ Freeing File Buffer..." << std::endl;
-                free(fileBuf);
+            std::cout << "🕊️ Freeing File Buffer..." << std::endl;
+            free(fileBuf);
 
 // DEBUG: Print the loaded image data
 #if DEBUG_MODE
-                std::cout << "🖼️ Displaying Image Data..." << std::endl;
-                ImageProcessing::printImageHex(imageFile, 24, 25, loadedImageChannels);
+            std::cout << "🖼️ Displaying Image Data..." << std::endl;
+            ImageProcessing::printImageHex(imageFile, 24, 25, loadedImageChannels);
 #endif
 
-                // Store the image
-                std::cout << "💾 Storing image to the global pointer..." << std::endl;
-                if (image == "/8bitghost.png")
-                {
-                    ghostjpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else if (image == "/8bitpumpkin.png")
-                {
-                    pumpkinjpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else if (image == "/blue.png")
-                {
-                    candyCanejpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else if (image == "/snowflake.png")
-                {
-                    snowflakejpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else if (image == "/christmastree.png")
-                {
-                    christmasTreejpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else if (image == "/snowman.png")
-                {
-                    snowmanjpg = imageFile;
-                    std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
-                }
-                else
-                {
-                    std::cerr << "Unrecognized file supplied (should be a jpg): '" << image << "' !" << std::endl;
-                }
-            }
-            catch (const std::exception &e)
+            // Store the image
+            std::cout << "💾 Storing image to the global pointer..." << std::endl;
+            if (image == "/8bitghost.png")
             {
-                std::cerr << "Error loading image: " << e.what() << std::endl;
+                ghostjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-        }
-        std::cout << "😁 Done loading images!" << std::endl;
-    }
-
-    // Function to convert a 6-character hex string to CRGB
-    CRGB hexToCRGB(const char *hex)
-    {
-        uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
-        uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
-        uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
-        return CRGB(r, g, b);
-    }
-
-    uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap)
-    {
-        // int startX = (matrixWidth - imgWidth) / 2;
-        // int startY = (matrixHeight - imgHeight) / 2;
-        if (startX < 0 || startY < 0)
-        {
-            return 1;
-        }
-
-        if (startX >= matrixWidth || startY >= matrixHeight)
-        {
-            return 1;
-        }
-
-        for (int y = 0; y < imgHeight; ++y)
-        {
-            for (int x = 0; x < imgWidth; ++x)
+            else if (image == "/8bitpumpkin.png")
             {
-                int bufferIndex = (y * imgWidth + x) * imgChannels;
-                uint8_t matrixIndex = 0;
-                if (wrap)
-                {
-                    matrixIndex = ((startY + y) % matrixHeight) * matrixWidth + ((startX + x) % matrixWidth);
-                }
-                else
-                {
-                    matrixIndex = (startY + y) * matrixWidth + (startX + x);
-                }
-
-                if (imgChannels == 3)
-                { // RGB
-                    leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
-                }
-                else if (imgChannels == 4)
-                { // RGBA
-                    leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
-                }
+                pumpkinjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-        }
-        return 0;
-    }
-
-    void fillRemainingPixels(CRGB * leds, int matrixWidth, int matrixHeight, CRGB backgroundColor)
-    {
-        for (int y = 0; y < matrixHeight; ++y)
-        {
-            for (int x = 0; x < matrixWidth; ++x)
+            else if (image == "/blue.png")
             {
-                int index = y * matrixWidth + x;
-                if (leds[index] == CRGB::Black)
-                {
-                    leds[index] = backgroundColor;
-                }
+                candyCanejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            }
+            else if (image == "/snowflake.png")
+            {
+                snowflakejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            }
+            else if (image == "/christmastree.png")
+            {
+                christmasTreejpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            }
+            else if (image == "/snowman.png")
+            {
+                snowmanjpg = imageFile;
+                std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
+            }
+            else
+            {
+                std::cerr << "Unrecognized file supplied (should be a jpg): '" << image << "' !" << std::endl;
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error loading image: " << e.what() << std::endl;
+        }
+    }
+    std::cout << "😁 Done loading images!" << std::endl;
+}
+
+// Function to convert a 6-character hex string to CRGB
+CRGB hexToCRGB(const char *hex)
+{
+    uint8_t r = strtol(std::string(hex, 2).c_str(), NULL, 16);
+    uint8_t g = strtol(std::string(hex + 2, 2).c_str(), NULL, 16);
+    uint8_t b = strtol(std::string(hex + 4, 2).c_str(), NULL, 16);
+    return CRGB(r, g, b);
+}
+
+uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap)
+{
+    if (startX < 0 || startY < 0)
+    {
+        return 1;
+    }
+
+    if (startX >= matrixWidth || startY >= matrixHeight)
+    {
+        return 1;
+    }
+
+    for (int y = 0; y < imgHeight; ++y)
+    {
+        bool rowFinished = false;
+
+        for (int x = 0; x < imgWidth; ++x)
+        {
+            int bufferIndex = (y * imgWidth + x) * imgChannels;
+            uint8_t matrixIndex = 0;
+            if (wrap)
+            {
+                matrixIndex = ((startY + y) % matrixHeight) * matrixWidth + ((startX + x) % matrixWidth);
+            }
+            else
+            {
+                matrixIndex = (startY + y) * matrixWidth + (startX + x);
+            }
+
+            if (matrixIndex >= matrixWidth * matrixHeight)
+            {
+                rowFinished = true;
+                break;
+            }
+
+            if (imgChannels == 3)
+            { // RGB
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+            }
+            else if (imgChannels == 4)
+            { // RGBA
+                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
             }
         }
     }
+    return 0;
+}
+
+void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor)
+{
+    for (int y = 0; y < matrixHeight; ++y)
+    {
+        for (int x = 0; x < matrixWidth; ++x)
+        {
+            int index = y * matrixWidth + x;
+            if (leds[index] == CRGB::Black)
+            {
+                leds[index] = backgroundColor;
+            }
+        }
+    }
+}
