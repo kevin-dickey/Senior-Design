@@ -87,63 +87,166 @@ void rearrangeForSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int widt
 
 /**
  * @brief 
+ * Rearranges rows of the original array into the rearranged array in a serpentine pattern.
+ * 
+ * Example: width = 20, height = 6, groupSize = 3
+ * Then, num_groups would be 2.
+ * The nth rows in each group are concatenated together in the rearranged array.
+ * If reverse is true, then the rows in every other group starting with the second group are reversed.
+ * 
+ * In this example, Strip 1 has rows 0 and 3. Strip 2 has rows 1 and 4. Strip 3 has rows 2 and 5.
+ * With reverse = true, rows 3, 4, 5 are reversed.
  * 
  * Expects rearrangedArray to be height / groupSize in length.
- * @param originalArray 
- * @param rearrangedArray 
- * @param width 
- * @param height 
- * @param groupSize 
+ * @param originalArray  Original array of pixels
+ * @param rearrangedArray  Array of arrays to store rearranged rows (len = groupSize)
+ * @param width  Total number of columns in the original array
+ * @param height Total number of rows in the original array
+ * @param groupSize Number of strands in a group (going a single direction)
  */
-// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int width, int height, int groupSize)
-// {
+// Version 1
+// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
+//     if (height % groupSize != 0) {
+//         // Ensure total rows are divisible by group size
+//         std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
+//         return;
+//     }
 
+//     // Number of panels (groups)
+//     int numGroups = height / groupSize;
 
+//     // For each row in the original frame
+//     //   Locate the group & row within the group
+//     //   Calculate the original index
+//     //   Calculate the index within the strand's array
+//     //   Copy the pixel to the appropriate strand array
+
+//     for (int row = 0; row < height; row++) {
+//         // Determine the group and row within the group
+//         int group = row / groupSize;
+//         int groupRow = row % groupSize;
+
+//         // Determine the base row for this group
+//         int panelBaseRow = (numGroups - 1 - group) * groupSize;
+
+//         // Calculate the original row for this strand and group
+//         int originalRow = panelBaseRow + 
+//             ((groupRow % 2 == 0) ? (groupSize - 1 - groupRow) : groupRow);
+
+//         // Determine if this row is forward or reverse
+//         bool isForwardRow = !reverse || ((group) % 2 == 0);
+
+//         // Debugging statements
+//         std::cout << "Row: " << row << ", Group: " << group << ", GroupRow: " << groupRow << std::endl;
+//         std::cout << "PanelBaseRow: " << panelBaseRow << ", OriginalRow: " << originalRow << std::endl;
+//         std::cout << "IsForwardRow: " << isForwardRow << std::endl;
+
+//         // Iterate through pixels in the row
+//         for (int col = 0; col < width; col++) {
+//             // Calculate original index
+//             int originalIndex = originalRow * width + 
+//                 (isForwardRow ? col : (width - 1 - col));
+            
+//             // Calculate the index within the strand's array
+//             int strandIndex = (group * width) + col;
+
+//             // Debugging statements
+//             std::cout << "Col: " << col << ", OriginalIndex: " << originalIndex << ", StrandIndex: " << strandIndex << std::endl;
+
+//             // Copy pixel to the appropriate strand array
+//             rearrangedArrays[group][strandIndex] = originalArray[originalIndex];
+//         }
+//     }
 // }
 
-void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int width, int height, int groupSize)
-{
+// Version 2
+// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
+//     // Validate constraints
+//     if (height % groupSize != 0) {
+//         std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
+//         return;
+//     }
+
+//     // Number of groups
+//     int numGroups = height / groupSize;
+
+//     // Iterate through each strand
+//     for (int strand = 0; strand < groupSize; strand++) {
+//         // Iterate through each group
+//         for (int group = 0; group < numGroups; group++) {
+//             // Calculate the original row for this strand and group
+//             int originalRow = group * groupSize + strand;
+
+//             // Determine if this row should be reversed
+//             bool isRowReversed = reverse && (strand >= groupSize / 2);
+
+//             // Debugging statements
+//             // std::cout << "Strand: " << strand << ", Group: " << group << ", OriginalRow: " << originalRow << ", IsRowReversed: " << isRowReversed << std::endl;
+
+//             // Iterate through pixels in the row
+//             for (int col = 0; col < width; col++) {
+//                 // Calculate original index
+//                 int originalIndex = originalRow * width + 
+//                     (isRowReversed ? (width - 1 - col) : col);
+                
+//                 // Calculate the index within the strand's array
+//                 int strandIndex = group * width + col;
+
+//                 // Debugging statements
+//                 // std::cout << "Col: " << col << ", OriginalIndex: " << originalIndex << ", StrandIndex: " << strandIndex << std::endl;
+
+//                 // Copy pixel to the appropriate strand array
+//                 rearrangedArrays[strand][strandIndex] = originalArray[originalIndex];
+//             }
+//         }
+//     }
+// }
+
+// Version 3
+void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
+    // Validate constraints
+    if (height % groupSize != 0) {
+        std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
+        return;
+    }
+
+    // Number of groups
     int numGroups = height / groupSize;
 
-    for (int strand = 0; strand < height; ++strand)
-    {
-        // Number of groups in the matrix, where each group contains groupSize rows (strands)
-        int groupIndex = strand / groupSize;
+    // Iterate through each strand
+    for (int strand = 0; strand < groupSize; strand++) {
+        // Iterate through each group
+        for (int group = 0; group < numGroups; group++) {
+            // Calculate the original row for this strand and group
+            int originalRow = ((numGroups - 1 - group) * groupSize) + strand;
 
-        // Flip odd
-        // bool isFlipped = (groupIndex % 2 != 0);
+            // Determine if this row should be reversed
+            bool isRowReversed = reverse && (strand >= groupSize / 2);
 
-        // Calculate the rearranged strand position
-        int rearrangedStrand;
+            // Iterate through pixels in the row
+            for (int col = 0; col < width; col++) {
+                // Calculate original index
+                int originalIndex = originalRow * width + 
+                    (isRowReversed ? (width - 1 - col) : col);
+                
+                // Calculate the index within the strand's array
+                int strandIndex = group * width + col;
 
-            // if (isFlipped)
-            // {
-            //     // Starting strand of the current group
-            //     int groupStartStrand = groupIndex * groupSize;
-
-            //     // Ending strand of the current group
-            //     int groupEndStrand = groupStartStrand + groupSize - 1;
-
-            //     // Reverse the strand
-            //     rearrangedStrand = groupEndStrand - (strand % groupSize);
-            // }
-            // else
-            // {
-                rearrangedStrand = strand;
-            // }
-
-        // Copy all elements in this strand (row)
-        for (int col = 0; col < width; ++col)
-        {
-            int originalIndex = strand * width + col;
-            int rearrangedIndex = rearrangedStrand * width + col;
-
-            rearrangedArray[rearrangedIndex] = originalArray[originalIndex];
+                // Copy pixel to the appropriate strand array
+                rearrangedArrays[strand][strandIndex] = originalArray[originalIndex];
+            }
         }
     }
+
+    // Verify last row requirement
+    int expectedLastRow = height - 1;
+    int actualLastRowInRearranged = ((groupSize - 1) + (numGroups - 1) * groupSize);
+    
+    if (expectedLastRow != actualLastRowInRearranged) {
+        std::cerr << "Error: Last row mismatch. Expected " << expectedLastRow 
+                  << ", but got " << actualLastRowInRearranged << std::endl;
+    }
 }
-
-
 
 void rearrangeForStrips(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height)
 {
@@ -193,6 +296,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 {
     for (const std::string &image : images)
     {
+        std::cout << "📂 Loading " << image << " Image..." << std::endl;
         try
         {
             File jpgFile = fm->getJsonFile(image);
@@ -217,13 +321,16 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
             std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
+            // get largest free heap block
+            std::cout << "Largest free heap block: " << ESP.getMaxAllocHeap() << std::endl;
+
             unsigned char *imageFile = ImageProcessing::load_image_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
             std::cout << "✅ Loaded Image!" << std::endl;
             // making it always resize for now
 
             std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-            int newWidth = 100;
-            int newHeight = leds_y * 2;
+            int newWidth = 100; // A larger width will resize downto the correct width to maintain aspect ratio
+            int newHeight = leds_y;
             imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
 // #ifdef DEBUG_MODE
@@ -244,12 +351,12 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/orb.png")
+            if (image == "/blue.png")
             {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/8bitpumpkin.png")
+            else if (image == "/orb.png")
             {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
