@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "config.h"
+
 #if USE_EMULATOR
 #include "configuration/Effect.h"
 #include "configuration/FileManager.h"
@@ -30,13 +32,9 @@ struct CRGB
 };
 #endif
 
-unsigned char bufferPattern[3][3][3] = {
-    {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
-    {{0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}},
-    {{0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}}};
-
-// Pointer to the array
-unsigned char *bufferPtr = &bufferPattern[0][0][0];
+// Test array and pointer to it. Set in .cpp
+extern unsigned char bufferPattern[3][3][3];
+extern unsigned char *bufferPtr;
 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 uint16_t XY(uint8_t x, uint8_t y);
