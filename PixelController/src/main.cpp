@@ -12,7 +12,7 @@ using json = nlohmann::json;
 #define STRIP_7_PIN 12
 
 #define FRAMES_PER_SECOND 20
-#define MAX_BRIGHTNESS 64 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define MAX_BRIGHTNESS 128 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 #define SKIP_SHOW_INITIALIZATION 0
 
 #if USE_EMULATOR
@@ -385,7 +385,15 @@ void setup()
     // for (effect which uses an image : show) {
     //     append necessary filepaths to a std::vector<std::string> or whatever datatype you want
     // }
-    std::vector<std::string> imgs = {"/blue.png", "/candycane.png", "/snowman.png", "/orb.png"};
+    // TODO: Dynamic loading of images based on effect. Save memory by loading only the images needed for the current effect running.
+    std::vector<std::string> imgs = {
+        "/blue.png",        // Ghost
+        "/orb.png",         // Pumpkin
+        "/candycane.png",   // Candy Cane
+        "/snowman.png"      // Snowman
+        "/snowflake.png",   // Snowflake
+    };
+    
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
     std::cout << "😁 Done loading images!" << std::endl;
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
@@ -635,7 +643,8 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         if (!loaded)
         {
             // need to set locations
-            bufferToCRGBArray(snowflakejpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+            bufferToCRGBArray(snowflakejpg, 
+            size_x, size_y, 4, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
             loaded = true;
         }
 
@@ -652,9 +661,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-            fill_solid(foreground_frame, num_leds, CRGB::Black);
-
             uint16_t frame_increment = showframe.frame / 25;
             for (int x = 0; x < num_leds_x; x += effect_spacing)
             {
@@ -674,7 +680,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
         }
 
-        // Reset the loaded flag if the frame is divisible by 20
+        // Reset the loaded flag if we've shifted the image the max number of times
         if (showframe.frame % (max_shifts * frames_per_shift) == 0)
         {
             loaded = false;
@@ -778,6 +784,23 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         break;
     }
+    case rainbowWalker:
+        if (curEffect != rainbowWalker)
+        {
+            newEffectReset();
+            curEffect = rainbowWalker;
+            hue = 30;
+        }
+
+        // draw rainbow with walker on top on each strip
+        for (int i = 0; i < groupSizeStrands; i++)
+        {
+            fill_rainbow(strip_data[i], num_leds, (hue + 6 * i) % 256, 8);
+        }
+
+        hue += 2;
+        hue %= 256;
+        break;
     default:
         newEffectReset();
         std::cout << "  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend)." << std::endl;
