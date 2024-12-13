@@ -53,7 +53,7 @@ ControllerRunner *runner;
 
 int num_leds_x = 100;
 int num_leds_y = 24;
-int num_groups = 4; // number of groups of strips. This should be the height of all pixels divided by the number of strands.
+int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
 int effect_spacing = 50; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 bool reverseGroups = true;
 
@@ -266,11 +266,7 @@ unsigned char *loadedImage;
 
 void clearStrips(CRGB **strip_data, int num_leds_x, int num_leds_y)
 {
-    for (int i = 0; i < groupSizeStrands; i++)
-    {
-        fill_solid(strip_data[i], num_leds_x * num_groups, CRGB::Black);
-    }
-    // FastLED.clear();
+    FastLED.clear();
 }
 
 // MARK: Setup
@@ -350,18 +346,17 @@ void setup()
 
 #pragma region FastLED Initialization
     // TODO: Set length from number of rows
-    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], num_leds_x * 4).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], num_leds_x * 4).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], num_leds_x * 4).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * 4).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * 4).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
 
     FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);          // setup the built-in LED for the esp32
-    fill_solid(foreground_frame, num_leds, CRGB::Black);
-    std::cout << "Rearranging..." << std::endl;
 
+    fill_solid(foreground_frame, num_leds, CRGB::Black);
     clearStrips(strip_data, num_leds_x, num_leds_y);
     FastLED.show();
 
@@ -393,7 +388,7 @@ void setup()
         "/snowman.png"    // Snowman
         "/snowflake.png", // Snowflake
     };
-    
+
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
     std::cout << "😁 Done loading images!" << std::endl;
     std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
@@ -468,11 +463,11 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     uint8_t start_y = showframe.effect->origin.y;
     uint8_t size_x = showframe.effect->size.x;
     uint8_t size_y = showframe.effect->size.y;
-    
+
     if (curEffect == -1) // new effect reset
     {
-            std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
-            << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
+        std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
+                  << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
     }
 
     // shift directions might be incorrect, need to test on field!
@@ -575,14 +570,13 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         break;
 
     case ghostRipple:
-        {
+    {
         if (curEffect != ghostRipple)
         {
             newEffectReset();
             curEffect = ghostRipple;
         }
 
-        fill_solid(foreground_frame, num_leds, CRGB::Black);
         // rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
         // for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
@@ -614,7 +608,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
-        }
+    }
     case pumpkinGhostRainbow:
         if (curEffect != pumpkinGhostRainbow)
         {
