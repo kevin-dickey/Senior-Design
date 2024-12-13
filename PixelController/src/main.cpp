@@ -462,7 +462,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case rainbow:
         if (curEffect != rainbow)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = rainbow;
         }
 
@@ -472,7 +472,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case ripple:
         if (curEffect != ripple)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = ripple;
         }
 
@@ -490,7 +490,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         std::cout << "Generating pumpkinRainbow frame..." << std::endl;
         if (curEffect != pumpkinRainbow)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = pumpkinRainbow;
         }
 
@@ -506,7 +506,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case pumpkinRipple:
         if (curEffect != pumpkinRipple)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = pumpkinRipple;
         }
 
@@ -524,7 +524,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case ghostRainbow:
         if (curEffect != ghostRainbow)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = ghostRainbow;
         }
 
@@ -541,7 +541,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
         if (curEffect != ghostRipple)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = ghostRipple;
         }
 
@@ -581,7 +581,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case pumpkinGhostRainbow:
         if (curEffect != pumpkinGhostRainbow)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = pumpkinGhostRainbow;
         }
 
@@ -615,7 +615,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case snowflake:
         if (curEffect != snowflake)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = snowflake;
         }
 
@@ -666,7 +666,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case pumpkin:
         if (curEffect != pumpkin)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = pumpkin;
 
             std::cout << "Setting up pumpkin effect..." << std::endl;
@@ -704,7 +704,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     case christmasTree:
         if (curEffect != christmasTree)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = christmasTree;
         }
 
@@ -722,7 +722,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
     {
         if (curEffect != candyCane)
         {
-            newEffectReset;
+            newEffectReset();
             curEffect = candyCane;
 
             std::cout << "Setting up candyCane effect..." << std::endl;
