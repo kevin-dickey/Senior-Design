@@ -24,6 +24,7 @@ enum EffectType : int {
     candyCane = 12,
     pumpkin = 13,
     rainbowWalker = 14,
+    ghost = 15,
 };
 
 namespace std {
@@ -103,6 +104,8 @@ public:
                 parsedType = pumpkin;
             } else if (effectType == "rainbowWalker") {
                 parsedType = rainbowWalker;
+            } else if (effectType == "ghost") {
+                parsedType = ghost;
             } else {
                 throw std::invalid_argument("Could not parse effect type: " + effectType);
             }

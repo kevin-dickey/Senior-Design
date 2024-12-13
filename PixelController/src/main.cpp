@@ -387,11 +387,11 @@ void setup()
     // }
     // TODO: Dynamic loading of images based on effect. Save memory by loading only the images needed for the current effect running.
     std::vector<std::string> imgs = {
-        "/blue.png",        // Ghost
-        "/orb.png",         // Pumpkin
-        "/candycane.png",   // Candy Cane
-        "/snowman.png"      // Snowman
-        "/snowflake.png",   // Snowflake
+        "/blue.png",      // Ghost
+        "/orb.png",       // Pumpkin
+        "/candycane.png", // Candy Cane
+        "/snowman.png"    // Snowman
+        "/snowflake.png", // Snowflake
     };
     
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
@@ -540,6 +540,22 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
+        break;
+
+    case ghost:
+        if (curEffect != ghost)
+        {
+            newEffectReset();
+            curEffect = ghost;
+        }
+
+        // draw ghost
+        bufferToCRGBArray(
+            ghostjpg,
+            num_leds_y / 2, num_leds_y / 2, 4,
+            foreground_frame,
+            num_leds_x, num_leds_y,
+            0, 0, false);
         break;
 
     case ghostRainbow:
