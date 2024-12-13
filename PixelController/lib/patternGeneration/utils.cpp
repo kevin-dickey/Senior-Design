@@ -104,104 +104,6 @@ void rearrangeForSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int widt
  * @param height Total number of rows in the original array
  * @param groupSize Number of strands in a group (going a single direction)
  */
-// Version 1
-// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
-//     if (height % groupSize != 0) {
-//         // Ensure total rows are divisible by group size
-//         std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
-//         return;
-//     }
-
-//     // Number of panels (groups)
-//     int numGroups = height / groupSize;
-
-//     // For each row in the original frame
-//     //   Locate the group & row within the group
-//     //   Calculate the original index
-//     //   Calculate the index within the strand's array
-//     //   Copy the pixel to the appropriate strand array
-
-//     for (int row = 0; row < height; row++) {
-//         // Determine the group and row within the group
-//         int group = row / groupSize;
-//         int groupRow = row % groupSize;
-
-//         // Determine the base row for this group
-//         int panelBaseRow = (numGroups - 1 - group) * groupSize;
-
-//         // Calculate the original row for this strand and group
-//         int originalRow = panelBaseRow + 
-//             ((groupRow % 2 == 0) ? (groupSize - 1 - groupRow) : groupRow);
-
-//         // Determine if this row is forward or reverse
-//         bool isForwardRow = !reverse || ((group) % 2 == 0);
-
-//         // Debugging statements
-//         std::cout << "Row: " << row << ", Group: " << group << ", GroupRow: " << groupRow << std::endl;
-//         std::cout << "PanelBaseRow: " << panelBaseRow << ", OriginalRow: " << originalRow << std::endl;
-//         std::cout << "IsForwardRow: " << isForwardRow << std::endl;
-
-//         // Iterate through pixels in the row
-//         for (int col = 0; col < width; col++) {
-//             // Calculate original index
-//             int originalIndex = originalRow * width + 
-//                 (isForwardRow ? col : (width - 1 - col));
-            
-//             // Calculate the index within the strand's array
-//             int strandIndex = (group * width) + col;
-
-//             // Debugging statements
-//             std::cout << "Col: " << col << ", OriginalIndex: " << originalIndex << ", StrandIndex: " << strandIndex << std::endl;
-
-//             // Copy pixel to the appropriate strand array
-//             rearrangedArrays[group][strandIndex] = originalArray[originalIndex];
-//         }
-//     }
-// }
-
-// Version 2
-// void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
-//     // Validate constraints
-//     if (height % groupSize != 0) {
-//         std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
-//         return;
-//     }
-
-//     // Number of groups
-//     int numGroups = height / groupSize;
-
-//     // Iterate through each strand
-//     for (int strand = 0; strand < groupSize; strand++) {
-//         // Iterate through each group
-//         for (int group = 0; group < numGroups; group++) {
-//             // Calculate the original row for this strand and group
-//             int originalRow = group * groupSize + strand;
-
-//             // Determine if this row should be reversed
-//             bool isRowReversed = reverse && (strand >= groupSize / 2);
-
-//             // Debugging statements
-//             // std::cout << "Strand: " << strand << ", Group: " << group << ", OriginalRow: " << originalRow << ", IsRowReversed: " << isRowReversed << std::endl;
-
-//             // Iterate through pixels in the row
-//             for (int col = 0; col < width; col++) {
-//                 // Calculate original index
-//                 int originalIndex = originalRow * width + 
-//                     (isRowReversed ? (width - 1 - col) : col);
-                
-//                 // Calculate the index within the strand's array
-//                 int strandIndex = group * width + col;
-
-//                 // Debugging statements
-//                 // std::cout << "Col: " << col << ", OriginalIndex: " << originalIndex << ", StrandIndex: " << strandIndex << std::endl;
-
-//                 // Copy pixel to the appropriate strand array
-//                 rearrangedArrays[strand][strandIndex] = originalArray[originalIndex];
-//             }
-//         }
-//     }
-// }
-
 // Version 3
 void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
     // Validate constraints
@@ -213,15 +115,13 @@ void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays,
     // Number of groups
     int numGroups = height / groupSize;
 
-    // Iterate through each strand
     for (int strand = 0; strand < groupSize; strand++) {
-        // Iterate through each group
         for (int group = 0; group < numGroups; group++) {
             // Calculate the original row for this strand and group
             int originalRow = ((numGroups - 1 - group) * groupSize) + strand;
 
-            // Determine if this row should be reversed
-            bool isRowReversed = reverse && (strand >= groupSize / 2);
+            // Determine if this row should be reversed (every other group)
+            bool isRowReversed = reverse && ((strand / groupSize) % 2 == 1);
 
             // Iterate through pixels in the row
             for (int col = 0; col < width; col++) {
