@@ -3,8 +3,12 @@
 
 #include <stdint.h>
 
+#if USE_EMULATOR
+#include "patternGeneration/utils.h"
+#else
 #include <FastLED.h>
-#include "utils.h"
+#include <utils.h>
+#endif
 
 CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width);
 

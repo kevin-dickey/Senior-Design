@@ -3,22 +3,45 @@
 
 #include <cmath>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
-#include <FastLED.h>
+#include "config.h"
 
+#if USE_EMULATOR
+#include "configuration/Effect.h"
+#include "configuration/FileManager.h"
+#include "imageProcessing/ImageProcessing.h"
+
+#else
+#include <FastLED.h>
 #include <effects.h>
 #include <ImageProcessing.h>
 #include <FileManager.h>
+#endif
+
+#if USE_EMULATOR
+struct CRGB
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+
+    CRGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
+    CRGB() : r(0), g(0), b(0) {}
+};
+#endif
+
+// Test array and pointer to it. Set in .cpp
+extern unsigned char bufferPattern[3][3][3];
+extern unsigned char *bufferPtr;
 
 uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-uint8_t scaleBrightness(uint8_t distance, uint8_t rippleCounter);  // depricated function
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int width, int height);
+void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse = false);
 void rearrangeForStrips(CRGB* originalArray, CRGB** rearrangedArrays, int width, int height);
-void parseBitmapData(const char *hexData);
 uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, int imgChannels, CRGB *leds, int matrixWidth, int matrixHeight, int startX, int startY, bool wrap = false);
 void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds_x, int leds_y);
 void fillRemainingPixels(CRGB *leds, int matrixWidth, int matrixHeight, CRGB backgroundColor);

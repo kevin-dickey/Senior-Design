@@ -1,6 +1,12 @@
 
 #include "utils.h"
-#include "config.h"
+
+unsigned char bufferPattern[3][3][3] = {
+    {{0x00, 0x00, 0xFF}, {0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}},
+    {{0x00, 0x00, 0xFF}, {0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}},
+    {{0x00, 0xFF, 0x00}, {0xFF, 0xFF, 0xFF}, {0xFF, 0xFF, 0xFF}}};
+
+unsigned char *bufferPtr = &bufferPattern[0][0][0];
 
 /**
  * MARK: Distance calculation
@@ -85,6 +91,69 @@ void rearrangeForSerpentine(CRGB *originalArray, CRGB *rearrangedArray, int widt
     }
 }
 
+/**
+ * @brief 
+ * Rearranges rows of the original array into the rearranged array in a serpentine pattern.
+ * 
+ * Example: width = 20, height = 6, groupSize = 3
+ * Then, num_groups would be 2.
+ * The nth rows in each group are concatenated together in the rearranged array.
+ * If reverse is true, then the rows in every other group starting with the second group are reversed.
+ * 
+ * In this example, Strip 1 has rows 0 and 3. Strip 2 has rows 1 and 4. Strip 3 has rows 2 and 5.
+ * With reverse = true, rows 3, 4, 5 are reversed.
+ * 
+ * Expects rearrangedArray to be height / groupSize in length.
+ * @param originalArray  Original array of pixels
+ * @param rearrangedArray  Array of arrays to store rearranged rows (len = groupSize)
+ * @param width  Total number of columns in the original array
+ * @param height Total number of rows in the original array
+ * @param groupSize Number of strands in a group (going a single direction)
+ */
+// Version 3
+void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height, int groupSize, bool reverse) {
+    // Validate constraints
+    if (height % groupSize != 0) {
+        std::cerr << "Error: Total rows must be divisible by group size." << std::endl;
+        return;
+    }
+
+    // Number of groups
+    int numGroups = height / groupSize;
+
+    for (int strand = 0; strand < groupSize; strand++) {
+        for (int group = 0; group < numGroups; group++) {
+            // Calculate the original row for this strand and group
+            int originalRow = ((numGroups - 1 - group) * groupSize) + strand;
+
+            // Determine if this row should be reversed (every other group)
+            bool isRowReversed = reverse && ((strand / groupSize) % 2 == 1);
+
+            // Iterate through pixels in the row
+            for (int col = 0; col < width; col++) {
+                // Calculate original index
+                int originalIndex = originalRow * width + 
+                    (isRowReversed ? (width - 1 - col) : col);
+                
+                // Calculate the index within the strand's array
+                int strandIndex = group * width + col;
+
+                // Copy pixel to the appropriate strand array
+                rearrangedArrays[strand][strandIndex] = originalArray[originalIndex];
+            }
+        }
+    }
+
+    // Verify last row requirement
+    int expectedLastRow = height - 1;
+    int actualLastRowInRearranged = ((groupSize - 1) + (numGroups - 1) * groupSize);
+    
+    if (expectedLastRow != actualLastRowInRearranged) {
+        std::cerr << "Error: Last row mismatch. Expected " << expectedLastRow 
+                  << ", but got " << actualLastRowInRearranged << std::endl;
+    }
+}
+
 void rearrangeForStrips(CRGB *originalArray, CRGB **rearrangedArrays, int width, int height)
 {
     if (rearrangedArrays[0] == nullptr)
@@ -133,6 +202,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 {
     for (const std::string &image : images)
     {
+        std::cout << "📂 Loading " << image << " Image..." << std::endl;
         try
         {
             File jpgFile = fm->getJsonFile(image);
@@ -157,21 +227,24 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             std::cout << "  Image Height: " << loadedImageHeight << std::dec << std::endl;
             std::cout << "  Image Channels: " << loadedImageChannels << std::dec << std::endl;
 
+            // get largest free heap block
+            std::cout << "Largest free heap block: " << ESP.getMaxAllocHeap() << std::endl;
+
             unsigned char *imageFile = ImageProcessing::load_image_from_memory(fileBuf, fileSize, &loadedImageWidth, &loadedImageHeight, &loadedImageChannels);
             std::cout << "✅ Loaded Image!" << std::endl;
             // making it always resize for now
 
             std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-            int newWidth = 100;
-            int newHeight = leds_y * 2;
+            int newWidth = 100; // A larger width will resize downto the correct width to maintain aspect ratio
+            int newHeight = leds_y;
             imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
 
-#ifdef DEBUG_MODE
+// #ifdef DEBUG_MODE
             std::cout << "🖼️ Resized Image:" << std::endl;
             std::cout << "   Image Width: " << newWidth << std::endl;
             std::cout << "   Image Height: " << newHeight << std::endl;
             std::cout << "   Image Channels: " << loadedImageChannels << std::endl;
-#endif
+// #endif
 
             std::cout << "🕊️ Freeing File Buffer..." << std::endl;
             free(fileBuf);
@@ -184,17 +257,17 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/8bitghost.png")
+            if (image == "/blue.png")
             {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/8bitpumpkin.png")
+            else if (image == "/orb.png")
             {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/candycane-old.png")
+            else if (image == "/candycane.png")
             {
                 candyCanejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
@@ -204,7 +277,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
                 snowflakejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/christmastree.png")
+            else if (image == "/christmastree.jpg")
             {
                 christmasTreejpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;

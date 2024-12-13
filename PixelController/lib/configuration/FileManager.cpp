@@ -39,7 +39,7 @@ bool FileManager::MountFileSystem()
 
     root = SD.open("/");
 
-    #if DEBUG_MODE
+    #ifdef DEBUG_MODE
     printCardInformation();
     std::cout << "  SD Card Files:" << std::endl;
     printDirectory(root, 1);
@@ -50,6 +50,8 @@ bool FileManager::MountFileSystem()
     return (bool) true;
 }
 
+#if USE_EMULATOR
+#else
 void FileManager::printCardInformation()
 {
 
@@ -132,3 +134,4 @@ File FileManager::getJsonFile(const std::string &filename)
     }
     return file;
 }
+#endif

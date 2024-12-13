@@ -33,11 +33,15 @@ public:
     ~FileManager();
     bool MountFileSystem();
     void printCardInformation();
+
+#if USE_EMULATOR
+#else
     void printDirectory(File dir, int numTabs, bool showHiddenItems = false);
     SDFile getJsonFile(const std::string &filename);
 
 private:
     SDFile root;
+#endif
 };
 
 #endif // FILEMANAGER_H

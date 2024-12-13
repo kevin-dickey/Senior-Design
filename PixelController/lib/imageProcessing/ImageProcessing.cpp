@@ -1,11 +1,14 @@
 //
 // Created by Nick Vazquez on 10/15/24.
 //
-
-#include <FS.h>
 #include <iostream>
 #include "memory.h"
-#include "ImageProcessing.h"
+
+#if USE_EMULATOR
+#include "imageProcessing/ImageProcessing.h"
+#else
+#include <ImageProcessing.h>
+#endif
 
 // Throw an error if STB_IMAGE_IMPLEMENTATION is already defined.
 // This is to prevent multiple definitions of the same function.
@@ -24,6 +27,8 @@
 #endif
 
 // Function to convert fs::File* to FILE*
+#if USE_EMULATOR
+#else
 unsigned char *ImageProcessing::convertFsFileToBuffer(fs::File *fsFile, size_t& fileSize)
 {
     if (!fsFile || !*fsFile)
@@ -50,6 +55,7 @@ unsigned char *ImageProcessing::convertFsFileToBuffer(fs::File *fsFile, size_t& 
 
     return buffer;
 }
+#endif
 
 int ImageProcessing::get_image_dimensions(const char *filename, int *width, int *height, int *channels)
 {
