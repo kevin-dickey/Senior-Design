@@ -270,7 +270,7 @@ void clearStrips(CRGB **strip_data, int num_leds_x, int num_leds_y)
     {
         fill_solid(strip_data[i], num_leds_x * num_groups, CRGB::Black);
     }
-    FastLED.clear();
+    // FastLED.clear();
 }
 
 // MARK: Setup
@@ -350,13 +350,12 @@ void setup()
 
 #pragma region FastLED Initialization
     // TODO: Set length from number of rows
-    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * 2).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * 2).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * 2).setCorrection(TypicalSMD5050);
-    // FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x).setCorrection(TypicalSMD5050);
-    // FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x).setCorrection(TypicalSMD5050);
-    // FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x).setCorrection(TypicalSMD5050);
-    // FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[6], num_leds_x).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * 4).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * 4).setCorrection(TypicalSMD5050);
 
     FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);          // setup the built-in LED for the esp32
@@ -454,6 +453,20 @@ void loop()
  */
 void generateFrame(ControllerRunner::ShowFrame showframe)
 {
+    const uint8_t frames_per_shift = 5;
+    const uint8_t max_shifts = 20;
+
+    uint8_t start_x = showframe.effect->origin.x;
+    uint8_t start_y = showframe.effect->origin.y;
+    uint8_t size_x = showframe.effect->size.x;
+    uint8_t size_y = showframe.effect->size.y;
+    
+    if (curEffect == -1) // new effect reset
+    {
+            std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
+            << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
+    }
+
     // shift directions might be incorrect, need to test on field!
     // rainbow + shifting effects might look a little goofy, but shouldn't be completely broken i don't think
     // ripple + shifting effects almost surely broken af
@@ -637,28 +650,35 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = snowman;
         }
 
-        // if (!loaded)
-        // {
-        //     // (check locations are good)
-        //     bufferToCRGBArray(snowmanjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
-        //     bufferToCRGBArray(snowmanjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 10, 0, false);
-        //     // bufferToCRGBArray(snowmanjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 50, 0, true);
-        //     // bufferToCRGBArray(snowmanjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 75, 0, true);
-        //     loaded = true;
-        // }
-
-        // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        fill_solid(foreground_frame, num_leds, CRGB::Black);
-
-        uint16_t frame_increment = showframe.frame / 50;
-        for (int x = 0; x < num_leds_x; x += effect_spacing)
+        if (!loaded)
         {
-            bufferToCRGBArray(bufferPtr, 
-            3, 3, 3, 
-            foreground_frame, 
-            num_leds_x, num_leds_y, 
-            x + frame_increment, 0 + frame_increment, 
-            false);
+            // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            fill_solid(foreground_frame, num_leds, CRGB::Black);
+
+            uint16_t frame_increment = showframe.frame / 25;
+            for (int x = 0; x < num_leds_x; x += effect_spacing)
+            {
+                bufferToCRGBArray(snowmanjpg,
+                                  size_x, size_y, 4,
+                                  foreground_frame,
+                                  num_leds_x, num_leds_y,
+                                  x + frame_increment, frame_increment,
+                                  false);
+            }
+            loaded = true;
+        }
+
+        // Only shift the candy cane if the frame is divisible by 5
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
+        }
+
+        // Reset the loaded flag if the frame is divisible by 20
+        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
+        {
+            loaded = false;
+            std::cout << "Resetting snowman effect..." << std::endl;
         }
         break;
     }
@@ -690,7 +710,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // Only shift the candy cane if the frame is divisible by 5
         if (showframe.frame % frames_per_shift == 0)
         {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
         }
 
         // Reset the loaded flag if the frame is divisible by 20
@@ -746,7 +766,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // Only shift the candy cane if the frame is divisible by 5
         if (showframe.frame % frames_per_shift == 0)
         {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
         }
 
         // Reset the loaded flag if the frame is divisible by 20
