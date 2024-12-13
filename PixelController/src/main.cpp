@@ -659,8 +659,10 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         if (!loaded)
         {
             // need to set locations
-            bufferToCRGBArray(snowflakejpg, 
-            size_x, size_y, 4, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+            bufferToCRGBArray(snowflakejpg,
+                              num_leds_y / 2, num_leds_y / 2, 4,
+                              // size_x, size_y, 4
+                              foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
             loaded = true;
         }
 
@@ -719,8 +721,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(pumpkinjpg,
-                                  size_x, size_y,
-                                  4,
+                                  num_leds_y / 2, num_leds_y / 2, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
                                   x, start_y,
@@ -753,7 +754,9 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         if (!loaded)
         {
             // load in christmas tree & pattern onto leds
-            bufferToCRGBArray(christmasTreejpg, 24, 24, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+            bufferToCRGBArray(christmasTreejpg,
+                              num_leds_y / 2, num_leds_y / 2, 4,
+                              foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
             loaded = true;
         }
 
@@ -775,8 +778,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(candyCanejpg,
-                                  25, size_y,
-                                  4,
+                                  num_leds_y / 2, num_leds_y / 2, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
                                   x, start_y,

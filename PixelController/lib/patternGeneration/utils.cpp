@@ -235,9 +235,9 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
             // making it always resize for now
 
             std::cout << "↔️ Resizing " << image << " Image..." << std::endl;
-            int newWidth = 100; // A larger width will resize downto the correct width to maintain aspect ratio
-            int newHeight = leds_y;
-            imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, true);
+            int newWidth = leds_y / 2; // A larger width will resize downto the correct width to maintain aspect ratio with preserve_ratio = true
+            int newHeight = leds_y / 2;
+            imageFile = ImageProcessing::resize_image(imageFile, loadedImageWidth, loadedImageHeight, loadedImageChannels, newWidth, newHeight, false);
 
 // #ifdef DEBUG_MODE
             std::cout << "🖼️ Resized Image:" << std::endl;
