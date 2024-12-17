@@ -11,7 +11,7 @@ using json = nlohmann::json;
 #define STRIP_6_PIN 14
 #define STRIP_7_PIN 12
 
-#define FRAMES_PER_SECOND 20
+#define FRAMES_PER_SECOND 30
 #define MAX_BRIGHTNESS 128 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 #define SKIP_SHOW_INITIALIZATION 0
 
@@ -55,7 +55,7 @@ int num_leds_x = 100;
 int num_leds_y = 24;
 int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
 int leds_per_group;      // number of leds per group of strips
-int effect_spacing = 50; // TODO: Give this a better name - it's the spacing between images in our moving effects.
+int effect_spacing = 30; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 bool reverseGroups = true;
 
 // Array of the original frame data and the transposed strip data from the foreground_frame.
@@ -306,12 +306,12 @@ void setup()
 
     std::cout << "Deserializing layout:" << std::endl;
     if (show.layouts[0]->isGridLayout())
-    {                                              // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
-        num_leds_x = show.layouts[0]->getWidth();  // this returns size of frontend, SHOULD be 100
+    {                                             // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
+        num_leds_x = show.layouts[0]->getWidth(); // this returns size of frontend, SHOULD be 100
         num_leds_y = show.layouts[0]->getHeight();
         num_leds = num_leds_x * num_leds_y;
         leds_per_group = num_leds_x * num_groups;
-        
+
         kMatrixHeight = num_leds_y;
         kMatrixWidth = num_leds_x;
 
@@ -427,13 +427,21 @@ void loop()
     }
 
     // TODO: divide frame up to send to picos
-    generateFrame(showFrame);
-    clearStrips(strip_data, num_leds_x, num_leds_y);
-    rearrangeForGroupedSerpentine(
-        foreground_frame, strip_data,
-        num_leds_x, num_leds_y,
-        groupSizeStrands, reverseGroups);
-    FastLED.show();
+    try
+    {
+        generateFrame(showFrame);
+        clearStrips(strip_data, num_leds_x, num_leds_y);
+        rearrangeForGroupedSerpentine(
+            foreground_frame, strip_data,
+            num_leds_x, num_leds_y,
+            groupSizeStrands, reverseGroups);
+        FastLED.show();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error generating frame: " << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
+        std::cerr << e.what() << '\n';
+    }
 
     end_millis = millis();
     frame_runtime = end_millis - current_millis;
@@ -450,14 +458,14 @@ void loop()
 void generateFrame(ControllerRunner::ShowFrame showframe)
 {
     const uint8_t frames_per_shift = 5;
-    const uint8_t max_shifts = 20;
+    const uint8_t max_shifts = 60;
 
     uint8_t start_x = showframe.effect->origin.x;
     uint8_t start_y = showframe.effect->origin.y;
     uint8_t size_x = showframe.effect->size.x;
     uint8_t size_y = showframe.effect->size.y;
 
-    if (curEffect == -1) // new effect reset
+    if (curEffect != showframe.effect->effectType) // new effect
     {
         std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
                   << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
@@ -506,10 +514,17 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // draw rainbow with pumpkin on top
         drawRainbow(foreground_frame, current_millis);
 
-        // load in pumpkins (check locations are good)
-        bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+        bufferToCRGBArray(pumpkinjpg,
+                          size_x, size_y, 4,
+                          foreground_frame,
+                          num_leds_x, num_leds_y,
+                          start_x, start_y,
+                          true);
 
-        // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);  // might make the rainbow effect look v weird, not sure
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        }
         break;
 
     case pumpkinRipple:
@@ -522,12 +537,23 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // draw ripple with pumpkin on top
         rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-        // load the images (check locations)                                                                 // v b/c shifting right
-        bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (10 + count) % num_leds_x, 0, false);
+        if (!loaded)
+        {
+            bufferToCRGBArray(pumpkinjpg,
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              start_x, start_y,
+                              true);
+            loaded = true;
+        }
 
-        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
-        count++;
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+            count++;
+        }
         break;
 
     case ghost:
@@ -540,10 +566,11 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // draw ghost
         bufferToCRGBArray(
             ghostjpg,
-            num_leds_y / 2, num_leds_y / 2, 4,
+            size_x, size_y, 4,
             foreground_frame,
             num_leds_x, num_leds_y,
-            0, 0, false);
+            start_x, start_y,
+            true);
         break;
 
     case ghostRainbow:
@@ -556,10 +583,17 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // draw rainbow with ghost on top
         drawRainbow(foreground_frame, current_millis);
 
-        // (check locations are good)
-        bufferToCRGBArray(ghostjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+        bufferToCRGBArray(ghostjpg,
+                          size_x, size_y, 4,
+                          foreground_frame,
+                          num_leds_x, num_leds_y,
+                          start_x, start_y,
+                          true);
 
-        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        }
         break;
 
     case ghostRipple:
@@ -570,34 +604,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = ghostRipple;
         }
 
-        // rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-        // for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
-        // {
-        //     bufferToCRGBArray(ghostjpg,
-        //                       6, 6,
-        //                       4,
-        //                       foreground_frame,
-        //                       num_leds_x, num_leds_y,
-        //                       x, start_y,
-        //                       false);
-        //     // break;
-        // }
+        for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+        {
+            bufferToCRGBArray(ghostjpg,
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              x, start_y,
+                              true);
+        }
 
-        // Fill the first 6 pixels of the first row with red
-        // Fill the first 6 pixels of the second row with green
-        // Fill the first 6 pixels of the third row with blue
-        CRGB *row6 = foreground_frame + 18 * num_leds_x;
-        fill_solid(row6, 6, CRGB::Red);
-        fill_solid(row6 + num_leds_x, 6, CRGB::Green);
-        fill_solid(row6 + 2 * num_leds_x, 6, CRGB::Blue);
-
-        // Repeat for rows 4-6
-        fill_solid(row6 + 3 * num_leds_x, 6, CRGB::Yellow);
-        fill_solid(row6 + 4 * num_leds_x, 6, CRGB::Purple);
-        fill_solid(row6 + 5 * num_leds_x, 6, CRGB::Orange);
-
-        // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
         count++;
         break;
@@ -607,13 +626,34 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset();
             curEffect = pumpkinGhostRainbow;
+
+            if (start_x + size_x > num_leds_x || start_y + size_y > num_leds_y)
+            {
+                std::cerr << "Warning: Effect is too large for the LED matrix. Skipping..." << std::endl;
+                if (start_x + effect_spacing + size_x > num_leds_x)
+                    std::cerr << "Overflowing X: " << start_x + size_x << " > " << num_leds_x << std::endl;
+                if (start_y + size_y > num_leds_y)
+                    std::cerr << "Overflowing Y: " << start_y + size_y << " > " << num_leds_y << std::endl;
+                std::cerr << "To fix this, reduce the size of the effect: " << showframe.effect->name << std::endl;
+                return;
+            }
         }
 
         // draw rainbow, then pumpkin and ghost
         drawRainbow(foreground_frame, current_millis);
 
         // need to set locations
-        bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+        bufferToCRGBArray(pumpkinjpg,
+                          size_x, size_y, 4,
+                          foreground_frame,
+                          num_leds_x, num_leds_y,
+                          start_x, start_y, true);
+
+        bufferToCRGBArray(ghostjpg,
+                          size_x, size_y, 4,
+                          foreground_frame,
+                          num_leds_x, num_leds_y,
+                          start_x + effect_spacing, start_y, false);
 
         shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         break;
@@ -623,17 +663,43 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset;
             curEffect = pumpkinGhostRipple;
+
+            if (start_x + size_x > num_leds_x || start_y + size_y > num_leds_y)
+            {
+                std::cerr << "Warning: Effect is too large for the LED matrix. Skipping..." << std::endl;
+                if (start_x + effect_spacing + size_x > num_leds_x)
+                    std::cerr << "Overflowing X: " << start_x + size_x << " > " << num_leds_x << std::endl;
+                if (start_y + size_y > num_leds_y)
+                    std::cerr << "Overflowing Y: " << start_y + size_y << " > " << num_leds_y << std::endl;
+                std::cerr << "To fix this, reduce the size of the effect: " << showframe.effect->name << std::endl;
+                return;
+            }
         }
 
-        // draw ripple, then pumpkin and ghost
         rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
 
-        // load the images (check locations)                                                                 // v b/c shifting right
-        // bufferToCRGBArray(pumpkinjpg, 8, 8, loadedImageChannels, foreground_frame, num_leds_x, num_leds_y, (0 + count) % num_leds_x, 0, false);
+        bufferToCRGBArray(
+            pumpkinjpg,
+            size_x, size_y, 4,
+            foreground_frame,
+            num_leds_x, num_leds_y,
+            start_x, start_y,
+            true);
 
-        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
-        rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
-        count++;
+        bufferToCRGBArray(
+            ghostjpg,
+            size_x, size_y, 4,
+            foreground_frame,
+            num_leds_x, num_leds_y,
+            start_x + effect_spacing, start_y,
+            true);
+
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            rippleCounter++; // increment again to account for the shift (if it looks weird just remove this)
+            count++;
+        }
         break;
 
     case snowflake:
@@ -645,11 +711,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            // need to set locations
             bufferToCRGBArray(snowflakejpg,
-                              num_leds_y / 2, num_leds_y / 2, 4,
-                              // size_x, size_y, 4
-                              foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              start_x, start_y,
+                              true);
             loaded = true;
         }
 
@@ -666,31 +733,24 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            uint16_t frame_increment = showframe.frame / 25;
-            for (int x = 0; x < num_leds_x; x += effect_spacing)
+            for (int x = start_x; (x + size_x) < num_leds_x; x += effect_spacing)
             {
                 bufferToCRGBArray(snowmanjpg,
                                   size_x, size_y, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
-                                  x + frame_increment, frame_increment,
-                                  false);
+                                  x, start_y,
+                                  true);
             }
             loaded = true;
         }
 
-        // Only shift the candy cane if the frame is divisible by 5
+        // Only shift the candy cane if the frame is divisible by frames_per_shift
         if (showframe.frame % frames_per_shift == 0)
         {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         }
 
-        // Reset the loaded flag if we've shifted the image the max number of times
-        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
-        {
-            loaded = false;
-            std::cout << "Resetting snowman effect..." << std::endl;
-        }
         break;
     }
 
@@ -705,14 +765,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+            for (int x = start_x; (x + size_x) < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(pumpkinjpg,
                                   num_leds_y / 2, num_leds_y / 2, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
                                   x, start_y,
-                                  false);
+                                  true);
             }
             loaded = true;
         }
@@ -720,14 +780,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // Only shift the candy cane if the frame is divisible by 5
         if (showframe.frame % frames_per_shift == 0)
         {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
-        }
-
-        // Reset the loaded flag if the frame is divisible by 20
-        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
-        {
-            loaded = false;
-            std::cout << "Resetting pumpkin effect..." << std::endl;
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         }
         break;
 
@@ -742,8 +795,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             // load in christmas tree & pattern onto leds
             bufferToCRGBArray(christmasTreejpg,
-                              num_leds_y / 2, num_leds_y / 2, 4,
-                              foreground_frame, num_leds_x, num_leds_y, 0, 0, false);
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              start_x, start_y,
+                              true);
+
             loaded = true;
         }
 
@@ -762,14 +819,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+            for (int x = start_x; x + size_x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(candyCanejpg,
                                   num_leds_y / 2, num_leds_y / 2, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
                                   x, start_y,
-                                  false);
+                                  true);
             }
             loaded = true;
         }
@@ -785,6 +842,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             loaded = false;
             std::cout << "Resetting candyCane effect..." << std::endl;
+            fill_solid(foreground_frame, num_leds_x * num_leds_y, CRGB::Black);
         }
 
         break;
