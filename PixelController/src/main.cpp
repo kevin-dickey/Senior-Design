@@ -54,6 +54,7 @@ ControllerRunner *runner;
 int num_leds_x = 100;
 int num_leds_y = 24;
 int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
+int leds_per_group;      // number of leds per group of strips
 int effect_spacing = 50; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 bool reverseGroups = true;
 
@@ -276,16 +277,6 @@ void setup()
     // delay(3000);                             // delay for 3 seconds to give time to open the serial monitor
     std::cout << "Starting..." << std::endl; // print to the serial monitor that the program is starting
 
-    // err = heap_caps_enable_stack_check(CONFIG_COMPILER_STACK_CHECK_MODE_NORM);
-    // if (err != ESP_OK) {
-    //     std::cerr << "Failed to enable stack check: " << esp_err_to_name(err) << std::endl;
-    // }
-
-    // err = heap_caps_enable_heap_poisoning(CONFIG_HEAP_POISONING_LIGHT);
-    // if (err != ESP_OK) {
-    //     std::cerr << "Failed to enable heap poisoning: " << esp_err_to_name(err) << std::endl;
-    // }
-
 #if SKIP_SHOW_INITIALIZATION
 #else
 
@@ -317,8 +308,10 @@ void setup()
     if (show.layouts[0]->isGridLayout())
     {                                              // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
         num_leds_x = show.layouts[0]->getWidth();  // this returns size of frontend, SHOULD be 100
-        num_leds_y = show.layouts[0]->getHeight(); // SHOULD be 24
-        num_leds = num_leds_x * num_leds_y;        // SHOULD be 2400
+        num_leds_y = show.layouts[0]->getHeight();
+        num_leds = num_leds_x * num_leds_y;
+        leds_per_group = num_leds_x * num_groups;
+        
         kMatrixHeight = num_leds_y;
         kMatrixWidth = num_leds_x;
 
@@ -329,7 +322,7 @@ void setup()
         for (int i = 0; i < groupSizeStrands; i++)
         {
             // Allocate space for each width of the strip
-            strip_data[i] = new CRGB[num_leds_x * num_groups];
+            strip_data[i] = new CRGB[leds_per_group];
         }
 
         // waiting on confirm if you want to double the computational intensity for ripple effect in lieu of saving on storage
@@ -346,12 +339,12 @@ void setup()
 
 #pragma region FastLED Initialization
     // TODO: Set length from number of rows
-    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
-    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], num_leds_x * num_groups).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_2_PIN, COLOR_ORDER>(strip_data[5], leds_per_group).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_3_PIN, COLOR_ORDER>(strip_data[4], leds_per_group).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_4_PIN, COLOR_ORDER>(strip_data[3], leds_per_group).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_5_PIN, COLOR_ORDER>(strip_data[2], leds_per_group).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_6_PIN, COLOR_ORDER>(strip_data[1], leds_per_group).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, STRIP_7_PIN, COLOR_ORDER>(strip_data[0], leds_per_group).setCorrection(TypicalSMD5050);
 
     FastLED.setBrightness(MAX_BRIGHTNESS); // set the max brightness for the LEDs
     pinMode(LED_BUILTIN, OUTPUT);          // setup the built-in LED for the esp32
@@ -399,7 +392,7 @@ void setup()
     goUp = true;
     srand(static_cast<unsigned int>(time(0)));
 
-    delay(3000); // delay for 3 seconds to give time to open the serial monitor
+    delay(5000); // delay for 5 seconds to give time to open the serial monitor
 }
 
 /**
@@ -415,7 +408,7 @@ void loop()
     // get showFrame
     auto showFrame = runner->getNextShowFrame(sensor_states);
 
-    std::cout << "Show Frame: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
+    // std::cout << "Show Frame: [" << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
 
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
