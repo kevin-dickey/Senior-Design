@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <cstdint>
 #include <vector>
 
@@ -15,7 +16,6 @@
 
 #else
 #include <FastLED.h>
-#include <effects.h>
 #include <ImageProcessing.h>
 #include <FileManager.h>
 #endif
@@ -31,6 +31,13 @@ struct CRGB
     CRGB() : r(0), g(0), b(0) {}
 };
 #endif
+
+enum ShiftDirection {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN
+};
 
 // Test array and pointer to it. Set in .cpp
 extern unsigned char bufferPattern[3][3][3];

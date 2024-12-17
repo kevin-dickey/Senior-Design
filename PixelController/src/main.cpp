@@ -37,6 +37,7 @@ using json = nlohmann::json;
 #include <Configuration.h>
 #include <ControllerRunner.h>
 #include <ImageProcessing.h>
+#include <backgrounds.h>
 #include <effects.h>
 #include <rippleEffect.h>
 #include <Sensor.h>
@@ -820,6 +821,16 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
+            std::vector<CRGB> colors = {CRGB::DarkRed, CRGB::DarkGoldenrod};
+
+            fillFrameWithColorPattern(
+                foreground_frame, 
+                num_leds_x, num_leds_y,
+                colors, 
+                2, 
+                ShiftDirection::LEFT
+        );
+
             for (int x = start_x; x + size_x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(candyCanejpg,
