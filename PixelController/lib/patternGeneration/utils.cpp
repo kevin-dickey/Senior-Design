@@ -127,7 +127,7 @@ void rearrangeForGroupedSerpentine(CRGB *originalArray, CRGB **rearrangedArrays,
             int originalRow = ((numGroups - 1 - group) * groupSize) + strand;
 
             // Determine if this row should be reversed (every other group)
-            bool isRowReversed = reverse && ((originalRow / groupSize) % 2 == 1);
+            bool isRowReversed = reverse && ((originalRow / groupSize) % 2 == 0);
 
             // Iterate through pixels in the row
             for (int col = 0; col < width; col++) {
@@ -328,7 +328,7 @@ uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, in
         for (int x = 0; x < imgWidth; ++x)
         {
             int bufferIndex = (y * imgWidth + x) * imgChannels;
-            uint8_t matrixIndex = 0;
+            uint16_t matrixIndex = 0;
             if (wrap)
             {
                 matrixIndex = ((startY + y) % matrixHeight) * matrixWidth + ((startX + x) % matrixWidth);
