@@ -22,24 +22,11 @@ void rippleEffect(CRGB *frame_data,
                    int width)
 {
     uint16_t maxDistance = max(num_leds_x, num_leds_y);
-    // uint16_t total_leds = num_leds[0] * num_leds[1];
-
-    // Shallow copy of the LED array
-    // auto *temp = new CRGB[total_leds];
-
-    // std::cout << "Alloced" << std::endl;
-
-    // for (int i = 0; i < total_leds; i++)
-    // {
-    //     temp[i] = frame_data[i];
-    // }
 
     if (prevLeds == NULL)
     {
         fill_solid(frame_data, num_leds_x * num_leds_y, CRGB::Black);
     }
-
-    std::cout << "Filled" << std::endl;
 
     // Iterate through the LED matrix
     for (uint16_t x = 0; x < num_leds_x; x++)
@@ -79,5 +66,4 @@ void rippleEffect(CRGB *frame_data,
             frame_data[xy_val] += newColor;
         }
     }
-    std::cout << "Patterned" << std::endl;
 }

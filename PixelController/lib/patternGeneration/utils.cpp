@@ -257,12 +257,12 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/blue.png")
+            if (image == "/santahat.png")
             {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/orb.png")
+            else if (image == "/8bitpumpkin.png")
             {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
