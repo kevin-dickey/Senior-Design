@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "../../include/json.hpp"
 #include "Spatials.h"
 
@@ -25,7 +26,8 @@ enum EffectType : int {
     pumpkin = 13,
     rainbowWalker = 14,
     ghost = 15,
-    ISU = 16
+    ISU = 16,
+    rainbowBars = 17,
 };
 
 namespace std {
@@ -109,6 +111,8 @@ public:
                 parsedType = ghost;
             } else if (effectType == "ISU") {
                 parsedType = ISU;
+            } else if (effectType == "rainbowBars") {
+                parsedType = rainbowBars;
             } else {
                 throw std::invalid_argument("Could not parse effect type: " + effectType);
             }

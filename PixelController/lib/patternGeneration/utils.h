@@ -43,7 +43,7 @@ enum ShiftDirection {
 extern unsigned char bufferPattern[3][3][3];
 extern unsigned char *bufferPtr;
 
-uint8_t calculateDistance(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+uint16_t calculateDistance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 uint16_t XY(uint8_t x, uint8_t y);
 uint16_t XYsafe(uint8_t x, uint8_t y);
 void rearrangeForSerpentine(CRGB* originalArray, CRGB* rearrangedArray, int width, int height);

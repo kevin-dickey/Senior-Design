@@ -472,7 +472,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
     if (curEffect != showframe.effect->effectType) // new effect
     {
-        std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
+        std::cout << "Starting effect -> " << showframe.effect->name << " (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
                   << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
     }
 
@@ -507,7 +507,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         try
         {
-            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
         }
         catch (std::exception &e)
         {
@@ -549,7 +554,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // draw ripple with pumpkin on top
         try
         {
-            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
         }
         catch (const std::exception &e)
         {
@@ -625,7 +635,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         try
         {
-            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
         }
         catch (std::exception &e)
         {
@@ -704,7 +719,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         try
         {
-            rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
         }
         catch (const std::exception &e)
         {
@@ -792,8 +812,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset();
             curEffect = pumpkin;
-
-            std::cout << "Setting up pumpkin effect..." << std::endl;
         }
 
         if (!loaded)
@@ -846,8 +864,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset();
             curEffect = candyCane;
-
-            std::cout << "Setting up candyCane effect..." << std::endl;
         }
 
         if (!loaded)
@@ -951,6 +967,42 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
                 false);
 
             loaded = true;
+        }
+        break;
+
+    case rainbowBars:
+        if (curEffect != rainbowBars)
+        {
+            newEffectReset();
+            curEffect = rainbowBars;
+        }
+
+        if (!loaded)
+        {
+            // TODO: Load from show file
+            std::vector<CRGB> rainbowColors = {
+                CRGB::Red,
+                CRGB::Orange,
+                CRGB::Yellow,
+                CRGB::Green,
+                CRGB::Blue,
+                CRGB::Indigo,
+                CRGB::Violet
+            };
+
+            fillFrameWithColorPattern(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                rainbowColors,
+                4,
+                ShiftDirection::LEFT);
+
+            loaded = true;
+        }
+
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         }
 
         break;
