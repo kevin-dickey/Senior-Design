@@ -260,6 +260,7 @@ unsigned char *candyCanejpg;
 unsigned char *christmasTreejpg;
 unsigned char *snowflakejpg;
 unsigned char *snowmanjpg;
+unsigned char *isuLogo;
 #pragma endregion // Variables
 
 int loadedImageHeight, loadedImageWidth, loadedImageChannels;
@@ -378,7 +379,7 @@ void setup()
         "/blue.png",      // Ghost
         "/orb.png",       // Pumpkin
         "/candycane.png", // Candy Cane
-        "/snowman.png"    // Snowman
+        "/snowman.png",   // Snowman
         "/snowflake.png", // Snowflake
     };
 
@@ -822,7 +823,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             for (int x = start_x; x + size_x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(candyCanejpg,
-                                  num_leds_y / 2, num_leds_y / 2, 4,
+                                  size_x, size_y, 4,
                                   foreground_frame,
                                   num_leds_x, num_leds_y,
                                   x, start_y,
@@ -864,6 +865,54 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         hue += 2;
         hue %= 256;
         break;
+
+    case ISU:
+        if (curEffect != ISU)
+        {
+            newEffectReset();
+            curEffect = ISU;
+        }
+
+        if (!loaded)
+        {
+            int imgWidth, imgHeight, imgChannels, newWidth, newHeight;
+            size_t imgFilesize;
+
+            File jpgFile = fm->getJsonFile("/trice_logo.png");
+            unsigned char *fileBuf = ImageProcessing::convertFsFileToBuffer(&jpgFile, imgFilesize);
+            jpgFile.close();
+            ImageProcessing::get_image_dimensions_from_memory(fileBuf, imgFilesize, &imgWidth, &imgHeight, &imgChannels);
+            isuLogo = ImageProcessing::load_image_from_memory(fileBuf, imgFilesize, &imgWidth, &imgHeight, &imgChannels);
+            free(fileBuf);
+
+            std::cout << "Loaded ISU logo: " << imgWidth << "x" << imgHeight << "x" << imgChannels << std::endl;
+
+            newWidth = num_leds_x;
+            newHeight = num_leds_y;
+
+            isuLogo = ImageProcessing::resize_image(isuLogo, imgWidth, imgHeight, imgChannels, newWidth, newHeight, true);
+
+            std::cout << "Width changed from " << imgWidth << " to " << newWidth << std::endl;
+
+            uint8_t imgSize = 24;
+            uint16_t mid_x = (num_leds_x / 2) - (newWidth / 2);
+            uint16_t mid_y = (num_leds_y / 2) - (newHeight / 2);
+
+                        fill_solid(foreground_frame, num_leds, CRGB::DarkRed);
+            // draw ISU logo
+            bufferToCRGBArray(
+                isuLogo,
+                newWidth, newHeight, 4,
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                mid_x, mid_y,
+                false);
+
+            loaded = true;
+        }
+
+        break;
+
     default:
         newEffectReset();
         std::cout << "  !Error! Effect not found/recognized (likely need to update Effect.h to match the effects on frontend)." << std::endl;
@@ -875,6 +924,14 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 // Resets some variables and such for the next effect to run properly
 void newEffectReset()
 {
+    if (curEffect == ISU)
+    {
+        if (isuLogo != NULL)
+            free(isuLogo);
+        else
+            std::cerr << "Error freeing ISU logo -> NULL" << std::endl;
+    }
+
     loaded = false;
     // prevLeds1 = {0}; // commented out b/c not using this anymore (memory issues on esp32), see rippleEffect.cpp for changed implementation
     rippleCounter = 0;
