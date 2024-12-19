@@ -51,6 +51,7 @@ Show_t show;
 SensorManager *sensorManager;
 ControllerRunner *runner;
 
+std::string showName = "show.json";
 int num_leds_x = 100;
 int num_leds_y = 24;
 int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
@@ -293,7 +294,7 @@ void setup()
 #pragma region Show Initialization
     try
     {
-        File showFile = fm->getJsonFile("/christmas-y.json");
+        File showFile = fm->getJsonFile(showName);
         show = loadShow(showFile);
         std::cout << "✅ Loaded Show!" << std::endl;
         // std::cout << "➡️ Show Name: " << show.name << std::endl;
@@ -417,7 +418,7 @@ void loop()
         std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
 
         // no effect found because we're over the shows duration. reset show
-        File showFile = fm->getJsonFile("/christmas-y.json");
+        File showFile = fm->getJsonFile(showName);
         show = loadShow(showFile);
         showFile.close();
 
