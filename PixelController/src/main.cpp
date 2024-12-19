@@ -12,7 +12,7 @@ using json = nlohmann::json;
 #define STRIP_7_PIN 12
 
 #define FRAMES_PER_SECOND 30
-#define MAX_BRIGHTNESS 128 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
+#define MAX_BRIGHTNESS 127 // maximum for FastLED is 255, (don't go higher than like 8 if you don't have a PSU attached)
 #define SKIP_SHOW_INITIALIZATION 0
 
 #if USE_EMULATOR
@@ -55,7 +55,7 @@ int num_leds_x = 100;
 int num_leds_y = 24;
 int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
 int leds_per_group;      // number of leds per group of strips
-int effect_spacing = 30; // TODO: Give this a better name - it's the spacing between images in our moving effects.
+int effect_spacing = 20; // TODO: Give this a better name - it's the spacing between images in our moving effects.
 bool reverseGroups = true;
 
 // Array of the original frame data and the transposed strip data from the foreground_frame.
@@ -376,11 +376,11 @@ void setup()
     // }
     // TODO: Dynamic loading of images based on effect. Save memory by loading only the images needed for the current effect running.
     std::vector<std::string> imgs = {
-        "/blue.png",      // Ghost
-        "/orb.png",       // Pumpkin
-        "/candycane.png", // Candy Cane
-        "/snowman.png",   // Snowman
-        "/snowflake.png", // Snowflake
+        "/santahat.png",        // ghost
+        "/8bitpumpkin.png",     // Pumpkin
+        "/candycane.png",       // Candy Cane
+        "/snowman.png",         // Snowman
+        "/snowflake.png",       // Snowflake
     };
 
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
@@ -413,14 +413,19 @@ void loop()
 
     while (showFrame.effect->name == "no effect" && showFrame.frame == -1)
     {
+        std::cout << "No effect found. Resetting runner..." << std::endl;
+        std::cout << "💩 Available Heap: " << ESP.getFreeHeap() << std::endl;
+
         // no effect found because we're over the shows duration. reset show
         File showFile = fm->getJsonFile("/christmas-y.json");
         show = loadShow(showFile);
+        showFile.close();
 
         newEffectReset();
 
         showStart = getMillis();
         epoch = std::chrono::system_clock::from_time_t(0);
+        delete runner;
         runner = new ControllerRunner(show, showStart, epoch);
         showFrame = runner->getNextShowFrame(sensor_states);
 
@@ -656,7 +661,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
                           num_leds_x, num_leds_y,
                           start_x + effect_spacing, start_y, false);
 
-        shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+        // shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         break;
 
     case pumpkinGhostRipple:
@@ -836,14 +841,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         if (showframe.frame % frames_per_shift == 0)
         {
             shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
-        }
-
-        // Reset the loaded flag if the frame is divisible by 20
-        if (showframe.frame % (max_shifts * frames_per_shift) == 0)
-        {
-            loaded = false;
-            std::cout << "Resetting candyCane effect..." << std::endl;
-            fill_solid(foreground_frame, num_leds_x * num_leds_y, CRGB::Black);
         }
 
         break;
