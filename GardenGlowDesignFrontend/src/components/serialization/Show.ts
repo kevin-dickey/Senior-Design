@@ -97,7 +97,7 @@ export class Show {
             encodeURIComponent(JSON.stringify(this.toJSON()));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", this.getFileName() + '.json');
+        downloadAnchorNode.setAttribute("download", "show" + '.json');
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
