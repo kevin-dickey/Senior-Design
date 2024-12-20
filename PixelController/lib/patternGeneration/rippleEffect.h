@@ -10,6 +10,11 @@
 #include <utils.h>
 #endif
 
-CRGB* rippleEffect(CRGB *frame_data, int *num_leds, int r, int g, int b, uint8_t center_x, uint8_t center_y, int rippleCounter, int prevLeds[], int width);
+void rippleEffect(CRGB *frame_data,
+                   int num_leds_x, int num_leds_y, 
+                   int r, int g, int b, 
+                   uint8_t center_x, uint8_t center_y, 
+                   int rippleCounter, int prevLeds[], 
+                   int width);
 
 #endif // PIXELCONTROLLER_RIPPLEEFFECT_H

@@ -46,6 +46,8 @@ Show_t loadShow(File sdFile)
 
     std::cout << "Read " << bytesRead << " bytes" << std::endl;
 
+    // std::cout << "Buffer content: " << std::string(buffer.begin(), buffer.end()) << std::endl;
+
     // Parse the buffer with the JSON library
     nlohmann::json data;
     try

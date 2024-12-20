@@ -14,12 +14,12 @@ unsigned char *bufferPtr = &bufferPattern[0][0][0];
 /**
  * Calculates the distance between two (x, y) points provided.
  */
-uint8_t calculateDistance(uint8_t center_x, uint8_t center_y, uint8_t x, uint8_t y)
+uint16_t calculateDistance(uint16_t center_x, uint16_t center_y, uint16_t x, uint16_t y)
 {
     // Calculate Euclidean distance from center point to point (x, y)
     int dx = x - center_x;
     int dy = y - center_y;
-    return static_cast<uint8_t>(sqrt(dx * dx + dy * dy));
+    return static_cast<uint16_t>(sqrt(dx * dx + dy * dy));
 }
 
 /**
@@ -257,12 +257,12 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
 
             // Store the image
             std::cout << "💾 Storing image to the global pointer..." << std::endl;
-            if (image == "/blue.png")
+            if (image == "/santahat.png")
             {
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/orb.png")
+            else if (image == "/8bitpumpkin.png")
             {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
@@ -350,7 +350,11 @@ uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, in
             }
             else if (imgChannels == 4)
             { // RGBA
-                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+                // Don't draw if alpha is fully transparent
+                if (!buffer[bufferIndex + 3] == 0xFF)
+                {
+                    leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+                }
             }
         }
     }

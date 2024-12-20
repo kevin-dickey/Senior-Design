@@ -37,6 +37,7 @@ using json = nlohmann::json;
 #include <Configuration.h>
 #include <ControllerRunner.h>
 #include <ImageProcessing.h>
+#include <backgrounds.h>
 #include <effects.h>
 #include <rippleEffect.h>
 #include <Sensor.h>
@@ -311,8 +312,11 @@ void setup()
     {                                             // might need to be a try catch instead (isGridLayout not defined for other types, but other types also not rlly defined afaict)
         num_leds_x = show.layouts[0]->getWidth(); // this returns size of frontend, SHOULD be 100
         num_leds_y = show.layouts[0]->getHeight();
+        // TODO: trim these down to just num_leds_x and num_leds_y and pass to other functions.
         num_leds = num_leds_x * num_leds_y;
         leds_per_group = num_leds_x * num_groups;
+        LEDS_SIZE_ARR[0] = num_leds_x;
+        LEDS_SIZE_ARR[1] = num_leds_y;
 
         kMatrixHeight = num_leds_y;
         kMatrixWidth = num_leds_x;
@@ -447,7 +451,7 @@ void loop()
     catch (const std::exception &e)
     {
         std::cerr << "Error generating frame: " << showFrame.effect->name << ", " << showFrame.frame << "]" << std::endl;
-        std::cerr << e.what() << '\n';
+        std::cerr << e.what() << std::endl;
     }
 
     end_millis = millis();
@@ -474,7 +478,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
     if (curEffect != showframe.effect->effectType) // new effect
     {
-        std::cout << "Starting effect -> (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
+        std::cout << "Starting effect -> " << showframe.effect->name << " (X: " << static_cast<int>(start_x) << ", Y: " << static_cast<int>(start_y) << ") "
                   << "Size: (X: " << static_cast<int>(size_x) << ", Y: " << static_cast<int>(size_y) << ")" << std::endl;
     }
 
@@ -507,7 +511,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             return;
         }
 
-        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        try
+        {
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "Error generating ripple effect: " << e.what() << std::endl;
+        }
         break;
 
     case pumpkinRainbow:
@@ -542,7 +558,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         }
 
         // draw ripple with pumpkin on top
-        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        try
+        {
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error generating ripple effect: " << e.what() << std::endl;
+        }
 
         if (!loaded)
         {
@@ -611,7 +639,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = ghostRipple;
         }
 
-        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        try
+        {
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "Error generating ripple effect: " << e.what() << std::endl;
+        }
 
         for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
         {
@@ -683,7 +723,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             }
         }
 
-        rippleEffect(foreground_frame, LEDS_SIZE_ARR, 0, 255, 221, showframe.effect->origin.x, showframe.effect->origin.y, rippleCounter++, prevLeds1, 2);
+        try
+        {
+            rippleEffect(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                0, 255, 221,
+                showframe.effect->origin.x, showframe.effect->origin.y,
+                rippleCounter++, prevLeds1, 2);
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error generating ripple: " << e.what() << std::endl;
+        }
 
         bufferToCRGBArray(
             pumpkinjpg,
@@ -766,8 +818,6 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset();
             curEffect = pumpkin;
-
-            std::cout << "Setting up pumpkin effect..." << std::endl;
         }
 
         if (!loaded)
@@ -820,12 +870,19 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         {
             newEffectReset();
             curEffect = candyCane;
-
-            std::cout << "Setting up candyCane effect..." << std::endl;
         }
 
         if (!loaded)
         {
+            std::vector<CRGB> colors = {CRGB::DarkRed, CRGB::DarkGoldenrod};
+
+            fillFrameWithColorPattern(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                colors,
+                2,
+                ShiftDirection::LEFT);
+
             for (int x = start_x; x + size_x < num_leds_x; x += effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(candyCanejpg,
@@ -896,7 +953,8 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             uint16_t mid_x = (num_leds_x / 2) - (newWidth / 2);
             uint16_t mid_y = (num_leds_y / 2) - (newHeight / 2);
 
-                        fill_solid(foreground_frame, num_leds, CRGB::DarkRed);
+            fill_solid(foreground_frame, num_leds, CRGB::DarkRed);
+
             // draw ISU logo
             bufferToCRGBArray(
                 isuLogo,
@@ -907,6 +965,42 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
                 false);
 
             loaded = true;
+        }
+        break;
+
+    case rainbowBars:
+        if (curEffect != rainbowBars)
+        {
+            newEffectReset();
+            curEffect = rainbowBars;
+        }
+
+        if (!loaded)
+        {
+            // TODO: Load from show file
+            std::vector<CRGB> rainbowColors = {
+                CRGB::Red,
+                CRGB::Orange,
+                CRGB::Yellow,
+                CRGB::Green,
+                CRGB::Blue,
+                CRGB::Indigo,
+                CRGB::Violet
+            };
+
+            fillFrameWithColorPattern(
+                foreground_frame,
+                num_leds_x, num_leds_y,
+                rainbowColors,
+                4,
+                ShiftDirection::LEFT);
+
+            loaded = true;
+        }
+
+        if (showframe.frame % frames_per_shift == 0)
+        {
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
         }
 
         break;
