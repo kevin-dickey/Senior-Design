@@ -350,7 +350,11 @@ uint8_t bufferToCRGBArray(unsigned char *buffer, int imgWidth, int imgHeight, in
             }
             else if (imgChannels == 4)
             { // RGBA
-                leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+                // Don't draw if alpha is fully transparent
+                if (!buffer[bufferIndex + 3] == 0xFF)
+                {
+                    leds[matrixIndex] = CRGB(buffer[bufferIndex], buffer[bufferIndex + 1], buffer[bufferIndex + 2]);
+                }
             }
         }
     }
