@@ -381,11 +381,11 @@ void setup()
     // }
     // TODO: Dynamic loading of images based on effect. Save memory by loading only the images needed for the current effect running.
     std::vector<std::string> imgs = {
-        "/santahat.png",        // ghost
-        "/8bitpumpkin.png",     // Pumpkin
-        "/candycane.png",       // Candy Cane
-        "/snowman.png",         // Snowman
-        "/snowflake.png",       // Snowflake
+        "/santahat.png",        // Ghost
+        "/christmastree.jpg", // Pumpkin
+        "/candycane.png",   // Candy Cane
+        "/snowman.png",     // Snowman
+        "/snowflake.png",   // Snowflake
     };
 
     loadImagesFromSD(imgs, fm, show.layouts[0]->getWidth(), show.layouts[0]->getHeight());
@@ -598,14 +598,23 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = ghost;
         }
 
-        // draw ghost
-        bufferToCRGBArray(
-            ghostjpg,
-            size_x, size_y, 4,
+        fillFrameWithColorPattern(
             foreground_frame,
             num_leds_x, num_leds_y,
-            start_x, start_y,
-            true);
+            {0x660000, 0x664b06},
+            3,
+            ShiftDirection::RIGHT);
+
+        // draw ghost repeated across the screen
+        for (uint16_t x = start_x + (showframe.frame / frames_per_shift); x + size_x < num_leds_x; x += size_x + effect_spacing)
+        {
+            bufferToCRGBArray(ghostjpg,
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              x, start_y,
+                              true);
+        }
         break;
 
     case ghostRainbow:
@@ -653,7 +662,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             std::cerr << "Error generating ripple effect: " << e.what() << std::endl;
         }
 
-        for (int x = start_x; x < num_leds_x; x += effect_spacing) // Repeat the image
+        for (int x = start_x; x < num_leds_x; x += size_x + effect_spacing) // Repeat the image
         {
             bufferToCRGBArray(ghostjpg,
                               size_x, size_y, 4,
@@ -792,7 +801,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            for (int x = start_x; (x + size_x) < num_leds_x; x += effect_spacing)
+            for (int x = start_x; (x + size_x) < num_leds_x; x += size_x + effect_spacing)
             {
                 bufferToCRGBArray(snowmanjpg,
                                   size_x, size_y, 4,
@@ -807,7 +816,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
         // Only shift the candy cane if the frame is divisible by frames_per_shift
         if (showframe.frame % frames_per_shift == 0)
         {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, RIGHT);
+            shiftLeds(foreground_frame, num_leds_x, num_leds_y, LEFT);
         }
 
         break;
@@ -822,7 +831,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
 
         if (!loaded)
         {
-            for (int x = start_x; (x + size_x) < num_leds_x; x += effect_spacing) // Repeat the image
+            for (int x = start_x; (x + size_x) < num_leds_x; x += size_x + effect_spacing) // Repeat the image
             {
                 bufferToCRGBArray(pumpkinjpg,
                                   num_leds_y / 2, num_leds_y / 2, 4,
@@ -872,34 +881,31 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             curEffect = candyCane;
         }
 
-        if (!loaded)
+        fillFrameWithColorPattern(
+            foreground_frame,
+            num_leds_x, num_leds_y,
+            {CRGB::DarkRed, CRGB::DarkGoldenrod},
+            2,
+            ShiftDirection::LEFT);
+
+        for (int x = start_x; x + size_x < num_leds_x; x += size_x + effect_spacing) // Repeat the image
         {
-            std::vector<CRGB> colors = {CRGB::DarkRed, CRGB::DarkGoldenrod};
-
-            fillFrameWithColorPattern(
-                foreground_frame,
-                num_leds_x, num_leds_y,
-                colors,
-                2,
-                ShiftDirection::LEFT);
-
-            for (int x = start_x; x + size_x < num_leds_x; x += effect_spacing) // Repeat the image
-            {
-                bufferToCRGBArray(candyCanejpg,
-                                  size_x, size_y, 4,
-                                  foreground_frame,
-                                  num_leds_x, num_leds_y,
-                                  x, start_y,
-                                  true);
-            }
-            loaded = true;
+            uint16_t shiftLen = (showframe.frame / frames_per_shift);
+            bufferToCRGBArray(candyCanejpg,
+                              size_x, size_y, 4,
+                              foreground_frame,
+                              num_leds_x, num_leds_y,
+                              x, (start_y + shiftLen),
+                              true);
         }
 
-        // Only shift the candy cane if the frame is divisible by 5
-        if (showframe.frame % frames_per_shift == 0)
-        {
-            shiftLeds(foreground_frame, num_leds_x, num_leds_y, DOWN);
-        }
+        // Reset the loaded flag if the frame is divisible by 20
+        // if (showframe.frame % (max_shifts * frames_per_shift) == 0)
+        // {
+        //     loaded = false;
+        //     std::cout << "Resetting candyCane effect..." << std::endl;
+        //     fill_solid(foreground_frame, num_leds_x * num_leds_y, CRGB::Black);
+        // }
 
         break;
     }
@@ -933,7 +939,12 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             int imgWidth, imgHeight, imgChannels, newWidth, newHeight;
             size_t imgFilesize;
 
-            File jpgFile = fm->getJsonFile("/trice_logo.png");
+            // Randomly choose an image to load between trice_logo.png and isu_logo.png
+            std::vector<std::string> isuImages = {"/trice_logo.png", "/isu_logo.png"};
+            std::string imgPath = isuImages[rand() % isuImages.size()];
+
+            std::cout << "Displaying logo: " << imgPath << std::endl;
+            File jpgFile = fm->getJsonFile(imgPath.c_str());
             unsigned char *fileBuf = ImageProcessing::convertFsFileToBuffer(&jpgFile, imgFilesize);
             jpgFile.close();
             ImageProcessing::get_image_dimensions_from_memory(fileBuf, imgFilesize, &imgWidth, &imgHeight, &imgChannels);
@@ -953,7 +964,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
             uint16_t mid_x = (num_leds_x / 2) - (newWidth / 2);
             uint16_t mid_y = (num_leds_y / 2) - (newHeight / 2);
 
-            fill_solid(foreground_frame, num_leds, CRGB::DarkRed);
+            fill_solid(foreground_frame, num_leds, 0x660000);
 
             // draw ISU logo
             bufferToCRGBArray(
@@ -985,8 +996,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
                 CRGB::Green,
                 CRGB::Blue,
                 CRGB::Indigo,
-                CRGB::Violet
-            };
+                CRGB::Violet};
 
             fillFrameWithColorPattern(
                 foreground_frame,

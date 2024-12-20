@@ -262,7 +262,7 @@ void loadImagesFromSD(std::vector<std::string> images, FileManager *fm, int leds
                 ghostjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
             }
-            else if (image == "/8bitpumpkin.png")
+            else if (image == "/christmastree.jpg")
             {
                 pumpkinjpg = imageFile;
                 std::cout << "✅ Successfully stored '" << image << "' !" << std::endl;
