@@ -52,7 +52,7 @@ Show_t show;
 SensorManager *sensorManager;
 ControllerRunner *runner;
 
-std::string showName = "show.json";
+std::string showName = "/show.json";
 int num_leds_x = 100;
 int num_leds_y = 24;
 int num_groups = 4;      // number of groups of strips. This should be the height of all pixels divided by the number of strands.
@@ -895,7 +895,7 @@ void generateFrame(ControllerRunner::ShowFrame showframe)
                               size_x, size_y, 4,
                               foreground_frame,
                               num_leds_x, num_leds_y,
-                              x, (start_y + shiftLen),
+                              (x + shiftLen), start_y,
                               true);
         }
 
